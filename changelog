@@ -1,0 +1,5 @@
+roscpp-nodewrap (0.1-1) stable; urgency=low
+
+  * Initial commit with project structure
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 14:16:00 +0100

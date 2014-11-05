@@ -1,0 +1,11 @@
+publishers:
+  chat:
+    topic: "chat"
+    queue_size: 100
+subscribers:
+  chat:
+    topic: "/alice/chat"
+    queue_size: 100
+chat:
+  initiate: False
+  say: "Hello Alice!"

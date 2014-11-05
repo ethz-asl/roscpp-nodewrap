@@ -1,0 +1,8 @@
+<launch>
+  <node name="alice" pkg="roscpp_nodewrap_tutorial" type="chatter_node" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/alice.yaml"/>
+  </node>
+  <node name="bob" pkg="roscpp_nodewrap_tutorial" type="chatter_node" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
+  </node>
+</launch>

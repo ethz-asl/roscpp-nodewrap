@@ -1,0 +1,14 @@
+publishers:
+  chat:
+    topic: "chat"
+    queue_size: 100
+    latch: false
+subscribers:
+  chat:
+    topic: "/bob/chat"
+    queue_size: 100
+    latch: false
+chat:
+  initiate: True
+  say: "Hello Bob!"
+  

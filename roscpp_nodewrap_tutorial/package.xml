@@ -1,0 +1,27 @@
+<package>
+  <name>roscpp_nodewrap_tutorial</name>
+  <version>0.1.0</version>
+  <description>
+    C++ implementation of ROS node(let) wrappers (tutorial)
+  </description>
+  <author>Ralf Kaestner</author>
+  <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <license>GNU Lesser General Public License (LGPL)</license>
+  <url>http://github.com/ethz-asl/roscpp-nodewrap</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <build_depend>roscpp_nodewrap</build_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>nodelet</build_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>std_srvs</run_depend>
+  <run_depend>roscpp_nodewrap</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>nodelet</run_depend>
+  <export>
+    <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
+  </export>
+</package>
