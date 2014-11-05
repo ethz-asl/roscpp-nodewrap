@@ -1,5 +1,17 @@
-roscpp-nodewrap (0.1-1) stable; urgency=low
+roscpp-nodewrap (0.1-3) stable; urgency=low
+
+  * ReMake build system port
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 15:30:00 +0100
+
+roscpp-nodewrap (0.1-2) stable; urgency=low
 
   * Initial commit with project structure
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 14:16:00 +0100
+
+roscpp-nodewrap (0.1-1) stable; urgency=low
+
+  * Initial commit
+
+ -- Péter Fankhauser <peterfankhauser@me.com>  Tue, 04 Nov 2014 20:35:19 +0100

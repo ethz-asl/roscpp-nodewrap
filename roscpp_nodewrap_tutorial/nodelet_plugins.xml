@@ -1,7 +1,0 @@
-<library path="lib/libroscpp_nodewrap_tutorial">
-  <class name="roscpp_nodewrap_tutorial/ChatterNode" type="nodewrap::Nodelet<nodewrap::ChatterNode>" base_class_type="nodelet::Nodelet">
-    <description>
-      Example chatter node
-    </description>
-  </class>
-</library>
