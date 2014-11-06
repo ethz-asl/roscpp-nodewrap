@@ -1,6 +1,6 @@
 <launch>
   <node name="chatters" pkg="roscpp_nodewrap_tutorial" type="chatter_supernode" output="screen">
-    <rosparam command="load" ns="/alice" file="$(find roscpp_nodewrap_tutorial)/etc/alice.yaml"/>
-    <rosparam command="load" ns="/bob" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
+    <rosparam command="load" ns="/alice" file="$(find roscpp_nodewrap_tutorial)/config/alice.yaml"/>
+    <rosparam command="load" ns="/bob" file="$(find roscpp_nodewrap_tutorial)/config/bob.yaml"/>
   </node>
 </launch>

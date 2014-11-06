@@ -3,9 +3,9 @@
     <param name="num_worker_threads" value="2"/>
   </node>
   <node name="alice" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ChatterNode chatters" output="screen">
-    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/alice.yaml"/>
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/alice.yaml"/>
   </node>
   <node name="bob" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ChatterNode chatters" output="screen">
-    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/bob.yaml"/>
   </node>
 </launch>
