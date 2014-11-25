@@ -1,16 +1,42 @@
-roscpp-nodewrap (0.1-3) stable; urgency=low
+roscpp-nodewrap (0.1-7) unstable; urgency=low
+
+  * Merge remote-tracking branch 'origin/master' into remake
+  
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 16:19:00 +0100
+ 
+roscpp-nodewrap (0.1-6) unstable; urgency=low
+
+  * Changed NodeImpl::advertiseService() with standard options to accept
+    a template argument of type Callback (to avoid future re-implementations
+    of the method for different overloaded callback signatures)
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 16:13:00 +0100
+ 
+roscpp-nodewrap (0.1-5) unstable; urgency=low
+
+  * Merge remote-tracking branch 'origin/master' into remake
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 06 Nov 2014 07:47:31 +0100
+
+roscpp-nodewrap (0.1-4) unstable; urgency=low
+
+  * Fixed folder name  of yaml files in launch files
+
+ -- gehrinch <gehrinch@ethz.ch>  Wed, 05 Nov 2014 21:13:25 +0100
+
+roscpp-nodewrap (0.1-3) unstable; urgency=low
 
   * ReMake build system port
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 15:30:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 15:31:00 +0100
 
-roscpp-nodewrap (0.1-2) stable; urgency=low
+roscpp-nodewrap (0.1-2) unstable; urgency=low
 
   * Initial commit with project structure
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 14:16:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 05 Nov 2014 14:16:49 +0100
 
-roscpp-nodewrap (0.1-1) stable; urgency=low
+roscpp-nodewrap (0.1-1) unstable; urgency=low
 
   * Initial commit
 

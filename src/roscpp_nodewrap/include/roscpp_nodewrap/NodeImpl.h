@@ -253,10 +253,9 @@ namespace nodewrap {
       * \see advertiseService(const std::string&, const ros::AdvertiseServiceOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <class S> ros::ServiceServer advertiseService(const
-      std::string& param, const std::string& defaultService, const
-      boost::function<bool(S&)>& callback, const ros::VoidConstPtr&
-      trackedObject = ros::VoidConstPtr());
+    template <typename Callback> ros::ServiceServer advertiseService(const
+      std::string& param, const std::string& defaultService, Callback callback,
+      const ros::VoidConstPtr& trackedObject = ros::VoidConstPtr());
     
     /** \brief Advertise a service, with full range of options
       * 
