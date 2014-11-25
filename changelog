@@ -1,4 +1,10 @@
-roscpp-nodewrap (0.1-6) unstable; urgency=low
+roscpp-nodewrap (0.1-5) unstable; urgency=low
+
+  * Fixed bug in NodeImpl::advertiseService()
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 18:32:00 +0100
+
+roscpp-nodewrap (0.1-4) unstable; urgency=low
 
   * Changed NodeImpl::advertiseService() with standard options to accept
     a template argument of type Callback (to avoid future re-implementations
@@ -6,7 +12,7 @@ roscpp-nodewrap (0.1-6) unstable; urgency=low
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 16:13:00 +0100
 
-roscpp-nodewrap (0.1-4) unstable; urgency=low
+roscpp-nodewrap (0.1-3) unstable; urgency=low
 
   * Fixed folder name  of yaml files in launch files
 

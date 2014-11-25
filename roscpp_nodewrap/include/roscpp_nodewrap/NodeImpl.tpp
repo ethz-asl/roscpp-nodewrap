@@ -95,7 +95,7 @@ template <typename Callback> ros::ServiceServer NodeImpl::advertiseService(
   std::string service = getParam(ns+"/service", defaultService);
   
   return this->getNodeHandle().advertiseService(service, callback,
-    trackedObject);
+    this, trackedObject);
 }
 
 template <class S> ros::ServiceClient NodeImpl::serviceClient(const
