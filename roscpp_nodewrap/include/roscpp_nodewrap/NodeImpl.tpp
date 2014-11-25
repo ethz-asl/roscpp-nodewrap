@@ -88,10 +88,9 @@ template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
     transportHints);
 }
 
-template <class S> ros::ServiceServer NodeImpl::advertiseService(const
-    std::string& param, const std::string& defaultService, const
-    boost::function<bool(S&)>& callback, const ros::VoidConstPtr&
-    trackedObject) {
+template <typename Callback> ros::ServiceServer NodeImpl::advertiseService(
+    const std::string& param, const std::string& defaultService, Callback
+    callback, const ros::VoidConstPtr& trackedObject) {
   std::string ns = std::string("servers/")+param;
   std::string service = getParam(ns+"/service", defaultService);
   
