@@ -1,3 +1,15 @@
+roscpp-nodewrap (0.1-6) unstable; urgency=low
+
+  * Removed templated callback overload of NodeImpl::advertiseService()
+    as it prevents deduction of the node implementation object type
+  * Added overloaded versions of NodeImpl::advertiseService() for
+    request/response callback signature and service event callback
+    signature
+  * Added empty service server to chatter node for compile-time testing
+    of the service-related node implementation members
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 26 Nov 2014 10:32:00 +0100
+
 roscpp-nodewrap (0.1-5) unstable; urgency=low
 
   * Fixed bug in NodeImpl::advertiseService()

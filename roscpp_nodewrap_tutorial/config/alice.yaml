@@ -8,6 +8,9 @@ subscribers:
     topic: "/bob/chat"
     queue_size: 100
     latch: false
+servers:
+  call:
+    service: "call"
 chat:
   initiate: True
   say: "Hello Bob!"
