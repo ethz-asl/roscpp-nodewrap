@@ -44,6 +44,7 @@ void ChatterNode::init() {
   NODEWRAP_INFO("Publishing to: %s", publisher.getTopic().c_str());
   subscriber = subscribe("chat", "/chat", 100, &ChatterNode::chat);
   NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
+  server = advertiseService("call", "/call", &ChatterNode::call);
   
   initiate = getParam("chat/initiate", false);
   say = getParam("chat/say", say);
@@ -70,6 +71,12 @@ void ChatterNode::chat(const std_msgs::String::ConstPtr& msg) {
   
   publisher.publish(reply);
   NODEWRAP_DEBUG("I said: [%s]", reply->data.c_str());
+}
+
+bool ChatterNode::call(std_srvs::Empty::Request& request,
+    std_srvs::Empty::Response& response) {
+  NODEWRAP_DEBUG("I have been called");
+  return true;
 }
 
 }

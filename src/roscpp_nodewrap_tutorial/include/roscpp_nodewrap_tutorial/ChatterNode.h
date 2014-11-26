@@ -24,6 +24,7 @@
 #define ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
 
 #include <std_msgs/String.h>
+#include <std_srvs/Empty.h>
 
 #include <roscpp_nodewrap/NodeImpl.h>
 #include <roscpp_nodewrap/Nodelet.h>
@@ -216,6 +217,10 @@ namespace nodewrap {
       */
     ros::Subscriber subscriber;
     
+    /** \brief The ROS service server which can be called
+      */
+    ros::ServiceServer server;
+    
     /** \brief True if this chatter initiates chat
       */
     bool initiate;
@@ -302,6 +307,32 @@ namespace nodewrap {
       * do not forget to mind thread-safety.
       */
     void chat(const std_msgs::String::ConstPtr& msg);
+    
+    /** \brief Service call callback
+      * 
+      * This dummy callback may be invoked by a service client calling the
+      * service of this chatter node. It currently exists for compile-time
+      * testing of the node implementation's service-related members and
+      * therefore does nothing meaningful.
+      * 
+      * \param[in] request The empty service request sent to the service server
+      *   by the service client.
+      * \param[in,out] response The empty service response to be returned to
+      *   the service client.
+      * 
+      * This is the callback's implementation:
+      * 
+        \verbatim
+        bool ChatterNode::call(std_srvs::Empty::Request& request,
+            std_srvs::Empty::Response& response) {
+          NODEWRAP_DEBUG("I have been called");
+          return true;
+        }
+        \endverbatim
+      * 
+      */
+    bool call(std_srvs::Empty::Request& request, std_srvs::Empty::Response&
+      response);
   };
 };
 

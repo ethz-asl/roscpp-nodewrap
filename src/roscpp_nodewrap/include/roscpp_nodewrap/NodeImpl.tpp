@@ -88,14 +88,29 @@ template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
     transportHints);
 }
 
-template <typename Callback> ros::ServiceServer NodeImpl::advertiseService(
-    const std::string& param, const std::string& defaultService, Callback
-    callback, const ros::VoidConstPtr& trackedObject) {
+template <class MReq, class MRes, class T> ros::ServiceServer
+    NodeImpl::advertiseService(const std::string& param, const std::string&
+    defaultService, bool(T::*fp)(MReq&, MRes&), const ros::VoidConstPtr&
+    trackedObject) {
   std::string ns = std::string("servers/")+param;
   std::string service = getParam(ns+"/service", defaultService);
   
-  return this->getNodeHandle().advertiseService(service, callback,
-    this, trackedObject);
+  boost::function<bool (MReq&, MRes&)> f(boost::bind(fp, (T*)this, _1, _2));
+  
+  return this->getNodeHandle().advertiseService(service, f, trackedObject);
+}
+
+template <class MReq, class MRes, class T> ros::ServiceServer
+    NodeImpl::advertiseService(const std::string& param, const std::string&
+    defaultService, bool(T::*fp)(ros::ServiceEvent<MReq, MRes>&), const
+    ros::VoidConstPtr& trackedObject) {
+  std::string ns = std::string("servers/")+param;
+  std::string service = getParam(ns+"/service", defaultService);
+  
+  boost::function<bool (ros::ServiceEvent<MReq, MRes>&)> f(
+    boost::bind(fp, (T*)this, _1));
+  
+  return this->getNodeHandle().advertiseService(service, f, trackedObject);
 }
 
 template <class S> ros::ServiceClient NodeImpl::serviceClient(const

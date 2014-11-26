@@ -6,6 +6,9 @@ subscribers:
   chat:
     topic: "/alice/chat"
     queue_size: 100
+servers:
+  call:
+    service: "call"
 chat:
   initiate: False
   say: "Hello Alice!"

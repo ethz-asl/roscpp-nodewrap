@@ -239,7 +239,8 @@ namespace nodewrap {
       * \param[in] param The name of the parameter which stores the
       *   configuration of the new service server.
       * \param[in] defaultService The default service name to advertise on.
-      * \param[in] callback The callback to call when the service is called.
+      * \param[in] fp A member function pointer to call when the service is
+      *   called.
       * \param[in] trackedObject A shared pointer to an object to track for
       *   these callbacks. If set, a weak pointer will be created to this
       *   object, and if the reference count goes to zero the subscriber
@@ -253,8 +254,34 @@ namespace nodewrap {
       * \see advertiseService(const std::string&, const ros::AdvertiseServiceOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <typename Callback> ros::ServiceServer advertiseService(const
-      std::string& param, const std::string& defaultService, Callback callback,
+    template <class MReq, class MRes, class T> ros::ServiceServer
+      advertiseService(const std::string& param, const std::string&
+      defaultService, bool(T::*fp)(MReq&, MRes&), const ros::VoidConstPtr&
+      trackedObject = ros::VoidConstPtr());
+    
+    /** \brief Advertise a service, with event callback and standard options
+      * 
+      * \param[in] param The name of the parameter which stores the
+      *   configuration of the new service server.
+      * \param[in] defaultService The default service name to advertise on.
+      * \param[in] fp A member function pointer to call when the service is
+      *   called.
+      * \param[in] trackedObject A shared pointer to an object to track for
+      *   these callbacks. If set, a weak pointer will be created to this
+      *   object, and if the reference count goes to zero the subscriber
+      *   callbacks will not get called. Note that setting this will cause
+      *   a new reference to be added to the object before the callback, and
+      *   for it to go out of scope (and potentially be deleted) in the code
+      *   path (and therefore thread) that the callback is invoked from. 
+      * \return On success, a ROS service server that, when all copies of it
+      *   go out of scope, will unadvertise this service.
+      * 
+      * \see advertiseService(const std::string&, const ros::AdvertiseServiceOptions&)
+      *   for a detailed description of the method's behavior.
+      */
+    template <class MReq, class MRes, class T> ros::ServiceServer
+      advertiseService(const std::string& param, const std::string&
+      defaultService, bool(T::*fp)(ros::ServiceEvent<MReq, MRes>&),
       const ros::VoidConstPtr& trackedObject = ros::VoidConstPtr());
     
     /** \brief Advertise a service, with full range of options
