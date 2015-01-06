@@ -23,6 +23,8 @@
 #ifndef ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
 #define ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
 
+#include <ros/xmlrpc_manager.h>
+
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
 
@@ -355,6 +357,10 @@ namespace nodewrap {
       */
     bool call(std_srvs::Empty::Request& request, std_srvs::Empty::Response&
       response);
+    
+//     void paramUpdate(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result);
+    
+    void sayUpdate(const std::string& say);
   };
 };
 

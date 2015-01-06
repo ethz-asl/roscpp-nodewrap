@@ -22,6 +22,8 @@
 
 namespace nodewrap {
 
+using namespace roscpp_nodewrap;
+  
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
@@ -129,6 +131,30 @@ ros::ServiceClient NodeImpl::serviceClient(const std::string& param, const
   ros::ServiceClientOptions options = getServiceClientOptions(param,
     defaultOptions);
   return this->getNodeHandle().serviceClient(options);
+}
+
+ParamServer NodeImpl::advertiseParam(const AdvertiseParamOptions& options) {
+  // BEGIN BOGUS
+//   getNodeHandle().setParam(options.key, options.value);
+//   XmlRpc::XmlRpcValue value;
+//   getNodeHandle().getParamCached(options.key, value);
+  // END BOGUS
+  
+  if (!configServer)
+    configServer = ConfigServer(shared_from_this());
+  
+  std::map<std::string, ParamServer>::const_iterator it =
+    paramServers.find(options.key);
+
+  if (it == paramServers.end()) {
+    ParamServer paramServer(options.key, options.value, options.cached,
+      shared_from_this());
+    paramServers.insert(std::make_pair(options.key, paramServer));
+    
+    return paramServer;
+  }
+  else
+    return it->second;
 }
 
 void NodeImpl::start(const std::string& name, bool nodelet, const

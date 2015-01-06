@@ -15,6 +15,33 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   nodelet
+  message_generation
+  std_msgs
+)
+
+## Add service files to be generated
+add_service_files(
+  DIRECTORY srv
+  FILES
+    ListParams.srv
+    HasParam.srv
+    GetParamName.srv
+    GetParamInfo.srv
+    GetParamValueXml.srv
+    SetParamValueXml.srv
+    GetParamValueString.srv
+    SetParamValueString.srv
+    GetParamValueDouble.srv
+    SetParamValueDouble.srv
+    GetParamValueInt.srv
+    SetParamValueInt.srv
+    GetParamValueBool.srv
+    SetParamValueBool.srv
+)
+
+## Generate services
+generate_messages(
+  DEPENDENCIES std_msgs
 )
 
 ###################################
@@ -29,7 +56,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES roscpp_nodewrap
-  CATKIN_DEPENDS nodelet roscpp
+  CATKIN_DEPENDS message_runtime nodelet roscpp std_msgs
 )
 
 ###########
@@ -47,8 +74,12 @@ include_directories(
 add_library(roscpp_nodewrap
   src/NodeInterface.cpp
   src/NodeImpl.cpp
+  src/ConfigServer.cpp
+  src/ParamServer.cpp
+  src/AdvertiseParamOptions.cpp
   src/Signal.cpp
 )
+add_dependencies(roscpp_nodewrap roscpp_nodewrap_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(
