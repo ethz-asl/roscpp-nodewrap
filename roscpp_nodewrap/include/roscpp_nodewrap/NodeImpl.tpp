@@ -40,14 +40,15 @@ template <typename T> T NodeImpl::getParam(const std::string& key,
 /*****************************************************************************/
 
 template <class M> ros::Publisher NodeImpl::advertise(const std::string&
-    param,const std::string& defaultTopic, uint32_t defaultQueueSize, bool
+    param, const std::string& defaultTopic, uint32_t defaultQueueSize, bool
     defaultLatch) {
-  std::string ns = std::string("publishers/")+param;
-  std::string topic = getParam(ns+"/topic", defaultTopic);
-  int queueSize = getParam(ns+"/queue_size", (int)defaultQueueSize);
-  bool latch = getParam(ns+"/latch", defaultLatch);
+  ros::AdvertiseOptions options, defaultOptions;
   
-  return this->getNodeHandle().advertise<M>(topic, queueSize, latch);
+  defaultOptions.template init<M>(defaultTopic, defaultQueueSize);
+  defaultOptions.latch = defaultLatch;
+  options = getAdvertiseOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().advertise(options);
 }
 
 template <class M> ros::Publisher NodeImpl::advertise(const std::string& param,
@@ -55,73 +56,94 @@ template <class M> ros::Publisher NodeImpl::advertise(const std::string& param,
     ros::SubscriberStatusCallback& connectCallback, const
     ros::SubscriberStatusCallback& disconnectCallback, const ros::VoidConstPtr&
     trackedObject, bool defaultLatch) {
-  std::string ns = std::string("publishers/")+param;
-  std::string topic = getParam(ns+"/topic", defaultTopic);
-  int queueSize = getParam(ns+"/queue_size", (int)defaultQueueSize);
-  bool latch = getParam(ns+"/latch", defaultLatch);
+  ros::AdvertiseOptions options, defaultOptions;
   
-  return this->getNodeHandle().advertise<M>(topic, queueSize, connectCallback,
-    disconnectCallback, trackedObject, latch);
+  defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
+    connectCallback, disconnectCallback);
+  defaultOptions.latch = defaultLatch;
+  defaultOptions.tracked_object = trackedObject;
+  options = getAdvertiseOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().advertise(options);
 }
 
 template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
     std::string& param, const std::string& defaultTopic, uint32_t
     defaultQueueSize, void(T::*fp)(const boost::shared_ptr<const M>&),
     const ros::TransportHints& transportHints) {
-  std::string ns = std::string("subscribers/")+param;
-  std::string topic = getParam(ns+"/topic", defaultTopic);
-  int queueSize = getParam(ns+"/queue_size", (int)defaultQueueSize);
+  ros::SubscribeOptions options, defaultOptions;
   
-  return this->getNodeHandle().subscribe(topic, queueSize, fp, (T*)this,
-    transportHints);
+  defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
+    boost::bind(fp, (T*)this, _1));
+  defaultOptions.transport_hints = transportHints;
+  options = getSubscribeOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().subscribe(options);
 }
   
 template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
     std::string& param, const std::string& defaultTopic, uint32_t
     defaultQueueSize, void(T::*fp)(const boost::shared_ptr<M const>&) const,
     const ros::TransportHints& transportHints) {
-  std::string ns = std::string("subscribers/")+param;
-  std::string topic = getParam(ns+"/topic", defaultTopic);
-  int queueSize = getParam(ns+"/queue_size", (int)defaultQueueSize);
+  ros::SubscribeOptions options, defaultOptions;
   
-  return this->getNodeHandle().subscribe(topic, queueSize, fp, (T*)this,
-    transportHints);
+  defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
+    boost::bind(fp, (const T*)this, _1));
+  defaultOptions.transport_hints = transportHints;
+  options = getSubscribeOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().subscribe(options);
 }
 
 template <class MReq, class MRes, class T> ros::ServiceServer
     NodeImpl::advertiseService(const std::string& param, const std::string&
     defaultService, bool(T::*fp)(MReq&, MRes&), const ros::VoidConstPtr&
     trackedObject) {
-  std::string ns = std::string("servers/")+param;
-  std::string service = getParam(ns+"/service", defaultService);
+  ros::AdvertiseServiceOptions options, defaultOptions;
+
+  defaultOptions.template init<MReq, MRes>(defaultService,
+    boost::bind(fp, (T*)this, _1, _2));
+  defaultOptions.tracked_object = trackedObject;
+  options = getAdvertiseServiceOptions(param, defaultOptions);
   
-  boost::function<bool (MReq&, MRes&)> f(boost::bind(fp, (T*)this, _1, _2));
-  
-  return this->getNodeHandle().advertiseService(service, f, trackedObject);
+  return this->getNodeHandle().advertiseService(options);
 }
 
-template <class MReq, class MRes, class T> ros::ServiceServer
-    NodeImpl::advertiseService(const std::string& param, const std::string&
-    defaultService, bool(T::*fp)(ros::ServiceEvent<MReq, MRes>&), const
-    ros::VoidConstPtr& trackedObject) {
-  std::string ns = std::string("servers/")+param;
-  std::string service = getParam(ns+"/service", defaultService);
-  
-  boost::function<bool (ros::ServiceEvent<MReq, MRes>&)> f(
+template <class S, class T> ros::ServiceServer NodeImpl::advertiseService(
+    const std::string& param, const std::string& defaultService,
+    bool(T::*fp)(S&), const ros::VoidConstPtr& trackedObject) {
+  ros::AdvertiseServiceOptions options, defaultOptions;
+
+  defaultOptions.template initBySpecType<S>(defaultService,
     boost::bind(fp, (T*)this, _1));
+  defaultOptions.tracked_object = trackedObject;
+  options = getAdvertiseServiceOptions(param, defaultOptions);
   
-  return this->getNodeHandle().advertiseService(service, f, trackedObject);
+  return this->getNodeHandle().advertiseService(options);
+}
+
+template <class MReq, class MRes> ros::ServiceClient NodeImpl::serviceClient(
+    const std::string& param, const std::string& defaultService, bool
+    defaultPersistent, const ros::M_string& headerValues) {
+  ros::ServiceClientOptions options, defaultOptions;
+  
+  defaultOptions.template init<MReq, MRes>(defaultService, defaultPersistent,
+    headerValues);
+  options = getServiceClientOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().serviceClient(options);
 }
 
 template <class S> ros::ServiceClient NodeImpl::serviceClient(const
     std::string& param, const std::string& defaultService, bool
     defaultPersistent, const ros::M_string& headerValues) {
-  std::string ns = std::string("clients/")+param;  
-  std::string service = getParam(ns+"/service", defaultService);
-  bool persistent = getParam(ns+"/persistent", defaultPersistent);
+  ros::ServiceClientOptions options, defaultOptions;
   
-  return this->getNodeHandle().serviceClient<S>(service, persistent,
+  defaultOptions.template init<S>(defaultService, defaultPersistent,
     headerValues);
+  options = getServiceClientOptions(param, defaultOptions);
+  
+  return this->getNodeHandle().serviceClient(options);
 }
-    
+
 }

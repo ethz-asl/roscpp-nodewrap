@@ -1,3 +1,11 @@
+roscpp-nodewrap (0.1-7) unstable; urgency=low
+
+  * Replaced NodeImpl class adapter by object adapter pattern (allowing
+    for proper passing of the NodeImpl objects using shared pointers)
+  * Added signal handling facilities
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:00:00 +0100
+
 roscpp-nodewrap (0.1-6) unstable; urgency=low
 
   * Removed templated callback overload of NodeImpl::advertiseService()

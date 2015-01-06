@@ -29,6 +29,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES roscpp_nodewrap
+  CATKIN_DEPENDS nodelet roscpp
 )
 
 ###########
@@ -46,6 +47,7 @@ include_directories(
 add_library(roscpp_nodewrap
   src/NodeInterface.cpp
   src/NodeImpl.cpp
+  src/Signal.cpp
 )
 
 ## Specify libraries to link a library or executable target against

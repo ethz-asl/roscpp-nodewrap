@@ -16,28 +16,82 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <csignal>
+
+#include <ros/ros.h>
+
+#include "roscpp_nodewrap/Signal.h"
+
 namespace nodewrap {
+
+/*****************************************************************************/
+/* Static Member Initialization                                              */
+/*****************************************************************************/
+
+std::map<int, std::list<Signal::Handler> > Signal::handlers;
+boost::mutex Signal::mutex;
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-template <class C> Nodelet<C>::Nodelet() :
-  impl(new C()) {
-}
-  
-template <class C> Nodelet<C>::~Nodelet() {
-  if (impl.unique() && impl->isValid())
-    impl->shutdown();
+Signal::Signal() {
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
+
+void Signal::bind(int signal_, const Handler& handler) {
+  boost::mutex::scoped_lock lock(mutex);
+
+  std::map<int, std::list<Handler> >::iterator it = handlers.find(signal_);
+  if (it == handlers.end()) {
+    it = handlers.insert(std::make_pair(signal_, std::list<Handler>())).first;
+    signal(signal_, &Signal::signaled);
+  }
   
-template <class C> void Nodelet<C>::onInit() {
-  impl->start(this->getName(), true, ros::NodeHandlePtr(
-    new ros::NodeHandle(this->getMTPrivateNodeHandle())));
+  for (std::list<Handler>::const_iterator jt = it->second.begin();
+      jt != it->second.end(); ++jt)
+    if (*jt == &handler)
+      return;
+  
+  it->second.push_back(handler);
+}
+
+void Signal::unbind(int signal_, const Handler& handler) {
+  boost::mutex::scoped_lock lock(mutex);
+  std::map<int, std::list<Handler> >::iterator it = handlers.find(signal_);
+  
+  if (it == handlers.end())
+    return;
+  
+  for (std::list<Handler>::iterator jt = it->second.begin();
+      jt != it->second.end(); ++jt) {
+    if (*jt == &handler) {
+      it->second.erase(jt);
+      
+      if (it->second.empty())
+        signal(signal_, SIG_DFL);
+      
+      return;
+    }
+  }
+}
+
+void Signal::signaled(int signal) {
+  boost::mutex::scoped_lock lock(mutex);
+  std::map<int, std::list<Handler> >::iterator it = handlers.find(signal);
+  
+  if (it == handlers.end())
+    return;
+  
+  for (std::list<Handler>::iterator jt = it->second.begin();
+      jt != it->second.end(); ++jt)
+    (*jt)();
+  
+  if (signal == SIGINT)
+    ros::shutdown();
 }
 
 }

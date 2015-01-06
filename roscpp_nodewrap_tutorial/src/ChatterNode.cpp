@@ -16,8 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <pluginlib/class_list_macros.h>
-
 #include "roscpp_nodewrap_tutorial/ChatterNode.h"
 
 NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ChatterNode)
@@ -46,8 +44,15 @@ void ChatterNode::init() {
   NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
   server = advertiseService("call", "/call", &ChatterNode::call);
   
+  name = getParam("chat/name", name);
   initiate = getParam("chat/initiate", false);
   say = getParam("chat/say", say);
+  
+  NODEWRAP_INFO("Hello, my name is %s!", name.c_str());
+}
+
+void ChatterNode::cleanup() {
+  NODEWRAP_INFO("Good bye from %s!", name.c_str());
 }
 
 void ChatterNode::connect(const ros::SingleSubscriberPublisher& pub) {

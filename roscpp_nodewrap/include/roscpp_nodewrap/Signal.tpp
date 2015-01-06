@@ -16,18 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/Node.h>
+#include <boost/bind.hpp>
 
-#include "roscpp_nodewrap_tutorial/ChatterNode.h"
+namespace nodewrap {
 
-using namespace nodewrap;
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "chatter_node");
-  
-  Node<ChatterNode> node;
-
-  ros::spin();
+template <typename T> void Signal::bind(int signal, void(T::*fp)(),
+    T* object) {
+  Signal::bind(signal, boost::bind(fp, object));
+}
     
-  return 0;
+template <typename T> void Signal::unbind(int signal, void(T::*fp)(),
+    T* object) {
+  Signal::unbind(signal, boost::bind(fp, object));
+}
+
 }

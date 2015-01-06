@@ -10,5 +10,6 @@ servers:
   call:
     service: "call"
 chat:
+  name: "Bob"
   initiate: False
   say: "Hello Alice!"

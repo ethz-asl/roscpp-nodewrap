@@ -133,12 +133,12 @@ namespace nodewrap {
       \endverbatim
     *
     * Above, roscpp_nodewrap_tutorial names the package providing the node
-    * implementation, and nodewrap::ChatterNode represents its fully qualified
-    * class name (including the namespace). Note that in the meantime, it
-    * became deprecated to provide the package name when registering a plugin
-    * class with ROS. Here, the package name has however been kept to allow
-    * for backwards compatible use (ROS fuerte and earlier) of the ROS
-    * pluginlib macros.
+    * implementation, and nodewrap::ChatterNode represents its fully
+    * qualified class name (including the namespace). Note that in the
+    * meantime, it became deprecated to provide the package name when
+    * registering a plugin class with ROS. Here, the package name has however
+    * been kept to allow for backwards compatible use (ROS fuerte and earlier)
+    * of the ROS pluginlib macros.
     *
     * Note that in ROS, the discovery of nodelet plugin types further requires
     * specific export tags in the package configuration as well as direct
@@ -221,6 +221,10 @@ namespace nodewrap {
       */
     ros::ServiceServer server;
     
+    /** \brief The human-readable name of the chatter
+      */
+    std::string name;
+    
     /** \brief True if this chatter initiates chat
       */
     bool initiate;
@@ -247,8 +251,11 @@ namespace nodewrap {
           subscriber = subscribe("chat", "/chat", 100, &ChatterNode::chat);
           NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
            
+          name = getParam("chat/name", name);
           initiate = getParam("chat/initiate", false);
           say = getParam("chat/say", say);
+          
+          NODEWRAP_INFO("Hello, my name is %s!", name.c_str());
         }
         \endverbatim
       * 
@@ -259,6 +266,21 @@ namespace nodewrap {
       * \see NodeImpl::init
       */
     void init();
+    
+    /** \brief Perform chatter node cleanup
+      * 
+      * Cleanup of the chatter node is just bogus. This is the implementation:
+      * 
+        \verbatim
+        void ChatterNode::cleanup() {
+          NODEWRAP_INFO("Good bye from %s!", name.c_str());
+        }
+        \endverbatim
+      * 
+      * 
+      * \see NodeImpl::cleanup
+      */
+    void cleanup();
     
     /** \brief Connect callback
       * 

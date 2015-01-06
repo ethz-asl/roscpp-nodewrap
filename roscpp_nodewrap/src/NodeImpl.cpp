@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <roscpp_nodewrap/Signal.h>
+
 #include "roscpp_nodewrap/NodeImpl.h"
 
 namespace nodewrap {
@@ -24,10 +26,79 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-NodeImpl::NodeImpl() {
+NodeImpl::NodeImpl() :
+  nodelet(false) {
 }
 
-NodeImpl::~NodeImpl() {
+NodeImpl::~NodeImpl() {  
+  Signal::unbind(SIGINT, &NodeImpl::shutdown, this);  
+}
+
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+const std::string& NodeImpl::getName() const {
+  return name;
+}
+
+bool NodeImpl::isNodelet() const {
+  return nodelet;
+}
+
+bool NodeImpl::isValid() const {
+  return nodeHandle && nodeHandle->ok();
+}
+
+ros::NodeHandle& NodeImpl::getNodeHandle() const {
+  return *nodeHandle;
+}
+
+ros::AdvertiseOptions NodeImpl::getAdvertiseOptions(const std::string& key,
+    const ros::AdvertiseOptions& defaultOptions) const {
+  std::string ns = std::string("publishers/")+key;
+  ros::AdvertiseOptions options = defaultOptions;
+  
+  options.topic = getParam(ns+"/topic", defaultOptions.topic);
+  options.queue_size = getParam(ns+"/queue_size",
+    (int)defaultOptions.queue_size);
+  options.latch = getParam(ns+"/latch", defaultOptions.latch);
+  
+  return options;
+}
+
+ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& key,
+    const ros::SubscribeOptions& defaultOptions) const {
+  std::string ns = std::string("subscribers/")+key;
+  ros::SubscribeOptions options = defaultOptions;
+  
+  options.topic = getParam(ns+"/topic", defaultOptions.topic);
+  options.queue_size = getParam(ns+"/queue_size",
+    (int)defaultOptions.queue_size);
+  
+  return options;
+}
+
+ros::AdvertiseServiceOptions NodeImpl::getAdvertiseServiceOptions(const
+    std::string& key, const ros::AdvertiseServiceOptions& defaultOptions)
+    const {
+  std::string ns = std::string("servers/")+key;  
+  ros::AdvertiseServiceOptions options = defaultOptions;
+  
+  options.service = getParam(ns+"/service", defaultOptions.service);
+  
+  return options;
+}
+
+ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
+    key, const ros::ServiceClientOptions& defaultOptions) const {
+  std::string ns = std::string("clients/")+key;  
+  ros::ServiceClientOptions options = defaultOptions;
+  
+  options.service = getParam(ns+"/service", defaultOptions.service);
+  options.persistent = getParam(ns+"/persistent", defaultOptions.persistent);
+  
+  return options;
 }
 
 /*****************************************************************************/
@@ -36,44 +107,47 @@ NodeImpl::~NodeImpl() {
 
 ros::Publisher NodeImpl::advertise(const std::string& param, const
     ros::AdvertiseOptions& defaultOptions) {
-  std::string ns = std::string("publishers/")+param;  
-  ros::AdvertiseOptions options = defaultOptions;
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
-    (int)defaultOptions.queue_size);
-  options.latch = getParam(ns+"/latch", defaultOptions.latch);
-  
+  ros::AdvertiseOptions options = getAdvertiseOptions(param, defaultOptions);
   return this->getNodeHandle().advertise(options);
 }
 
 ros::Subscriber NodeImpl::subscribe(const std::string& param, const
     ros::SubscribeOptions& defaultOptions) {
-  std::string ns = std::string("subscribers/")+param;  
-  ros::SubscribeOptions options = defaultOptions;
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
-    (int)defaultOptions.queue_size);
-  
+  ros::SubscribeOptions options = getSubscribeOptions(param, defaultOptions);
   return this->getNodeHandle().subscribe(options);
 }
 
 ros::ServiceServer NodeImpl::advertiseService(const std::string& param,
     const ros::AdvertiseServiceOptions& defaultOptions) {
-  std::string ns = std::string("servers/")+param;  
-  ros::AdvertiseServiceOptions options = defaultOptions;
-  options.service = getParam(ns+"/service", defaultOptions.service);
-  
+  ros::AdvertiseServiceOptions options = getAdvertiseServiceOptions(
+    param, defaultOptions);
   return this->getNodeHandle().advertiseService(options);
 }
 
 ros::ServiceClient NodeImpl::serviceClient(const std::string& param, const
     ros::ServiceClientOptions& defaultOptions) {
-  std::string ns = std::string("clients/")+param;  
-  ros::ServiceClientOptions options = defaultOptions;
-  options.service = getParam(ns+"/service", defaultOptions.service);
-  options.persistent = getParam(ns+"/persistent", defaultOptions.persistent);
-  
+  ros::ServiceClientOptions options = getServiceClientOptions(param,
+    defaultOptions);
   return this->getNodeHandle().serviceClient(options);
 }
-    
+
+void NodeImpl::start(const std::string& name, bool nodelet, const
+    ros::NodeHandlePtr& nodeHandle) {
+  this->name = name;
+  this->nodelet = nodelet;
+  this->nodeHandle = nodeHandle;
+  
+  init();
+  
+  Signal::bind(SIGINT, &NodeImpl::shutdown, this);
+}
+
+void NodeImpl::shutdown() {
+  cleanup();
+  
+  this->name.clear();
+  this->nodelet = false;
+  this->nodeHandle.reset();
+}
+
 }
