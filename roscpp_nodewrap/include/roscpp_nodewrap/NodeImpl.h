@@ -81,6 +81,7 @@ namespace nodewrap {
       */
     bool isValid() const;
     
+    void unbindDefaultSigIntHandler();
   protected:
     /** \brief Retrieve the node(let)'s ROS node handle
       * 
@@ -515,6 +516,14 @@ namespace nodewrap {
     void start(const std::string& name, bool nodelet, const
       ros::NodeHandlePtr& nodeHandle);
     
+    /** \brief Unload the nodelet
+      *
+      * This helper method is called from the template wrapper of
+      * the nodelet to unload the nodelet.
+      */
+    void unload();
+
+public:
     /** \brief Shutdown the node(let)
       *
       * This method is executed if a process interrupt signals the ROS
@@ -528,6 +537,12 @@ namespace nodewrap {
       * \see ros::shutdown and cleanup
       */
     void shutdown();
+
+  public:
+    /** \brief Default signal handler for SIGINT
+      *
+      */
+    void defaultSignalIntHandler(int signal);
   };
 };
 

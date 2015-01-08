@@ -31,7 +31,7 @@ NodeImpl::NodeImpl() :
 }
 
 NodeImpl::~NodeImpl() {  
-  Signal::unbind(SIGINT, &NodeImpl::shutdown, this);  
+  Signal::unbind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
 }
 
 /*****************************************************************************/
@@ -137,12 +137,27 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
   this->nodelet = nodelet;
   this->nodeHandle = nodeHandle;
   
+  Signal::bind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
+
   init();
-  
-  Signal::bind(SIGINT, &NodeImpl::shutdown, this);
+
+}
+
+void NodeImpl::unload() {
+  ROS_INFO("Unload %s.", this->name.c_str());
+  this->shutdown();
+}
+
+void NodeImpl::defaultSignalIntHandler(int signal) {
+  ROS_INFO("defaultSignalIntHandler of %s.", this->name.c_str());
+  this->shutdown();
+}
+void NodeImpl::unbindDefaultSigIntHandler() {
+  Signal::unbind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
 }
 
 void NodeImpl::shutdown() {
+  ROS_INFO("Shutdown %s.", this->name.c_str());
   cleanup();
   
   this->name.clear();
