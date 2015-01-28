@@ -16,18 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/Node.h>
+namespace nodewrap {
 
-#include "roscpp_nodewrap_tutorial/ChatterNode.h"
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
 
-using namespace nodewrap;
+template <typename P> void AdvertiseParamOptions::init(const std::string&
+    key, const P& value, const boost::function<void(const P&)>& callback,
+    bool cached) {
+  this->key = key;
+  this->value = XmlRpc::XmlRpcValue(value);
+  this->cached = cached;
+}
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "chatter_node");
-  
-  Node<ChatterNode> node;
-
-  ros::spin();
-    
-  return 0;
 }

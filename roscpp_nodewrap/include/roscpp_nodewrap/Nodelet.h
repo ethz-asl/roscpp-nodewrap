@@ -33,7 +33,6 @@ namespace nodewrap {
     */
   
   template <class C> class Nodelet :
-    public C,
     public nodelet::Nodelet {
   public:
     /** \brief Default constructor
@@ -49,39 +48,20 @@ namespace nodewrap {
       */
     virtual ~Nodelet();
     
-    /** \brief Retrieve the nodelet's name
-      * 
-      * \return The nodelet's name.
-      * 
-      * \see NodeInterface::getName
-      */
-    const std::string& getName() const;
-    
-    /** \brief Query if the nodelet is a ROS nodelet
-      * 
-      * \return In this implementation, the method always returns true.
-      * 
-      * \see NodeInterface::isNodelet
-      */
-    bool isNodelet() const;
-    
     /** \brief Virtual override of the ROS nodelet's initialization
       * 
-      * This method essentially calls C::init() to delegate the initialization
+      * This method essentially calls C::startup to delegate initialization
       * to the node implementation.
       * 
       * \see nodelet::Nodelet::onInit
       */
     void onInit();
-  protected:
-    /** \brief Retrieve the node's ROS node handle
-      * 
-      * \return The private ROS node handle with the multi-threaded callback
-      *   queue of the nodelet manager.
-      * 
-      * \see NodeInterface::getNodeHandle
+    
+  private:
+  private:
+    /** \brief The nodelet's implementation
       */
-    ros::NodeHandle& getNodeHandle() const;
+    boost::shared_ptr<C> impl;
   };
 };
 

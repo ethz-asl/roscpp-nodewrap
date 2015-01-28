@@ -16,18 +16,51 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/Node.h>
+/** \file Signal.h
+  * \brief Header file providing the Signal class interface
+  */
 
-#include "roscpp_nodewrap_tutorial/ChatterNode.h"
+#ifndef ROSCPP_NODEWRAP_SIGNAL_H
+#define ROSCPP_NODEWRAP_SIGNAL_H
 
-using namespace nodewrap;
+#include <map>
+#include <list>
+#include <csignal>
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "chatter_node");
+#include <boost/function.hpp>
+#include <boost/thread/mutex.hpp>
+
+namespace nodewrap {
+  /** \brief Signal handling for the ROS node wrapper
+    * 
+    * This class provides a static interface to bind the cleanup methods of
+    * multiple ROS node implementations to a common process signal handler.
+    */
   
-  Node<ChatterNode> node;
+  class Signal {
+  public:
+    typedef boost::function<void()> Handler;
 
-  ros::spin();
+    template <typename T> static void bind(int signal, void(T::*fp)(),
+      T* object);
     
-  return 0;
-}
+    static void bind(int signal, const Handler& handler);
+    
+    template <typename T> static void unbind(int signal, void(T::*fp)(),
+      T* object);
+    
+    static void unbind(int signal, const Handler& handler);
+    
+  private:
+    static std::map<int, std::list<Handler> > handlers;
+    static boost::mutex mutex;
+    
+    Signal();
+    
+    static void signaled(int signal);
+  };
+};
+
+#include <roscpp_nodewrap/Signal.tpp>
+
+#endif

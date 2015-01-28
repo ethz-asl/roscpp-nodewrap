@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <roscpp_nodewrap/NodeImpl.h>
+
 namespace nodewrap {
 
 /*****************************************************************************/
@@ -24,44 +26,31 @@ namespace nodewrap {
 
 template <class C> Node<C>::Node(const std::string& ns, const ros::M_string&
     remappings) :
-  privateNodeHandle(new ros::NodeHandle(ns, remappings)) {
-  this->init();
+  impl(new C()) {
+  impl->start(ros::this_node::getName(), false, ros::NodeHandlePtr(
+    new ros::NodeHandle(ns, remappings)));
 }
   
 template <class C> Node<C>::Node(const Node& parent, const std::string& ns) :
-  privateNodeHandle(new ros::NodeHandle(parent.nodeHandle, ns)) {
-  this->init();
+  impl(new C()) {
+  impl->start(ros::this_node::getName(), false, ros::NodeHandlePtr(
+    new ros::NodeHandle(parent.nodeHandle, ns)));
 }
 
 template <class C> Node<C>::Node(const Node& parent, const std::string& ns,
     const ros::M_string& remappings) :
-  privateNodeHandle(new ros::NodeHandle(parent.nodeHandle, ns, remappings)) {
-  this->init();
+  impl(new C()) {
+  impl->start(ros::this_node::getName(), false, ros::NodeHandlePtr(
+    new ros::NodeHandle(parent.nodeHandle, ns, remappings)));
 }
 
 template <class C> Node<C>::Node(const Node& src) :
-  C(src),
-  privateNodeHandle(src.privateNodeHandle) {
-  this->init();
+  impl(src.impl) {
 }
                                  
 template <class C> Node<C>::~Node() {
-}
-  
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-template <class C> const std::string& Node<C>::getName() const {
-  return ros::this_node::getName();
-}
-
-template <class C> bool Node<C>::isNodelet() const {
-  return false;
-}
-  
-template <class C> ros::NodeHandle& Node<C>::getNodeHandle() const {
-  return *privateNodeHandle;
+  if (impl.unique() && impl->isValid())
+    impl->shutdown();
 }
 
 /*****************************************************************************/
@@ -69,9 +58,10 @@ template <class C> ros::NodeHandle& Node<C>::getNodeHandle() const {
 /*****************************************************************************/
 
 template <class C> Node<C>& Node<C>::operator=(const Node<C>& src) {
-  C::operator=(src);
+  if (impl.unique() && impl->isValid())
+    impl->shutdown();
   
-  privateNodeHandle = src.privateNodeHandle;
+  impl = src.impl;
   
   return *this;
 }

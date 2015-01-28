@@ -1,3 +1,23 @@
+roscpp-nodewrap (0.1-9) unstable; urgency=low
+
+  * Updated README.md with project information and install instructions
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:50:00 +0100
+
+roscpp-nodewrap (0.1-8) unstable; urgency=low
+
+  * First class implementations for parameter advertising feature
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:20:00 +0100
+
+roscpp-nodewrap (0.1-7) unstable; urgency=low
+
+  * Replaced NodeImpl class adapter by object adapter pattern (allowing
+    for proper passing of the NodeImpl objects using shared pointers)
+  * Added signal handling facilities
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:00:00 +0100
+
 roscpp-nodewrap (0.1-6) unstable; urgency=low
 
   * Removed templated callback overload of NodeImpl::advertiseService()

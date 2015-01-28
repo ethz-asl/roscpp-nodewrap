@@ -16,18 +16,49 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/Node.h>
+/** \file AdvertiseParamOptions.h
+  * \brief Header file providing the AdvertiseParamOptions class interface
+  */
 
-#include "roscpp_nodewrap_tutorial/ChatterNode.h"
+#ifndef ROSCPP_NODEWRAP_ADVERTISE_PARAM_OPTIONS_H
+#define ROSCPP_NODEWRAP_ADVERTISE_PARAM_OPTIONS_H
 
-using namespace nodewrap;
+#include <ros/ros.h>
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "chatter_node");
+#include <roscpp_nodewrap/ParamCallbackHelper.h>
+
+namespace nodewrap {
+  /** \brief ROS advertise parameter options
+    * 
+    * This class encapsulates all options available for creating a parameter
+    * service server.
+    */
   
-  Node<ChatterNode> node;
-
-  ros::spin();
+  class AdvertiseParamOptions {
+  public:
+    /** \brief Default constructor
+      */
+    AdvertiseParamOptions();
     
-  return 0;
-}
+    void init(const std::string& key, const XmlRpc::XmlRpcValue& value,
+      const boost::function<bool(const XmlRpc::XmlRpcValue&)>& callback,
+      bool cached = true);
+
+    template <typename P> void init(const std::string& key, const P& value,
+      const boost::function<void(const P&)>& callback, bool cached = true);
+    
+    std::string key;
+    XmlRpc::XmlRpcValue value;
+    bool cached;
+    
+    ParamCallbackHelperPtr helper;
+    
+    ros::CallbackQueueInterface* callbackQueue;
+    
+    ros::VoidConstPtr trackedObject;
+  };
+};
+
+#include <roscpp_nodewrap/AdvertiseParamOptions.tpp>
+
+#endif

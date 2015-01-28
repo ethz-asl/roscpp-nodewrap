@@ -1,0 +1,19 @@
+---
+uint8 TYPE_INVALID = 0
+uint8 TYPE_BOOLEAN = 1
+uint8 TYPE_INT = 2
+uint8 TYPE_DOUBLE = 3
+uint8 TYPE_STRING = 4
+uint8 TYPE_DATETIME = 5
+uint8 TYPE_BASE64 = 6
+uint8 TYPE_ARRAY = 7
+uint8 TYPE_STRUCT = 8
+
+uint8 type        # Parameter value type as given above
+uint32 size       # Size for string, base64, array, and struct parameter values
+
+float32[] limits  # Minimum and maximum for int and double parameter values
+string[] members  # Member names for struct parameter values
+
+bool valid        # True if the parameter value has been set
+bool cached       # True if the parameter value has been cached

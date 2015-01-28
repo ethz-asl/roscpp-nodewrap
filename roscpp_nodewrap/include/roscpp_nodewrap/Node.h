@@ -29,11 +29,10 @@ namespace nodewrap {
   /** \brief ROS node template wrapper
     * 
     * This class is a templated wrapper for native ROS nodes. Its sole
-    * template parameter usually subclasses the NodeImpl interface.
+    * template parameter is expected to subclass the NodeImpl interface.
     */
   
-  template <class C> class Node :
-    public C {
+  template <class C> class Node {
   public:
     /** \brief Default constructor
       * 
@@ -98,22 +97,6 @@ namespace nodewrap {
       */
     virtual ~Node();
     
-    /** \brief Retrieve the node's name
-      * 
-      * \return The node's name.
-      * 
-      * \see NodeInterface::getName
-      */
-    const std::string& getName() const;
-    
-    /** \brief Query if the node is a ROS nodelet
-      * 
-      * \return In this implementation, the method always returns false.
-      * 
-      * \see NodeInterface::isNodelet
-      */
-    bool isNodelet() const;
-    
     /** \brief Assignment operator
       * 
       * \param[in] src The source node which is being copied to this node.
@@ -122,18 +105,11 @@ namespace nodewrap {
       * \see ros::NodeHandle::operator=
       */
     Node& operator=(const Node& src);
-  protected:
-    /** \brief Retrieve the node's ROS node handle
-      * 
-      * \return The private ROS node handle used by this node.
-      * 
-      * \see NodeInterface::getNodeHandle
-      */
-    ros::NodeHandle& getNodeHandle() const;
+
   private:
-    /** \brief The node's private ROS node handle
+    /** \brief The node's implementation
       */
-    ros::NodeHandlePtr privateNodeHandle;
+    boost::shared_ptr<C> impl;
   };
 };
 

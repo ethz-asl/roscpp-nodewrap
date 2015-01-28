@@ -32,12 +32,13 @@
 #ifdef PLUGINLIB_EXPORT_CLASS
 #define NODEWRAP_EXPORT_CLASS(pkg, class_type) \
   template class nodewrap::Nodelet<class_type>; \
-  PLUGINLIB_EXPORT_CLASS(nodewrap::Nodelet<class_type>, nodelet::Nodelet);
+  PLUGINLIB_EXPORT_CLASS(nodewrap::Nodelet<class_type>, \
+    nodelet::Nodelet);
 #else
 #define NODEWRAP_EXPORT_CLASS(pkg, class_type) \
   template class nodewrap::Nodelet<class_type>; \
-  PLUGINLIB_DECLARE_CLASS(pkg, class_type, nodewrap::Nodelet<class_type>, \
-    nodelet::Nodelet);
+  PLUGINLIB_DECLARE_CLASS(pkg, class_type, \
+    nodewrap::Nodelet<class_type>, nodelet::Nodelet);
 #endif
 
 #endif
