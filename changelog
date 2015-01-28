@@ -1,3 +1,9 @@
+roscpp-nodewrap (0.1-9) unstable; urgency=low
+
+  * Updated README.md with project information and install instructions
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:50:00 +0100
+
 roscpp-nodewrap (0.1-8) unstable; urgency=low
 
   * First class implementations for parameter advertising feature
