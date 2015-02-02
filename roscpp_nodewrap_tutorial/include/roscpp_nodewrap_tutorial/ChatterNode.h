@@ -20,8 +20,8 @@
   * \brief Header file providing the example ChatterNode class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
-#define ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
+#ifndef ROSCPP_NODEWRAP_TUTORIAL_CHATTER_NODE_HPP
+#define ROSCPP_NODEWRAP_TUTORIAL_CHATTER_NODE_HPP
 
 #include <ros/xmlrpc_manager.h>
 
@@ -210,6 +210,7 @@ namespace nodewrap {
       * The destructor of the chatter node is left empty.
       */
     virtual ~ChatterNode();
+  
   protected:
     /** \brief The ROS publisher advertising the chat topic
       */
@@ -357,10 +358,6 @@ namespace nodewrap {
       */
     bool call(std_srvs::Empty::Request& request, std_srvs::Empty::Response&
       response);
-    
-//     void paramUpdate(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result);
-    
-    void sayUpdate(const std::string& say);
   };
 };
 

@@ -31,8 +31,10 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
-#include <roscpp_nodewrap/ConfigServer.h>
 #include <roscpp_nodewrap/AdvertiseParamOptions.h>
+#include <roscpp_nodewrap/ConfigServer.h>
+#include <roscpp_nodewrap/ParamClient.h>
+#include <roscpp_nodewrap/ParamClientOptions.h>
 #include <roscpp_nodewrap/ParamServer.h>
 
 namespace nodewrap {
@@ -50,6 +52,7 @@ namespace nodewrap {
   template <class C> friend class Node;
   template <class C> friend class Nodelet;
   friend class ConfigServer;
+  friend class ParamClient;
   friend class ParamServer;
   public:
     /** \brief Default constructor
@@ -503,7 +506,6 @@ namespace nodewrap {
     template <typename P, class T> ParamServer advertiseParam(const
       std::string& key, const P& value, void(T::*fp)(const P&), bool
       cached = true);
-
     ParamServer advertiseParam(const AdvertiseParamOptions& options);
 
   private:

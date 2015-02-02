@@ -30,9 +30,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    INCLUDE_DIRS include
-    LIBRARIES roscpp_nodewrap_tutorial
-    CATKIN_DEPENDS std_msgs std_srvs roscpp_nodewrap
+  INCLUDE_DIRS include
+  LIBRARIES roscpp_nodewrap_tutorial
+  CATKIN_DEPENDS std_msgs std_srvs roscpp_nodewrap
 )
 
 ###########
@@ -49,6 +49,8 @@ include_directories(
 ## Declare a cpp library
 add_library(roscpp_nodewrap_tutorial
   src/ChatterNode.cpp
+  src/ParamAdvertiserNode.cpp
+  src/ParamListenerNode.cpp
 )
 
 ## Declare a cpp executable
@@ -59,6 +61,14 @@ add_executable(
 add_executable(
   chatter_supernode
   src/chatter_supernode.cpp
+)
+add_executable(
+  param_advertiser_node
+  src/param_advertiser_node.cpp
+)
+add_executable(
+  param_listener_node
+  src/param_listener_node.cpp
 )
 
 ## Specify libraries to link a library or executable target against
@@ -73,6 +83,16 @@ target_link_libraries(
 )
 target_link_libraries(
   chatter_supernode
+  roscpp_nodewrap_tutorial
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(
+  param_advertiser_node
+  roscpp_nodewrap_tutorial
+  ${catkin_LIBRARIES}
+)
+target_link_libraries(
+  param_listener_node
   roscpp_nodewrap_tutorial
   ${catkin_LIBRARIES}
 )

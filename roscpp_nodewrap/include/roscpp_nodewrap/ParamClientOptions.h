@@ -16,45 +16,49 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+/** \file ParamClientOptions.h
+  * \brief Header file providing the ParamClientOptions class interface
+  */
+
+#ifndef ROSCPP_NODEWRAP_PARAM_CLIENT_OPTIONS_H
+#define ROSCPP_NODEWRAP_PARAM_CLIENT_OPTIONS_H
+
+#include <ros/ros.h>
+
+#include <roscpp_nodewrap/ParamCallbackHelper.h>
+
 namespace nodewrap {
+  /** \brief ROS parameter client options
+    * 
+    * This class encapsulates all options available for creating a parameter
+    * service client.
+    */
+  
+  class ParamClientOptions {
+  public:
+    /** \brief Default constructor
+      */
+    ParamClientOptions();
+    
+    void init(const std::string& key, const XmlRpc::XmlRpcValue& value,
+      const boost::function<bool(const XmlRpc::XmlRpcValue&)>& callback,
+      bool cached = true);
 
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
+    template <typename P> void init(const std::string& key, const P& value,
+      const boost::function<void(const P&)>& callback, bool cached = true);
+    
+    std::string key;
+    XmlRpc::XmlRpcValue value;
+    bool cached;
+    
+    ParamCallbackHelperPtr helper;
+    
+    ros::CallbackQueueInterface* callbackQueue;
+    
+    ros::VoidConstPtr trackedObject;
+  };
+};
 
-template <typename P> bool paramToValue(const ros::NodeHandle& nodeHandle,
-    const std::string& key, P& value) {
-  return nodeHandle.getParam(key, value);
-}
+#include <roscpp_nodewrap/ParamClientOptions.tpp>
 
-template <typename P> void valueToParam(const ros::NodeHandle& nodeHandle,
-    const P& value, const std::string& key) {
-  nodeHandle.setParam(key, value);
-}
-
-template <typename P> void messageToValue(const typename
-    ParamTraits<P>::SetParamValue::Request& message, P& value) {
-  value = message.value;
-}
-
-template <typename P> void valueToMessage(const P& value,
-    typename ParamTraits<P>::GetParamValue::Response& message) {
-  message.value = value;
-}
-
-template <> void messageToValue<XmlRpc::XmlRpcValue>(const
-    SetParamValueXml::Request& message, XmlRpc::XmlRpcValue& value) {
-  int offset = 0;
-  value.fromXml(message.value, &offset);
-}
-
-template <> void valueToMessage<XmlRpc::XmlRpcValue>(const
-    XmlRpc::XmlRpcValue& value, GetParamValueXml::Response& message) {
-  message.value = value.toXml();
-}
-
-template <typename P> void valueToXmlRpcValue(const P& value,
-    XmlRpc::XmlRpcValue& xmlRpcValue) {
-  xmlRpcValue = value;
-}
-}
+#endif

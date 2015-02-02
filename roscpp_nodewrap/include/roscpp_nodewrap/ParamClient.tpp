@@ -22,39 +22,4 @@ namespace nodewrap {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-template <typename P> bool paramToValue(const ros::NodeHandle& nodeHandle,
-    const std::string& key, P& value) {
-  return nodeHandle.getParam(key, value);
-}
-
-template <typename P> void valueToParam(const ros::NodeHandle& nodeHandle,
-    const P& value, const std::string& key) {
-  nodeHandle.setParam(key, value);
-}
-
-template <typename P> void messageToValue(const typename
-    ParamTraits<P>::SetParamValue::Request& message, P& value) {
-  value = message.value;
-}
-
-template <typename P> void valueToMessage(const P& value,
-    typename ParamTraits<P>::GetParamValue::Response& message) {
-  message.value = value;
-}
-
-template <> void messageToValue<XmlRpc::XmlRpcValue>(const
-    SetParamValueXml::Request& message, XmlRpc::XmlRpcValue& value) {
-  int offset = 0;
-  value.fromXml(message.value, &offset);
-}
-
-template <> void valueToMessage<XmlRpc::XmlRpcValue>(const
-    XmlRpc::XmlRpcValue& value, GetParamValueXml::Response& message) {
-  message.value = value.toXml();
-}
-
-template <typename P> void valueToXmlRpcValue(const P& value,
-    XmlRpc::XmlRpcValue& xmlRpcValue) {
-  xmlRpcValue = value;
-}
 }

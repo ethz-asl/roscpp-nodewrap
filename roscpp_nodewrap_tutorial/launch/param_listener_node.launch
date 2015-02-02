@@ -1,0 +1,4 @@
+<launch>
+  <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/params.yaml"/>
+  <node name="param_listener" pkg="roscpp_nodewrap_tutorial" type="param_listener_node" output="screen"/>
+</launch>

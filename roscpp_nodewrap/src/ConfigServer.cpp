@@ -62,9 +62,9 @@ ConfigServer::Impl::Impl(const boost::shared_ptr<NodeImpl>& nodeImpl) :
   hasParamServer = nodeImpl->getNodeHandle().advertiseService(
     hasParamOptions);
   
-//   ros::XMLRPCManager::instance()->unbind("paramUpdate");
-//   ros::XMLRPCManager::instance()->bind("paramUpdate",
-//     boost::bind(&ConfigServer::Impl::updateParam, impl, _1, _2));
+  ros::XMLRPCManager::instance()->unbind("paramUpdate");
+  ros::XMLRPCManager::instance()->bind("paramUpdate",
+    boost::bind(&ConfigServer::Impl::updateParam, this, _1, _2));
 }
 
 ConfigServer::~ConfigServer() {

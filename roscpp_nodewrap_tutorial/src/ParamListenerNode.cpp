@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ChatterNode.h"
+#include <ros/xmlrpc_manager.h>
 
-NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ChatterNode)
+#include "roscpp_nodewrap_tutorial/ParamListenerNode.h"
 
 namespace nodewrap {
 
@@ -26,62 +26,57 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ChatterNode::ChatterNode() {
+ParamListenerNode::ParamListenerNode() {
 }
 
-ChatterNode::~ChatterNode() {
+ParamListenerNode::~ParamListenerNode() {
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void ChatterNode::init() {
-  publisher = advertise<std_msgs::String>("chat", "/chat", 100,
-    boost::bind(&ChatterNode::connect, this, _1));
-  NODEWRAP_INFO("Publishing to: %s", publisher.getTopic().c_str());
-  subscriber = subscribe("chat", "/chat", 100, &ChatterNode::chat);
-  NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
-  server = advertiseService("call", "/call", &ChatterNode::call);
+void ParamListenerNode::init() {
+  NODEWRAP_INFO("Hello!");
   
-  name = getParam("chat/name", name);
-  initiate = getParam("chat/initiate", false);
-  say = getParam("chat/say", say);
+  NODEWRAP_INFO_STREAM("ParamListenerNode::init() " << __LINE__ << " " << ros::isInitialized());
   
-  NODEWRAP_INFO("Hello, my name is %s!", name.c_str());
+  // This is problematic as it prevents cache parameters to be updated!!!
+  ros::XMLRPCManager::instance()->unbind("paramUpdate");
+  ros::XMLRPCManager::instance()->bind("paramUpdate",
+    boost::bind(&ParamListenerNode::paramUpdate, this, _1, _2));
+  
+  bool bogus = false;
+  getNodeHandle().setParam("bogus", bogus);
+  getNodeHandle().getParamCached("bogus", bogus);
+  
+//   NODEWRAP_INFO_STREAM("ChatterNode::init() " << __LINE__);  
+  
+//   advertiseParam("chat/name", name, false);
+//   advertiseParam("chat/initiate", initiate);
+//   advertiseParam("chat/say", say, &ChatterNode::sayUpdate);
 }
 
-void ChatterNode::cleanup() {
-  NODEWRAP_INFO("Good bye from %s!", name.c_str());
+void ParamListenerNode::cleanup() {
+  NODEWRAP_INFO("Good bye!");
 }
 
-void ChatterNode::connect(const ros::SingleSubscriberPublisher& pub) {
-  if (initiate) {
-    while (!publisher)
-      ros::Duration(0.1).sleep();
-    
-    std_msgs::StringPtr msg(new std_msgs::String);
-    msg->data = say;
-    
-    publisher.publish(msg);
-    NODEWRAP_DEBUG("I said: [%s]", msg->data.c_str());
-  }
-}
-
-void ChatterNode::chat(const std_msgs::String::ConstPtr& msg) {
-  NODEWRAP_DEBUG("I heard: [%s]", msg->data.c_str());
+void ParamListenerNode::paramUpdate(XmlRpc::XmlRpcValue& params,
+    XmlRpc::XmlRpcValue& result) {
+  NODEWRAP_INFO_STREAM("ParamListenerNode::paramUpdate() " << __LINE__);
   
-  std_msgs::StringPtr reply(new std_msgs::String);
-  reply->data = say;
+//   result[0] = 1;
+//   result[1] = std::string("");
+//   result[2] = 0;
+// 
+//   ros::param::update((std::string)params[1], params[2]);
   
-  publisher.publish(reply);
-  NODEWRAP_DEBUG("I said: [%s]", reply->data.c_str());
+//   bool trigger = getNodeHandle().getParam("trigger", trigger);
+//   NODEWRAP_INFO_STREAM("params[2] = " << params[2] << " trigger = " << trigger);
 }
 
-bool ChatterNode::call(std_srvs::Empty::Request& request,
-    std_srvs::Empty::Response& response) {
-  NODEWRAP_DEBUG("I have been called");
-  return true;
+void ParamListenerNode::paramUpdate(const std::string& name) {
+  NODEWRAP_INFO("Parameter value changed to %s!", name.c_str());
 }
 
 }

@@ -72,11 +72,13 @@ include_directories(
 
 ## Declare a cpp library
 add_library(roscpp_nodewrap
-  src/NodeInterface.cpp
-  src/NodeImpl.cpp
-  src/ConfigServer.cpp
-  src/ParamServer.cpp
   src/AdvertiseParamOptions.cpp
+  src/ConfigServer.cpp
+  src/NodeImpl.cpp
+  src/NodeInterface.cpp
+  src/ParamClient.cpp
+  src/ParamClientOptions.cpp
+  src/ParamServer.cpp
   src/Signal.cpp
 )
 add_dependencies(roscpp_nodewrap roscpp_nodewrap_generate_messages_cpp)

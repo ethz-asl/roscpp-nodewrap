@@ -103,6 +103,9 @@ namespace nodewrap {
     SetParamValueXml::Request& message, XmlRpc::XmlRpcValue& value);
   template <> inline void valueToMessage<XmlRpc::XmlRpcValue>(const
     XmlRpc::XmlRpcValue& value, GetParamValueXml::Response& message);
+  
+  template <typename P> inline void valueToXmlRpcValue(const P& value,
+    XmlRpc::XmlRpcValue& xmlRpcValue);
 };
 
 #include <roscpp_nodewrap/ParamTraits.tpp>
