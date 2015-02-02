@@ -146,21 +146,4 @@ template <class S> ros::ServiceClient NodeImpl::serviceClient(const
   return this->getNodeHandle().serviceClient(options);
 }
 
-template <typename P> ParamServer NodeImpl::advertiseParam(const std::string&
-    key, const P& value, bool cached) {
-  AdvertiseParamOptions options;  
-  options.template init<P>(key, value, 0, cached);
-  
-  return this->advertiseParam(options);
-}
-
-template <typename P, class T> ParamServer NodeImpl::advertiseParam(const
-    std::string& key, const P& value, void(T::*fp)(const P&), bool cached) {
-  AdvertiseParamOptions options;  
-  options.template init<P>(key, value, boost::bind(fp, (T*)this, _1),
-    cached);
-  
-  return this->advertiseParam(options);
-}
-
 }

@@ -31,10 +31,6 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
-#include <roscpp_nodewrap/ConfigServer.h>
-#include <roscpp_nodewrap/AdvertiseParamOptions.h>
-#include <roscpp_nodewrap/ParamServer.h>
-
 namespace nodewrap {
   /** \brief Abstract class implementation of a ROS node(let)
     * 
@@ -49,8 +45,6 @@ namespace nodewrap {
     public boost::enable_shared_from_this<NodeImpl> {
   template <class C> friend class Node;
   template <class C> friend class Nodelet;
-  friend class ConfigServer;
-  friend class ParamServer;
   public:
     /** \brief Default constructor
       * 
@@ -494,17 +488,7 @@ namespace nodewrap {
       * \see ros::NodeHandle::serviceClient
       */
     ros::ServiceClient serviceClient(const std::string& param, const
-      ros::ServiceClientOptions& defaultOptions);
-    
-    /** \brief Advertise a parameter
-      */
-    template <typename P> ParamServer advertiseParam(const std::string&
-      key, const P& value, bool cached = true);
-    template <typename P, class T> ParamServer advertiseParam(const
-      std::string& key, const P& value, void(T::*fp)(const P&), bool
-      cached = true);
-
-    ParamServer advertiseParam(const AdvertiseParamOptions& options);
+      ros::ServiceClientOptions& defaultOptions);    
 
   private:
     /** \brief The node implementation's name
@@ -518,14 +502,6 @@ namespace nodewrap {
     /** \brief The node implementation's private ROS node handle
       */
     ros::NodeHandlePtr nodeHandle;
-    
-    /** \brief The node implementation's configuration service server
-      */
-    ConfigServer configServer;
-    
-    /** \brief The node implementation's parameter service servers
-      */
-    std::map<std::string, ParamServer> paramServers;
     
     /** \brief Start the node(let)
       *

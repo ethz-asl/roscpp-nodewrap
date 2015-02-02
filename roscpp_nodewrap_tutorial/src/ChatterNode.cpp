@@ -49,22 +49,6 @@ void ChatterNode::init() {
   say = getParam("chat/say", say);
   
   NODEWRAP_INFO("Hello, my name is %s!", name.c_str());
-  
-//   NODEWRAP_INFO_STREAM("ChatterNode::init() " << __LINE__);
-  
-//   bool trigger = false;
-//   getNodeHandle().setParam("trigger", trigger);
-//   getNodeHandle().getParamCached("trigger", trigger);
-  // This is problematic as it prevents cache parameters to be updated!!!
-//   ros::XMLRPCManager::instance()->unbind("paramUpdate");
-//   ros::XMLRPCManager::instance()->bind("paramUpdate",
-//     boost::bind(&ChatterNode::paramUpdate, this, _1, _2));
-  
-//   NODEWRAP_INFO_STREAM("ChatterNode::init() " << __LINE__);  
-  
-  advertiseParam("chat/name", name, false);
-  advertiseParam("chat/initiate", initiate);
-  advertiseParam("chat/say", say, &ChatterNode::sayUpdate);
 }
 
 void ChatterNode::cleanup() {
@@ -98,24 +82,6 @@ bool ChatterNode::call(std_srvs::Empty::Request& request,
     std_srvs::Empty::Response& response) {
   NODEWRAP_DEBUG("I have been called");
   return true;
-}
-
-// void ChatterNode::paramUpdate(XmlRpc::XmlRpcValue& params,
-//     XmlRpc::XmlRpcValue& result) {
-//   NODEWRAP_INFO_STREAM("ChatterNode::paramUpdate() " << __LINE__);
-  
-//   result[0] = 1;
-//   result[1] = std::string("");
-//   result[2] = 0;
-// 
-//   ros::param::update((std::string)params[1], params[2]);
-  
-//   bool trigger = getNodeHandle().getParam("trigger", trigger);
-//   NODEWRAP_INFO_STREAM("params[2] = " << params[2] << " trigger = " << trigger);
-// }
-
-void ChatterNode::sayUpdate(const std::string& say) {
-  this->say = say;
 }
 
 }
