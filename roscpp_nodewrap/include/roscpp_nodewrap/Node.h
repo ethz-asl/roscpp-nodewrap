@@ -25,6 +25,8 @@
 
 #include <ros/ros.h>
 
+#include <roscpp_nodewrap/Forwards.h>
+
 namespace nodewrap {
   /** \brief ROS node template wrapper
     * 
@@ -109,7 +111,7 @@ namespace nodewrap {
   private:
     /** \brief The node's implementation
       */
-    boost::shared_ptr<C> impl;
+    NodeImplPtr impl;
   };
 };
 

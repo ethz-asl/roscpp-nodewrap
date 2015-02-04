@@ -1,0 +1,4 @@
+---
+bool started   # True, if the worker has been started
+bool active    # True, if the worker is active
+bool canceled  # True, if the worker has been canceled

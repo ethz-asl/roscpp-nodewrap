@@ -16,58 +16,41 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file Nodelet.h
-  * \brief Header file providing the Nodelet class interface
+/** \file WorkerOptions.h
+  * \brief Header file providing the WorkerOptions class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_NODELET_H
-#define ROSCPP_NODEWRAP_NODELET_H
+#ifndef ROSCPP_NODEWRAP_WORKER_OPTIONS_H
+#define ROSCPP_NODEWRAP_WORKER_OPTIONS_H
 
-#include <nodelet/nodelet.h>
+#include <ros/ros.h>
 
 #include <roscpp_nodewrap/Forwards.h>
-#include <roscpp_nodewrap/Pluginlib.h>
 
 namespace nodewrap {
-  /** \brief ROS nodelet template wrapper
+  /** \brief ROS worker options
     * 
-    * This class is a templated wrapper for native ROS nodelets. Its sole
-    * template parameter usually subclasses the NodeImpl interface.
+    * This class encapsulates all options available for creating a
+    * timer-controlled node worker.
     */
   
-  template <class C> class Nodelet :
-    public nodelet::Nodelet {
+  class WorkerOptions {
   public:
     /** \brief Default constructor
-      * 
-      * \note No constructor overloading is provided to allow for
-      *   construction when dynamically loaded.
-      * 
-      * \see nodelet::Nodelet::Nodelet
       */
-    Nodelet();
+    WorkerOptions();
+
+    std::string name;
     
-    /** \brief Destructor
-      */
-    virtual ~Nodelet();
+    ros::Rate rate;
+    WorkerCallback callback;
     
-    /** \brief Virtual override of the ROS nodelet's initialization
-      * 
-      * This method essentially calls C::startup to delegate initialization
-      * to the node implementation.
-      * 
-      * \see nodelet::Nodelet::onInit
-      */
-    void onInit();
+    ros::CallbackQueueInterface* callbackQueue;
     
-  private:
-  private:
-    /** \brief The nodelet's implementation
-      */
-    NodeImplPtr impl;
+    ros::VoidConstPtr trackedObject;
+    
+    bool autostart;
   };
 };
-
-#include <roscpp_nodewrap/Nodelet.tpp>
 
 #endif

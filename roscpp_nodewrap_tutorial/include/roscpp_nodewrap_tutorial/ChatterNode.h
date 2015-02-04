@@ -20,8 +20,8 @@
   * \brief Header file providing the example ChatterNode class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
-#define ROSCPP_NODEWRAP_TUTORIAL_CHATTERNODE_HPP
+#ifndef ROSCPP_NODEWRAP_TUTORIAL_CHATTER_NODE_HPP
+#define ROSCPP_NODEWRAP_TUTORIAL_CHATTER_NODE_HPP
 
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
@@ -276,7 +276,6 @@ namespace nodewrap {
           NODEWRAP_INFO("Good bye from %s!", name.c_str());
         }
         \endverbatim
-      * 
       * 
       * \see NodeImpl::cleanup
       */

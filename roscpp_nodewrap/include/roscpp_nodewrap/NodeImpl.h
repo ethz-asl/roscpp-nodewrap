@@ -31,7 +31,11 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
-namespace nodewrap {
+#include <roscpp_nodewrap/Worker.h>
+#include <roscpp_nodewrap/WorkerManager.h>
+#include <roscpp_nodewrap/WorkerOptions.h>
+
+namespace nodewrap {  
   /** \brief Abstract class implementation of a ROS node(let)
     * 
     * This class provides the abstract, opaque implementation of a ROS
@@ -45,6 +49,8 @@ namespace nodewrap {
     public boost::enable_shared_from_this<NodeImpl> {
   template <class C> friend class Node;
   template <class C> friend class Nodelet;
+  friend class Worker;
+  friend class WorkerManager;
   public:
     /** \brief Default constructor
       * 
@@ -490,6 +496,35 @@ namespace nodewrap {
     ros::ServiceClient serviceClient(const std::string& param, const
       ros::ServiceClientOptions& defaultOptions);    
 
+    /** \brief Add a worker, with standard options
+      * 
+      * \param[in] name The name of the new worker, a valid ROS graph
+      *   resource name.
+      * \param[in] defaultRate The default rate at which the worker's
+      *   work callback will be attempted to be invoked by the worker's
+      *   timer.
+      * \param[in] fp A member function pointer to call when the worker
+      *   should perform its work.
+      * \param[in] defaultAutostart If true, the worker will by default be
+      *   started automatically.
+      * \return On success, a worker that, when all copies of it go out
+      *   of scope, will remove this worker.
+      */
+    template <class T> Worker addWorker(const std::string& name, const
+      ros::Rate& defaultRate, bool(T::*fp)(const WorkerEvent&), bool
+      defaultAutostart = true);
+    
+    /** \brief Add a worker, with full range of options
+      * 
+      * \param[in] name The name of the new worker, a valid ROS graph
+      *   resource name.
+      * \param[in] defaultOptions The default worker options to use.
+      * \return On success, a worker that, when all copies of it go out
+      *   of scope, will remove this worker.
+      */
+    Worker addWorker(const std::string& name, const WorkerOptions&
+      defaultOptions);
+    
   private:
     /** \brief The node implementation's name
       */
@@ -503,6 +538,10 @@ namespace nodewrap {
       */
     ros::NodeHandlePtr nodeHandle;
     
+    /** \brief The node implementation's worker manager
+      */
+    WorkerManager workerManager;
+
     /** \brief Start the node(let)
       *
       * This helper method is called from the template wrapper of

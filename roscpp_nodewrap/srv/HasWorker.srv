@@ -1,0 +1,3 @@
+string name   # Name of the requested worker
+---
+bool result   # True, if a worker with the requested name exists

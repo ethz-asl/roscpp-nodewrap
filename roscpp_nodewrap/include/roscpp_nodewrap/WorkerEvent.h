@@ -16,58 +16,37 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file Nodelet.h
-  * \brief Header file providing the Nodelet class interface
+/** \file WorkerEvent.h
+  * \brief Header file providing the WorkerEvent class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_NODELET_H
-#define ROSCPP_NODEWRAP_NODELET_H
+#ifndef ROSCPP_NODEWRAP_WORKER_EVENT_H
+#define ROSCPP_NODEWRAP_WORKER_EVENT_H
 
-#include <nodelet/nodelet.h>
+#include <ros/ros.h>
 
 #include <roscpp_nodewrap/Forwards.h>
-#include <roscpp_nodewrap/Pluginlib.h>
 
 namespace nodewrap {
-  /** \brief ROS nodelet template wrapper
+  /** \brief ROS worker event
     * 
-    * This class is a templated wrapper for native ROS nodelets. Its sole
-    * template parameter usually subclasses the NodeImpl interface.
+    * This class is passed as a parameter to the worker event.
     */
   
-  template <class C> class Nodelet :
-    public nodelet::Nodelet {
+  class WorkerEvent {
   public:
     /** \brief Default constructor
-      * 
-      * \note No constructor overloading is provided to allow for
-      *   construction when dynamically loaded.
-      * 
-      * \see nodelet::Nodelet::Nodelet
       */
-    Nodelet();
+    WorkerEvent();
     
-    /** \brief Destructor
-      */
-    virtual ~Nodelet();
+    /** \brief The expected cycle time of the worker
+      */ 
+    ros::Duration expectedCycleTime;
     
-    /** \brief Virtual override of the ROS nodelet's initialization
-      * 
-      * This method essentially calls C::startup to delegate initialization
-      * to the node implementation.
-      * 
-      * \see nodelet::Nodelet::onInit
-      */
-    void onInit();
-    
-  private:
-  private:
-    /** \brief The nodelet's implementation
-      */
-    NodeImplPtr impl;
+    /** \brief The timing information related to this worker event
+      */ 
+    ros::TimerEvent timing;
   };
 };
-
-#include <roscpp_nodewrap/Nodelet.tpp>
 
 #endif

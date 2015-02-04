@@ -1,0 +1,12 @@
+workers:
+  house_keeping:
+    rate: 10
+    autostart: true
+  nursing:
+    rate: 100
+    autostart: true
+  collecting:
+    rate: 1000
+    autostart: true
+field:
+  flowers: 10000

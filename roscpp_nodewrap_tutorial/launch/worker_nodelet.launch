@@ -1,0 +1,8 @@
+<launch>
+  <node pkg="nodelet" type="nodelet" name="worker" args="manager" output="screen">
+    <param name="num_worker_threads" value="3"/>
+  </node>
+  <node name="maya" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/WorkerNode worker" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
+  </node>
+</launch>

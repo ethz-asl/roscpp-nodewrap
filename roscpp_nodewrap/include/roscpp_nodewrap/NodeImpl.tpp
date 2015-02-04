@@ -146,4 +146,16 @@ template <class S> ros::ServiceClient NodeImpl::serviceClient(const
   return this->getNodeHandle().serviceClient(options);
 }
 
+template <class T> Worker NodeImpl::addWorker(const std::string& name,
+    const ros::Rate& defaultRate, bool(T::*fp)(const WorkerEvent&), bool
+    defaultAutostart) {
+  WorkerOptions defaultOptions;
+  
+  defaultOptions.rate = defaultRate;
+  defaultOptions.callback = boost::bind(fp, (T*)this, _1);
+  defaultOptions.autostart = defaultAutostart;
+  
+  return this->addWorker(name, defaultOptions);
+}
+
 }

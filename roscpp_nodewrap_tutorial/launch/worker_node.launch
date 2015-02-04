@@ -1,0 +1,5 @@
+<launch>
+  <node name="maya" pkg="roscpp_nodewrap_tutorial" type="worker_node" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
+  </node>
+</launch>

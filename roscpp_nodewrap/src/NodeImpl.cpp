@@ -31,7 +31,7 @@ NodeImpl::NodeImpl() :
 }
 
 NodeImpl::~NodeImpl() {  
-  Signal::unbind(SIGINT, &NodeImpl::shutdown, this);  
+  Signal::unbind(SIGINT, &NodeImpl::shutdown, this);
 }
 
 /*****************************************************************************/
@@ -124,11 +124,19 @@ ros::ServiceServer NodeImpl::advertiseService(const std::string& param,
   return this->getNodeHandle().advertiseService(options);
 }
 
-ros::ServiceClient NodeImpl::serviceClient(const std::string& param, const
+ros::ServiceClient NodeImpl::serviceClient(const std::string& name, const
     ros::ServiceClientOptions& defaultOptions) {
-  ros::ServiceClientOptions options = getServiceClientOptions(param,
+  ros::ServiceClientOptions options = getServiceClientOptions(name,
     defaultOptions);
   return this->getNodeHandle().serviceClient(options);
+}
+
+Worker NodeImpl::addWorker(const std::string& name, const WorkerOptions&
+    defaultOptions) {
+  if (!workerManager)
+    workerManager = WorkerManager(shared_from_this());
+  
+  return workerManager.addWorker(name, defaultOptions);
 }
 
 void NodeImpl::start(const std::string& name, bool nodelet, const
@@ -143,8 +151,11 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
 }
 
 void NodeImpl::shutdown() {
-  cleanup();
+  if (workerManager)
+    workerManager.shutdown();
   
+  cleanup();
+
   this->name.clear();
   this->nodelet = false;
   this->nodeHandle.reset();

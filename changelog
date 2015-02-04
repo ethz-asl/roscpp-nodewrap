@@ -1,3 +1,9 @@
+roscpp-nodewrap (0.1-11) unstable; urgency=low
+
+  * First operational version of the worker feature and its tutorial
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 04 Feb 2015 16:03:00 +0100
+
 roscpp-nodewrap (0.1-10) unstable; urgency=low
 
   * Removed code fragments and classes fromf features/advertise_param

@@ -4,4 +4,9 @@
       Example chatter node
     </description>
   </class>
+  <class name="roscpp_nodewrap_tutorial/WorkerNode" type="nodewrap::Nodelet<nodewrap::WorkerNode>" base_class_type="nodelet::Nodelet">
+    <description>
+      Example worker node
+    </description>
+  </class>
 </library>
