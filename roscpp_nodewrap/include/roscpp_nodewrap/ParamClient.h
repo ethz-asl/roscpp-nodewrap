@@ -23,11 +23,14 @@
 #ifndef ROSCPP_NODEWRAP_PARAM_CLIENT_H
 #define ROSCPP_NODEWRAP_PARAM_CLIENT_H
 
-#include <boost/thread/mutex.hpp>
-
 #include <ros/ros.h>
 
-#include <roscpp_nodewrap/ParamTraits.h>
+#include <boost/thread/mutex.hpp>
+
+#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/ParamType.h>
+
+#include <roscpp_nodewrap/GetParamInfo.h>
 
 namespace nodewrap {
   class NodeImpl;
@@ -39,15 +42,20 @@ namespace nodewrap {
     * This class provides access to a node's parameters through a ROS
     * service client interface.
     */
-  
   class ParamClient {
+  friend class ConfigClient;
   friend class NodeImpl;
+  friend class ParamServiceHelper;
+  template <class Spec> friend class ParamServiceHelperT;
   public:
     /** \brief Default constructor
       */
     ParamClient();
     
     /** \brief Copy constructor
+      * 
+      * \param[in] src The source parameter service client which is being
+      *   copied to this parameter service client.
       */
     ParamClient(const ParamClient& src);
     
@@ -55,73 +63,242 @@ namespace nodewrap {
       */
     ~ParamClient();
     
-    const std::string& getNamespace() const;
-    const std::string& getKey() const;
+    /** \brief Access the name of the parameter service this parameter
+      *   service client connects to
+      */
+    std::string getService() const;
     
-    void setValue(const XmlRpc::XmlRpcValue& value);
-    XmlRpc::XmlRpcValue getValue() const;
-    XmlRpc::XmlRpcValue getValue(const XmlRpc::XmlRpcValue&
-      defaultValue) const;
+    /** \brief Query the ROS name of the parameter advertised by the
+      *   connected parameter service
+      */
+    std::string getParamName();
     
+    /** \brief Modify the value of the parameter advertised by the
+      *   connected parameter service
+      */
+    template <typename T> bool setParamValue(const T& value);
+    
+    /** \brief Query the value of the parameter advertised by the
+      *   connected parameter service
+      */
+    template <typename T> bool getParamValue(T& value);
+    
+    /** \brief Query if this parameter service client is valid
+      */
+    bool isValid() const;
+    
+    /** \brief Query if this parameter service client uses persistent
+      *   connections
+      */
+    bool isPersistent() const;
+    
+    /** \brief Query if the parameter service connected to by this
+      *   parameter service client exist
+      */
+    bool exists() const;
+    
+    /** \brief Wait for the parameter service connected to by this
+      *   parameter service client to become available
+      */
+    bool waitForExistence(ros::Duration timeout = ros::Duration(-1));
+      
+    /** \brief Perform shutdown of the parameter service client
+      */
     void shutdown();
-
+      
+    /** \brief Void pointer conversion
+      */
     inline operator void*() const {
       return (impl && impl->isValid()) ? (void*)1 : (void*)0;
     };
     
+    /** \brief Lesser comparison operator
+      */
     inline bool operator<(const ParamClient& paramClient) const {
       return (impl < paramClient.impl);
     };
-
+    
+    /** \brief Equality comparison operator
+      */
     inline bool operator==(const ParamClient& paramClient) const {
       return (impl == paramClient.impl);
     };
     
+    /** \brief Inequality comparison operator
+      */
     inline bool operator!=(const ParamClient& paramClient) const {
       return (impl != paramClient.impl);
     };
     
   private:
-    /** \brief Private constructors, with full range of options
+    /** \brief ROS parameter service client implementation
+      * 
+      * This class provides the private implementation of the parameter
+      * service client.
       */
-    ParamClient(const std::string& ns, const std::string& key,
-      bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    
-    void init(const std::string& key, bool cached, const
-      boost::shared_ptr<NodeImpl>& nodeImpl);
-    
     class Impl {
     public:
-      Impl(const std::string& key, bool cached, const
-        boost::shared_ptr<NodeImpl>& nodeImpl);
-      ~Impl();
+      /** \brief Constructor
+        */
+      Impl(const ParamClientOptions& options, const NodeImplPtr& nodeImpl);
       
+      /** \brief Destructor
+        */
+      virtual ~Impl();
+      
+      /** \brief Query the ROS name of the parameter advertised by the
+        *   connected parameter service (implementation)
+        */
+      std::string getParamName();
+    
+      /** \brief Query if this parameter service client is valid
+        */
       bool isValid() const;
       
-      ros::ServiceClient subscribe(ros::ServiceClientOptions& options);
-      void unsubscribe();
+      /** \brief Create the service clients of this parameter service client
+        */
+      ros::ServiceClient client(const ros::ServiceClientOptions& options);
       
-//       bool getParamName(GetParamName::Request& request,
-//         GetParamName::Response& response);
-//       bool getParamInfo(GetParamInfo::Request& request,
-//         GetParamInfo::Response& response);
+      /** \brief Disconnect from the parameter service connected to by this
+        *   parameter service client
+        */
+      void disconnect();
       
-      std::string ns;
-      std::string key;
-      bool cached;
+      /** \brief Service client for querying the value of the parameter
+        *   advertised by the connected parameter service
+        */ 
+      ros::ServiceClient getParamValueClient;
       
-//       ros::ServiceClient getParamNameClient;
-//       ros::ServiceClient setParamValueClient;
-//       ros::ServiceClient getParamValueClient;
-//       ros::ServiceClient getParamInfoClient;
+      /** \brief Service client for modifying the value of the parameter
+        *   advertised by the connected parameter service
+        */ 
+      ros::ServiceClient setParamValueClient;
       
-      boost::shared_ptr<NodeImpl> nodeImpl;
-      boost::mutex mutex;
+      /** \brief Service client for querying information about the parameter
+        *   advertised by the connected parameter service
+        */ 
+      ros::ServiceClient getParamInfoClient;
+      
+      /** \brief The name of the parameter service connected to by this
+        *   parameter service client
+        */ 
+      std::string service;
+      
+      /** \brief The type of the parameter advertised by the connected
+        *   parameter service
+        */ 
+      ParamType type;
+      
+      /** \brief The parameter service client's mutex
+        */ 
+      mutable boost::mutex mutex;
+      
+      /** \brief The node implementation owning this parameter service
+        *   client
+        */ 
+      NodeImplPtr nodeImpl;
     };
+    
+    /** \brief ROS parameter service client implementation (templated version)
+      * 
+      * This class provides the private templated implementation of the
+      * parameter service client.
+      */
+    template <class Spec> class ImplT :
+      public Impl {
+    public:
+      /** \brief Definition of the parameter value type derived from the
+        *   parameter specifications
+        */
+      typedef typename Spec::Value Value;
+      
+      /** \brief Definition of the service request type derived from the
+        *   parameter specifications for querying the value of the parameter
+        *   advertised by the connected parameter service
+        */
+      typedef typename Spec::GetValueServiceRequest GetValueServiceRequest;
+      
+      /** \brief Definition of the service response type derived from the
+        *   parameter specifications for querying the value of the parameter
+        *   advertised by the connected parameter service
+        */
+      typedef typename Spec::GetValueServiceResponse GetValueServiceResponse;
+      
+      /** \brief Definition of the service request type derived from the
+        *   parameter specifications for modifying the value of the parameter
+        *   advertised by the connected parameter service
+        */
+      typedef typename Spec::SetValueServiceRequest SetValueServiceRequest;
+      
+      /** \brief Definition of the service response type derived from the
+        *   parameter specifications for modifying the value of the parameter
+        *   advertised by the connected parameter service
+        */
+      typedef typename Spec::SetValueServiceResponse SetValueServiceResponse;
+    
+      /** \brief Definition of the function type derived from the parameter
+        *   specification for assigning the parameter's value from a service
+        *   response
+        */
+      typedef typename Spec::FromResponse FromResponse;
+      
+      /** \brief Definition of the function type derived from the parameter
+        *   specification for assigning the parameter's value to a service
+        *   request
+        */
+      typedef typename Spec::ToRequest ToRequest;
+      
+      /** \brief Constructor
+        */
+      ImplT(const FromResponse& fromResponse, const ToRequest& toRequest,
+        const ParamClientOptions& options, const NodeImplPtr& nodeImpl);
+      
+      /** \brief Destructor
+        */
+      virtual ~ImplT();
+      
+      /** \brief Query the value of the parameter advertised by the
+        *   connected parameter service
+        */ 
+      bool getParamValue(Value& value);
+      
+      /** \brief Modify the value of the parameter advertised by the
+        *   connected parameter service
+        */
+      bool setParamValue(const Value& value);
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by the connected parameter service from a service
+        *   response
+        */
+      FromResponse fromResponse;
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by the connected parameter service to a service
+        *   request
+        */
+      ToRequest toRequest;
+    };
+    
+    /** \brief Declaration of the parameter service client implementation
+      *   pointer type
+      */
     typedef boost::shared_ptr<Impl> ImplPtr;
     
+    /** \brief Declaration of the parameter service client implementation
+      *   weak pointer type
+      */
+    typedef boost::weak_ptr<Impl> ImplWPtr;
+
+    /** \brief The  parameter service client's implementation
+      */
     ImplPtr impl;
-  };
+    
+    /** \brief Constructor (private version)
+      */
+    ParamClient(const ParamClientOptions& options, const NodeImplPtr&
+      nodeImpl);
+  };        
 };
 
 #include <roscpp_nodewrap/ParamClient.tpp>

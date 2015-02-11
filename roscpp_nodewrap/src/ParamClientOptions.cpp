@@ -25,19 +25,7 @@ namespace nodewrap {
 /*****************************************************************************/
 
 ParamClientOptions::ParamClientOptions() :
-  callbackQueue(0) {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void ParamClientOptions::init(const std::string& key, const
-    XmlRpc::XmlRpcValue& value, const boost::function<bool(const
-    XmlRpc::XmlRpcValue&)>& callback, bool cached) {
-  this->key = key;
-  this->value = value;
-  this->cached = cached;
+  persistent(false) {
 }
 
 }

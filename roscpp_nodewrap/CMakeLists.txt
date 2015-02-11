@@ -23,20 +23,20 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
   DIRECTORY srv
   FILES
-    ListParams.srv
-    HasParam.srv
-    GetParamName.srv
     GetParamInfo.srv
-    GetParamValueXml.srv
-    SetParamValueXml.srv
-    GetParamValueString.srv
-    SetParamValueString.srv
-    GetParamValueDouble.srv
-    SetParamValueDouble.srv
-    GetParamValueInt.srv
-    SetParamValueInt.srv
     GetParamValueBool.srv
+    GetParamValueDouble.srv
+    GetParamValueInt.srv
+    GetParamValueString.srv
+    GetParamValueXml.srv
+    FindParam.srv
+    HasParam.srv
+    ListParams.srv
     SetParamValueBool.srv
+    SetParamValueDouble.srv
+    SetParamValueInt.srv
+    SetParamValueString.srv
+    SetParamValueXml.srv
 )
 
 ## Generate services
@@ -72,13 +72,19 @@ include_directories(
 
 ## Declare a cpp library
 add_library(roscpp_nodewrap
-  src/AdvertiseParamOptions.cpp
+  src/ConfigClient.cpp
   src/ConfigServer.cpp
+  src/Exceptions.cpp
   src/NodeImpl.cpp
   src/NodeInterface.cpp
+  src/Param.cpp
+#   src/ParamCallbackHelper.cpp
   src/ParamClient.cpp
   src/ParamClientOptions.cpp
   src/ParamServer.cpp
+  src/ParamServerOptions.cpp
+  src/ParamServiceHelper.cpp
+  src/ParamType.cpp
   src/Signal.cpp
 )
 add_dependencies(roscpp_nodewrap roscpp_nodewrap_generate_messages_cpp)

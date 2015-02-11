@@ -18,14 +18,14 @@
 
 #include <roscpp_nodewrap/Node.h>
 
-#include "roscpp_nodewrap_tutorial/ParamListenerNode.h"
+#include "roscpp_nodewrap_tutorial/ParamClientNode.h"
 
 using namespace nodewrap;
 
 int main(int argc, char** argv) {
-  ros::init(argc, argv, "param_listener_node");
+  ros::init(argc, argv, "param_client_node");
   
-  Node<ParamListenerNode> node;
+  Node<ParamClientNode> node;
 
   ros::spin();
     

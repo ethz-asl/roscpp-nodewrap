@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/AdvertiseParamOptions.h"
+#include "roscpp_nodewrap/Exceptions.h"
 
 namespace nodewrap {
 
@@ -24,20 +24,9 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-AdvertiseParamOptions::AdvertiseParamOptions() :
-  callbackQueue(0) {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void AdvertiseParamOptions::init(const std::string& key, const
-    XmlRpc::XmlRpcValue& value, const boost::function<bool(const
-    XmlRpc::XmlRpcValue&)>& callback, bool cached) {
-  this->key = key;
-  this->value = value;
-  this->cached = cached;
+InvalidParamKeyException::InvalidParamKeyException(const std::string& key,
+    const std::string& reason) :
+  Exception("Invalid parameter key ["+key+"]: "+reason) {
 }
 
 }

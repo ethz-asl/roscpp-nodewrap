@@ -16,48 +16,68 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file ParamListenerNode.h
-  * \brief Header file providing the example ParamListenerNode class interface
+/** \file ParamServerNode.h
+  * \brief Header file providing the example ParamServerNode class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_TUTORIAL_PARAMLISTENERNODE_HPP
-#define ROSCPP_NODEWRAP_TUTORIAL_PARAMLISTENERNODE_HPP
+#ifndef ROSCPP_NODEWRAP_TUTORIAL_PARAM_SERVER_NODE_HPP
+#define ROSCPP_NODEWRAP_TUTORIAL_PARAM_SERVER_NODE_HPP
 
 #include <roscpp_nodewrap/NodeImpl.h>
+#include <roscpp_nodewrap/Nodelet.h>
 
 namespace nodewrap {
-  /** \brief Example parameter listener node
+  /** \brief Example parameter server node
     * 
-    * This parameter listener node demonstrates the concept of using
-    * parameter service clients for listening to parameter updates.
+    * This parameter server node demonstrates the concept of using
+    * parameter service server for advertising a parameter.
     */
-  
-  class ParamListenerNode :
+  class ParamServerNode :
     public NodeImpl {
   public:
     /** \brief Default constructor
       * 
-      * The constructor of the parameter listener node is left empty.
+      * The constructor of the parameter server node is left empty.
       */
-    ParamListenerNode();
+    ParamServerNode();
     
     /** \brief Destructor
       * 
-      * The destructor of the parameter listener node is left empty.
+      * The destructor of the parameter server node is left empty.
       */
-    virtual ~ParamListenerNode();
-    
+    virtual ~ParamServerNode();
+  
   protected:
-    /** \brief Perform parameter listener node initialization
+    /** \brief The parameter service server advertising the XML/RPC parameter
+      */
+    ParamServer xmlServer;
+    
+    /** \brief The parameter service server advertising the string parameter
+      */
+    ParamServer stringServer;
+    
+    /** \brief The parameter service server advertising the double parameter
+      */
+    ParamServer doubleServer;
+    
+    /** \brief The parameter service server advertising the integer parameter
+      */
+    ParamServer integerServer;
+    
+    /** \brief The parameter service server advertising the boolean parameter
+      */
+    ParamServer booleanServer;
+    
+    /** \brief Perform parameter server node initialization
       * 
-      * The initialization of the parameter listener node involves subscribing
-      * to changes of the targeted parameter and registering a callback handler
-      * to be executed in case of an update.
+      * The initialization of the parameter server node involves advertising
+      * the targeted parameter.
       *
       * This is the initializer's implementation:
       * 
         \verbatim
-        void ParamListenerNode::init() {
+        void ParamServerNode::init() {
+          NODEWRAP_INFO("I think you ought to know I'm feeling very depressed.");
         }
         \endverbatim
       * 
@@ -65,14 +85,14 @@ namespace nodewrap {
       */
     void init();
     
-    /** \brief Perform parameter listener node cleanup
+    /** \brief Perform parameter server node cleanup
       * 
-      * Cleanup of the parameter listener node is just bogus. This is the
+      * Cleanup of the parameter server node is just bogus. This is the
       * implementation:
       * 
         \verbatim
-        void ParamListenerNode::cleanup() {
-          NODEWRAP_INFO("Good bye!");
+        void ParamServerNode::cleanup() {
+          NODEWRAP_INFO("I told you this would all end in tears.");
         }
         \endverbatim
       * 
@@ -80,10 +100,6 @@ namespace nodewrap {
       * \see NodeImpl::cleanup
       */
     void cleanup();
-        
-    void paramUpdate(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue& result);
-    
-    void paramUpdate(const std::string& name);
   };
 };
 

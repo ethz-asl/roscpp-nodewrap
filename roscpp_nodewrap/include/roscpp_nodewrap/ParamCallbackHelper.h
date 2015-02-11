@@ -23,138 +23,84 @@
 #ifndef ROSCPP_NODEWRAP_PARAM_CALLBACK_HELPER_H
 #define ROSCPP_NODEWRAP_PARAM_CALLBACK_HELPER_H
 
-#include <XmlRpcValue.h>
+#include <ros/ros.h>
 
-#include <boost/type_traits/add_const.hpp>
-#include <boost/type_traits/remove_const.hpp>
+#include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
-  /** \brief ROS parameter callback helper parameters
-    */
-  
-  class ParamCallbackHelperCallParams {
-  public:
-    boost::shared_ptr<std::string> key;
-    boost::shared_ptr<XmlRpc::XmlRpcValue> value;
-  };
-
-  /** \brief ROS parameter-specific parameters
-    */
-  
-  template <typename T> class ParamSpecCallParams {
-  public:
-    boost::shared_ptr<std::string> key;
-    boost::shared_ptr<T> value;
-  };
-  
-  /** \brief ROS parameter event
-    */
-  template <typename T> class ParameterEvent {
-  public:
-    typedef std::string KeyType;
-    typedef T ValueType;
-    typedef boost::shared_ptr<KeyType> KeyPtr;
-    typedef boost::shared_ptr<ValueType> ValuePtr;
-    typedef boost::function<bool(ParameterEvent<ValueType>&)>
-      CallbackType;
-
-    static void call(const CallbackType& callback,
-        ParamSpecCallParams<ValueType>& params) {
-      ParameterEvent<ValueType> event(params.key, params.value);
-      callback(event);
-    };
-
-    ParameterEvent(const KeyPtr& key, const ValuePtr& value) :
-      key(key),
-      value(value) {
-    };
-
-    /** \brief Returns a const-reference to the request
-      */
-    const KeyType& getKey() const {
-      return *key;
-    };
-    
-    /** \brief Returns a non-const reference to the response
-      */
-    const ValueType& getValue() const {
-      return *value;
-    };
-  private:
-    KeyPtr key;
-    ValuePtr value;
-  };
-  
-  template <typename T> class ParameterSpec {
-  public:
-    typedef std::string KeyType;
-    typedef T ValueType;
-    typedef boost::shared_ptr<KeyType> KeyPtr;
-    typedef boost::shared_ptr<ValueType> ValuePtr;
-    typedef boost::function<void(const ValueType&)> CallbackType;
-
-    static bool call(const CallbackType& callback,
-        ParamSpecCallParams<ValueType>& params) {
-      return callback(*params.key, *params.value);
-    };
-  };
-  
   /** \brief ROS parameter callback helper
+    * 
+    * This class encapsulates the callback functions which are required
+    * to operate the parameter services.
     */
-  
   class ParamCallbackHelper {
   public:
-    virtual ~ParamCallbackHelper() {
-    };
+    /** \brief Constructor
+      */ 
+    ParamCallbackHelper();
     
-    virtual void call(ParamCallbackHelperCallParams& params) = 0;
+    /** \brief Destructor
+      */ 
+    virtual ~ParamCallbackHelper();
   };
   
-  typedef boost::shared_ptr<ParamCallbackHelper> ParamCallbackHelperPtr;
-  
-  /** \brief ROS parameter callback helper implementation
-    */  
-  
+  /** \brief ROS parameter callback helper (templated version)
+    */    
   template <typename Spec> class ParamCallbackHelperT :
     public ParamCallbackHelper {
   public:
-    typedef typename Spec::KeyType KeyType;
-    typedef typename Spec::ValueType ValueType;
-    typedef typename Spec::KeyPtr KeyPtr;
-    typedef typename Spec::ValuePtr ValuePtr;
-    typedef typename Spec::CallbackType Callback;
-    typedef boost::function<ValuePtr()> ValueCreateFunction;
+    /** \brief Definitions of the parameter value type derived from the
+      *   parameter specifications
+      */
+    typedef typename Spec::Value Value;
     
-    typedef typename boost::add_const<ValueType>::type ConstType;
-    typedef typename boost::remove_const<ValueType>::type NonConstType;
+    /** \brief Definition of the set/get service request/response types
+      *   derived from the parameter specifications
+      */
+    typedef typename Spec::GetValueServiceRequest GetValueServiceRequest;
+    typedef typename Spec::GetValueServiceResponse GetValueServiceResponse;
+    typedef typename Spec::SetValueServiceRequest SetValueServiceRequest;
+    typedef typename Spec::SetValueServiceResponse SetValueServiceReponse;
     
-//     ParamCallbackHelperT(const Callback& callback, const
-//         ValueCreateFunction& createValue = static_cast<ValuePtr(*)()>(
-//         defaultValueCreateFunction<ValueType>)) :
-//       callback(callback),
-//       createValue(createValue) {
-//     };
-// 
-//     void call(ParamCallbackHelperCallParams& params) {
-//       namespace ser = serialization;
-//       RequestPtr req(create_req_());
-//       ResponsePtr res(create_res_());
-// 
-//       ser::deserializeMessage(params.request, *req);
-// 
-//       ParamSpecCallParams<ValueType> callParams;
-//       call_params.request = req;
-//       call_params.response = res;
-//       call_params.connection_header = params.connection_header;
-//       
-//       Spec::call(callback, callParams);
-//       params.response = ser::serializeServiceResponse(ok, *res);
-//     };
-
+    /** \brief Definition of the callback function types derived from
+      *   the parameter specifications
+      */
+    typedef typename Spec::FromXmlRpcValueCallback FromXmlRpcValueCallback;
+    typedef typename Spec::ToXmlRpcValueCallback ToXmlRpcValueCallback;
+    typedef typename Spec::FromRequestCallback FromRequestCallback;
+    typedef typename Spec::ToResponseCallback ToResponseCallback;
+    
+    /** \brief Constructor
+      */ 
+    ParamCallbackHelperT(
+      const FromXmlRpcValueCallback& fromXmlRpcValueCallback,
+      const ToXmlRpcValueCallback& toXmlRpcValueCallback,
+      const FromRequestCallback& fromRequestCallback,
+      const ToResponseCallback& toResponseCallback);
+    
   private:
-    Callback callback;
-    ValueCreateFunction createValue;
+    /** \brief The callback function for assigning the parameter's value
+      *   from an XML/RPC value
+      */
+    FromXmlRpcValueCallback fromXmlRpcValueCallback;
+    
+    /** \brief The callback function for assigning the parameter's value
+      *   to an XML/RPC value
+      */
+    ToXmlRpcValueCallback fromXmlRpcValueCallback;
+
+    /** \brief The callback function for assigning the parameter's value
+      *   from a service request
+      */
+    FromRequestCallback fromRequestCallback;
+    
+    /** \brief The callback function for assigning the parameter's value
+      *   to a service response
+      */
+    ToResponseCallback toResponseCallback;
   };
 };
+
+#include <roscpp_nodewrap/ParamCallbackHelper.tpp>
 
 #endif

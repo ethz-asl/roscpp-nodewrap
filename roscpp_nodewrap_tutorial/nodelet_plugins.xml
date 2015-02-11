@@ -4,4 +4,14 @@
       Example chatter node
     </description>
   </class>
+  <class name="roscpp_nodewrap_tutorial/ParamClientNode" type="nodewrap::Nodelet<nodewrap::ParamClientNode>" base_class_type="nodelet::Nodelet">
+    <description>
+      Example parameter client node
+    </description>
+  </class>
+  <class name="roscpp_nodewrap_tutorial/ParamServerNode" type="nodewrap::Nodelet<nodewrap::ParamServerNode>" base_class_type="nodelet::Nodelet">
+    <description>
+      Example parameter server node
+    </description>
+  </class>
 </library>

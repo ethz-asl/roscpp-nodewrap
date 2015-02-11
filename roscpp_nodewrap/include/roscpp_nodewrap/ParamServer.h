@@ -23,13 +23,14 @@
 #ifndef ROSCPP_NODEWRAP_PARAM_SERVER_H
 #define ROSCPP_NODEWRAP_PARAM_SERVER_H
 
-#include <boost/thread/mutex.hpp>
-
 #include <ros/ros.h>
 
-#include <roscpp_nodewrap/GetParamName.h>
+#include <boost/thread/mutex.hpp>
+
+#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/ParamType.h>
+
 #include <roscpp_nodewrap/GetParamInfo.h>
-#include <roscpp_nodewrap/ParamTraits.h>
 
 namespace nodewrap {
   class NodeImpl;
@@ -41,15 +42,19 @@ namespace nodewrap {
     * This class provides access to a node's parameters through a ROS
     * service server interface.
     */
-  
   class ParamServer {
-  friend class NodeImpl;
+  friend class ConfigServer;
+  friend class ParamServiceHelper;
+  template <class Spec> friend class ParamServiceHelperT;
   public:
     /** \brief Default constructor
       */
     ParamServer();
     
     /** \brief Copy constructor
+      * 
+      * \param[in] src The source parameter service server which is being
+      *   copied to this parameter service server.
       */
     ParamServer(const ParamServer& src);
     
@@ -57,130 +62,266 @@ namespace nodewrap {
       */
     ~ParamServer();
     
-    std::string getKey() const;
+    /** \brief Access the name of the parameter service advertised by this
+      *   parameter service server
+      */
+    std::string getService() const;
     
-    template <typename P> void setValue(const P& value);
-    template <typename P> P getValue(const P& defaultValue) const;
-    
+    /** \brief Perform shutdown of the parameter service server
+      */
     void shutdown();
-
+      
+    /** \brief Void pointer conversion
+      */
     inline operator void*() const {
       return (impl && impl->isValid()) ? (void*)1 : (void*)0;
     };
     
+    /** \brief Lesser comparison operator
+      */
     inline bool operator<(const ParamServer& paramServer) const {
       return (impl < paramServer.impl);
     };
-
+    
+    /** \brief Equality comparison operator
+      */
     inline bool operator==(const ParamServer& paramServer) const {
       return (impl == paramServer.impl);
     };
     
+    /** \brief Inequality comparison operator
+      */
     inline bool operator!=(const ParamServer& paramServer) const {
       return (impl != paramServer.impl);
     };
     
   private:
-    /** \brief Private constructors, with full range of options
+    /** \brief ROS parameter service server implementation
+      * 
+      * This class provides the private implementation of the parameter
+      * service server.
       */
-    ParamServer(const std::string& key, const XmlRpc::XmlRpcValue& value,
-      bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    template <typename P> ParamServer(const std::string& key, const P&
-      value, bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    template <typename P, bool Cached> ParamServer(const std::string& key,
-      const P& value, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    
-    template <typename P> void init(const std::string& key, const P& value,
-      bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    template <typename P, bool Cached> void init(const std::string& key,
-      const P& value, const boost::shared_ptr<NodeImpl>& nodeImpl);
-    
     class Impl {
     public:
-      Impl(const std::string& key, XmlRpc::XmlRpcValue::Type type,
-        bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl);
-      ~Impl();
+      /** \brief Constructor
+        */
+      Impl(const ParamServerOptions& options, const NodeImplPtr& nodeImpl);
       
-      std::string getNamespace() const;
+      /** \brief Destructor
+        */
+      virtual ~Impl();
+      
+      /** \brief Query the XML/RPC value of the parameter advertised by
+        *   this parameter service server
+        */ 
+      bool getParamXmlRpcValue(XmlRpc::XmlRpcValue& value);
+      
+      /** \brief Modify the XML/RPC value of the parameter advertised by
+        *   this parameter service server
+        */ 
+      bool setParamXmlRpcValue(const XmlRpc::XmlRpcValue& value);
+      
+      /** \brief Query if this parameter service server is valid
+        */
       bool isValid() const;
       
-      ros::ServiceServer advertise(ros::AdvertiseServiceOptions& options);
+      /** \brief Advertise the parameter service server's services
+        */
+      ros::ServiceServer advertise(const ros::AdvertiseServiceOptions&
+        options);
+      
+      /** \brief Unadvertise the parameter service server's services
+        */
       void unadvertise();
       
-      bool getParamName(GetParamName::Request& request,
-        GetParamName::Response& response);
-      bool getParamInfo(GetParamInfo::Request& request,
+      /** \brief Service callback for querying information about the parameter
+        *   advertised by this parameter service server
+        */ 
+      bool getParamInfoCallback(GetParamInfo::Request& request,
         GetParamInfo::Response& response);
       
-      std::string key;
-      XmlRpc::XmlRpcValue::Type type;
-      bool cached;
-      
-      ros::ServiceServer getParamNameServer;
+      /** \brief Service server for querying the value of the parameter
+        *   advertised by this parameter service server
+        */ 
       ros::ServiceServer getParamValueServer;
+      
+      /** \brief Service server for modifying the value of the parameter
+        *   advertised by this parameter service server
+        */ 
       ros::ServiceServer setParamValueServer;
+      
+      /** \brief Service server for querying information about the parameter
+        *   advertised by this parameter service server
+        */ 
       ros::ServiceServer getParamInfoServer;
       
-      boost::shared_ptr<NodeImpl> nodeImpl;
-      boost::mutex mutex;
+      /** \brief The name of the parameter service advertised by this
+        *   parameter service server
+        */ 
+      std::string service;
+      
+      /** \brief The ROS name of the parameter advertised by this parameter
+        *   service server
+        */ 
+      std::string name;
+      
+      /** \brief The type of the parameter advertised by this parameter
+        *   service server
+        */ 
+      ParamType type;
+      
+      /** \brief True, if the cached parameter value is provided by this
+        *   parameter service server
+        */ 
+      bool cached;
+      
+      /** \brief The parameter service server's mutex
+        */ 
+      mutable boost::mutex mutex;
+      
+      /** \brief The node implementation owning this parameter service
+        *   server
+        */ 
+      NodeImplPtr nodeImpl;
     };
-    typedef boost::shared_ptr<Impl> ImplPtr;
     
-    ImplPtr impl;
-    
-    template <typename P> class ImplT :
+    /** \brief ROS parameter service server implementation (templated version)
+      * 
+      * This class provides the private templated implementation of the
+      * parameter service server.
+      */
+    template <class Spec> class ImplT :
       public Impl {
     public:
-      typedef typename ParamTraits<P>::SetParamValue SetValueService;
-      typedef typename ParamTraits<P>::GetParamValue GetValueService;
+      /** \brief Definition of the parameter value type derived from the
+        *   parameter specifications
+        */
+      typedef typename Spec::Value Value;
       
-      typedef boost::function<bool(typename SetValueService::Request&,
-        typename SetValueService::Response&)> SetValueCallback;
-      typedef boost::function<bool(typename GetValueService::Request&,
-        typename GetValueService::Response&)> GetValueCallback;
+      /** \brief Definition of the service request type derived from the
+        *   parameter specifications for querying the value of the parameter
+        *   advertised by this parameter service server
+        */
+      typedef typename Spec::GetValueServiceRequest GetValueServiceRequest;
       
-      ImplT(const std::string& key, bool cached, const SetValueCallback&
-        setValueCallback, const GetValueCallback& getValueCallback, const
-        boost::shared_ptr<NodeImpl>& nodeImpl);
-      ~ImplT();
+      /** \brief Definition of the service response type derived from the
+        *   parameter specifications for querying the value of the parameter
+        *   advertised by this parameter service server
+        */
+      typedef typename Spec::GetValueServiceResponse GetValueServiceResponse;
+      
+      /** \brief Definition of the service request type derived from the
+        *   parameter specifications for modifying the value of the parameter
+        *   advertised by this parameter service server
+        */
+      typedef typename Spec::SetValueServiceRequest SetValueServiceRequest;
+      
+      /** \brief Definition of the service response type derived from the
+        *   parameter specifications for modifying the value of the parameter
+        *   advertised by this parameter service server
+        */
+      typedef typename Spec::SetValueServiceResponse SetValueServiceResponse;
+    
+      /** \brief Definition of the function type for assigning the parameter's
+        *   value from an XML/RPC value
+        */
+      typedef typename Spec::FromXmlRpcValue FromXmlRpcValue;
+        
+      /** \brief Definition of the function type derived from the parameter
+        *   specification for assigning the parameter's value to an XML/RPC
+        *   value
+        */
+      typedef typename Spec::ToXmlRpcValue ToXmlRpcValue;
+        
+      /** \brief Definition of the function type derived from the parameter
+        *   specification for assigning the parameter's value from a service
+        *   request
+        */
+      typedef typename Spec::FromRequest FromRequest;
+      
+      /** \brief Definition of the function type derived from the parameter
+        *   specification for assigning the parameter's value to a service
+        *   response
+        */
+      typedef typename Spec::ToResponse ToResponse;
+      
+      /** \brief Constructor
+        */
+      ImplT(const FromXmlRpcValue& fromXmlRpcValue, const ToXmlRpcValue&
+        toXmlRpcValue, const FromRequest& fromRequest, const ToResponse&
+        toResponse, const ParamServerOptions& options, const NodeImplPtr&
+        nodeImpl);
+      
+      /** \brief Destructor
+        */
+      virtual ~ImplT();
+      
+      /** \brief Query the value of the parameter advertised by this
+        *   parameter service server
+        */ 
+      bool getParamValue(Value& value);
+      
+      /** \brief Modify the value of the parameter advertised by this
+        *   parameter service server
+        */
+      bool setParamValue(const Value& value);
+      
+      /** \brief Service callback for querying the value of the parameter
+        *   advertised by this parameter service server
+        */ 
+      bool getParamValueCallback(GetValueServiceRequest& request, 
+        GetValueServiceResponse& response);
+      
+      /** \brief Service callback for modifying the value of the parameter
+        *   advertised by this parameter service server
+        */ 
+      bool setParamValueCallback(SetValueServiceRequest& request,
+        SetValueServiceResponse& response);
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by this parameter service server from an XML/RPC
+        *   value
+        */
+      FromXmlRpcValue fromXmlRpcValue;
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by this parameter service server to an XML/RPC
+        *   value
+        */
+      ToXmlRpcValue toXmlRpcValue;
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by this parameter service server from a service
+        *   request
+        */
+      FromRequest fromRequest;
+      
+      /** \brief The function for assigning the value of the parameter
+        *   advertised by this parameter service server to a service
+        *   response
+        */
+      ToResponse toResponse;
     };
     
-    template <typename P, bool Cached> class ImplT2;
+    /** \brief Declaration of the parameter service server implementation
+      *   pointer type
+      */
+    typedef boost::shared_ptr<Impl> ImplPtr;
     
-    template <typename P> class ImplT2<P, false> :
-      public ImplT<P> {
-    public:
-      typedef typename ImplT<P>::SetValueService SetValueService;
-      typedef typename ImplT<P>::GetValueService GetValueService;
-      
-      ImplT2(const std::string& key, const P& value, const
-        boost::shared_ptr<NodeImpl>& nodeImpl);
-      ~ImplT2();
-      
-      bool setParamValue(typename SetValueService::Request& request,
-        typename SetValueService::Response& response);
-      bool getParamValue(typename GetValueService::Request& request,
-        typename GetValueService::Response& response);
-    };
+    /** \brief Declaration of the parameter service server implementation
+      *   weak pointer type
+      */
+    typedef boost::weak_ptr<Impl> ImplWPtr;
+
+    /** \brief The  parameter service server's implementation
+      */
+    ImplPtr impl;
     
-    template <typename P> class ImplT2<P, true> :
-      public ImplT<P> {
-    public:
-      typedef typename ImplT<P>::SetValueService SetValueService;
-      typedef typename ImplT<P>::GetValueService GetValueService;
-      
-      ImplT2(const std::string& key, const P& value, const
-        boost::shared_ptr<NodeImpl>& nodeImpl);
-      ~ImplT2();
-      
-      bool setParamValue(typename SetValueService::Request& request,
-        typename SetValueService::Response& response);
-      bool getParamValue(typename GetValueService::Request& request,
-        typename GetValueService::Response& response);
-      
-      P value;
-    };
-  };
+    /** \brief Constructor (private version)
+      */
+    ParamServer(const ParamServerOptions& options, const NodeImplPtr&
+      nodeImpl);
+  };        
 };
 
 #include <roscpp_nodewrap/ParamServer.tpp>

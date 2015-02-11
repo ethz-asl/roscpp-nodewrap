@@ -36,7 +36,6 @@ namespace nodewrap {
     * This class provides a static interface to bind the cleanup methods of
     * multiple ROS node implementations to a common process signal handler.
     */
-  
   class Signal {
   public:
     typedef boost::function<void()> Handler;

@@ -16,18 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/Node.h>
+#include "roscpp_nodewrap/ParamCallbackHelper.h"
 
-#include "roscpp_nodewrap_tutorial/ParamAdvertiserNode.h"
+namespace nodewrap {
 
-using namespace nodewrap;
+/*****************************************************************************/
+/* Constructors and Destructor                                               */
+/*****************************************************************************/
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "param_advertiser_node");
-  
-  Node<ParamAdvertiserNode> node;
+ParamCallbackHelper::ParamCallbackHelper() {
+}
 
-  ros::spin();
-    
-  return 0;
+ParamCallbackHelper::~ParamCallbackHelper() {
+}
+
 }

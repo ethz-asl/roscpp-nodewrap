@@ -31,11 +31,11 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
-#include <roscpp_nodewrap/AdvertiseParamOptions.h>
 #include <roscpp_nodewrap/ConfigServer.h>
 #include <roscpp_nodewrap/ParamClient.h>
 #include <roscpp_nodewrap/ParamClientOptions.h>
 #include <roscpp_nodewrap/ParamServer.h>
+#include <roscpp_nodewrap/ParamServerOptions.h>
 
 namespace nodewrap {
   /** \brief Abstract class implementation of a ROS node(let)
@@ -45,13 +45,13 @@ namespace nodewrap {
     * which are intended to become instantiable as both, ROS nodes and ROS
     * nodelets.
     */
-
   class NodeImpl :
     public virtual NodeInterface,
     public boost::enable_shared_from_this<NodeImpl> {
+  friend class ConfigClient;
+  friend class ConfigServer;
   template <class C> friend class Node;
   template <class C> friend class Nodelet;
-  friend class ConfigServer;
   friend class ParamClient;
   friend class ParamServer;
   public:
@@ -499,14 +499,162 @@ namespace nodewrap {
     ros::ServiceClient serviceClient(const std::string& param, const
       ros::ServiceClientOptions& defaultOptions);
     
-    /** \brief Advertise a parameter
+    /** \brief Advertise a parameter service, templated on the parameter type
+      *   and with standard options
+      * 
+      * \param[in] key The key of the parameter to be advertised.
+      * \param[in] service The parameter service name to advertise on. If
+      *   empty, the provided parameter key will instead be used to construct
+      *   the service name as params/key.
+      * \param[in] name The name of the parameter under which it can be
+      *   accessed through rosparam. If empty, the provided parameter key
+      *   will instead be assumed to also correspond to the parameter name,
+      *   in which case it would be interpreted as a relative graph resource
+      *   name.
+      * \param[in] cached If true, the parameter service server will provide
+      *   the cached parameter value.
+      * \return On success, a parameter service server that, when all copies
+      *   of it go out of scope, will unadvertise this parameter service.
+      * 
+      * \see advertiseParam(const std::string&, const ParamServerOptions&)
+      *   for a detailed description of the method's behavior.
       */
-    template <typename P> ParamServer advertiseParam(const std::string&
-      key, const P& value, bool cached = true);
-    template <typename P, class T> ParamServer advertiseParam(const
-      std::string& key, const P& value, void(T::*fp)(const P&), bool
-      cached = true);
-    ParamServer advertiseParam(const AdvertiseParamOptions& options);
+    template <typename P> ParamServer advertiseParam(const std::string& key,
+      const std::string& service = std::string(), const std::string& name =
+      std::string(), bool cached = true);
+    
+    /** \brief Advertise a parameter service, templated on the parameter
+      *   specification and with standard options
+      * 
+      * \param[in] key The key of the parameter to be advertised.
+      * \param[in] fromXmlRpcValue Function for assigning the parameter's
+      *   value from an XML/RPC value.
+      * \param[in] toXmlRpcValue Function for assigning the parameter's
+      *   value to an XML/RPC value.
+      * \param[in] fromRequest Function for assigning the parameter's
+      *   value from a service request.
+      * \param[in] toResponse Function for assigning the parameter's
+      *   value to a service response.
+      * \param[in] service The parameter service name to advertise on. If
+      *   empty, the provided parameter key will instead be used to construct
+      *   the service name as params/key.
+      * \param[in] name The name of the parameter under which it can be
+      *   accessed through rosparam. If empty, the provided parameter key
+      *   will instead be assumed to also correspond to the parameter name,
+      *   in which case it would be interpreted as a relative graph resource
+      *   name.
+      * \param[in] cached If true, the parameter service server will provide
+      *   the cached parameter value.
+      * \return On success, a parameter service server that, when all copies
+      *   of it go out of scope, will unadvertise this parameter service.
+      * 
+      * \see advertiseParam(const std::string&, const ParamServerOptions&)
+      *   for a detailed description of the method's behavior.
+      */
+    template <class PSpec> ParamServer advertiseParam(const std::string&
+      key, const typename PSpec::FromXmlRpcValue& fromXmlRpcValue, const
+      typename PSpec::ToXmlRpcValue& toXmlRpcValue, const typename
+      PSpec::FromRequest& fromRequest, const typename PSpec::ToResponse&
+      toResponse, const std::string& service = std::string(), const
+      std::string& name = std::string(), bool cached = true);
+    
+    /** \brief Advertise a parameter service, with full range of options
+      * 
+      * To advertise a parameter service, this method employs the service
+      * name specified in the parameter server options as parent namespace
+      * for the services. The service signatures further depend on the
+      * value type of the advertised parameter and must be specified as
+      * template parameters in the templated initializer of the parameter
+      * server options. Similarly, the types of the functions required to
+      * assign the parameter value from/to its XML/RPC value representation
+      * and the service request/response types depend on the value type, and
+      * their function object wrappers must be specified when initializing
+      * the parameter server options.
+      * 
+      * Once successfully created, the parameter service server will advertise
+      * the following services:
+      * 
+      * - service/get_value: <GetParamValue>
+      * - service/set_value: <SetParamValue>
+      * - service/get_info: <GetParamInfo>
+      * 
+      * where <GetParamValue> and <SetParamValue> would correspond to the
+      * service types defined for the advertised parameter.
+      * 
+      * On creation of the first parameter service server, a configuration
+      * service server will be instantiated simultaneously. It provides
+      * information about all parameter services which have been advertised
+      * for this node. In particular, the configuration services comprise:
+      * 
+      * - list_params: <ListParams>
+      * - has_params: <HasParam>
+      * 
+      * and may be called to identify a node's parameter services.
+      * 
+      * \param[in] key The key of the parameter to be advertised.
+      * \param[in] options The parameter service server options to use.
+      * \return On success, a parameter service server that, when all copies
+      *   of it go out of scope, will unadvertise this parameter service.
+      */
+    ParamServer advertiseParam(const std::string& key, const
+      ParamServerOptions& options);
+
+    /** \brief Create a client for a parameter service, templated on the
+      *   parameter type and with standard options
+      * 
+      * \param[in] service The name of the parameter service the parameter
+      *   service client connects to.
+      * \param[in] persistent Whether the connection of the parameter service
+      *   client should persist. 
+      * \return On success, a parameter service client that, when all copies
+      *   of it go out of scope, will disconnect from the parameter service.
+      * 
+      * \see paramClient(const ParamClientOptions&) for a detailed description
+      *   of the method's behavior.
+      */
+    template <typename P> ParamClient paramClient(const std::string& service,
+      bool persistent = false);
+    
+    /** \brief Create a client for a parameter service, templated on the
+      *   parameter specification and with standard options
+      * 
+      * \param[in] service The name of the parameter service the parameter
+      *   service client connects to.
+      * \param[in] fromResponse Function for assigning the parameter's
+      *   value from a service response.
+      * \param[in] toRequest Function for assigning the parameter's
+      *   value to a service request.
+      * \param[in] persistent Whether the connection of the parameter service
+      *   client should persist. 
+      * \return On success, a parameter service client that, when all copies
+      *   of it go out of scope, will disconnect from the parameter service.
+      * 
+      * \see paramClient(const ParamClientOptions&) for a detailed description
+      *   of the method's behavior.
+      */
+    template <class PSpec> ParamClient paramClient(const std::string&
+      service, const typename PSpec::FromResponse& fromResponse, const
+      typename PSpec::ToRequest& toRequest, bool persistent = false);
+    
+    /** \brief Create a client for a parameter service, with full range of
+      *   options
+      * 
+      * To create a client for a parameter service, this method interprets
+      * the service name specified in the parameter client options as
+      * parent namespace for the services. The service signatures further
+      * depend on the value type of the advertised parameter and must be
+      * specified as template parameters in the templated initializer of the
+      * parameter client options. Similarly, the types of the functions
+      * required to assign the parameter value from/to its service
+      * request/response types depend on the value type, and their function
+      * object wrappers must be specified when initializing the parameter
+      * client options.
+      * 
+      * \param[in] options The parameter service client options to use.
+      * \return On success, a parameter service client that, when all copies
+      *   of it go out of scope, will disconnect from the parameter service.
+      */
+    ParamClient paramClient(const ParamClientOptions& options);
 
   private:
     /** \brief The node implementation's name

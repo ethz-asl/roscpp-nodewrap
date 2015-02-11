@@ -147,20 +147,46 @@ template <class S> ros::ServiceClient NodeImpl::serviceClient(const
 }
 
 template <typename P> ParamServer NodeImpl::advertiseParam(const std::string&
-    key, const P& value, bool cached) {
-  AdvertiseParamOptions options;  
-  options.template init<P>(key, value, 0, cached);
-  
-  return this->advertiseParam(options);
-}
-
-template <typename P, class T> ParamServer NodeImpl::advertiseParam(const
-    std::string& key, const P& value, void(T::*fp)(const P&), bool cached) {
-  AdvertiseParamOptions options;  
-  options.template init<P>(key, value, boost::bind(fp, (T*)this, _1),
+    key, const std::string& service, const std::string& name, bool cached) {
+  ParamServerOptions options;
+  options.template init<P>(
+    service.empty() ? ros::names::append("params", key) : service,
+    name.empty() ? key : name,
     cached);
   
-  return this->advertiseParam(options);
+  return this->advertiseParam(key, options);
+}
+
+template <class PSpec> ParamServer NodeImpl::advertiseParam(const
+    std::string& key, const typename PSpec::FromXmlRpcValue& fromXmlRpcValue,
+    const typename PSpec::ToXmlRpcValue& toXmlRpcValue, const typename
+    PSpec::FromRequest& fromRequest, const typename PSpec::ToResponse&
+    toResponse, const std::string& service ,const std::string& name,
+    bool cached) {
+  ParamServerOptions options;
+  options.template init<PSpec>(
+    service.empty() ? ros::names::append("params", key) : service,
+    name.empty() ? key : name,
+    fromXmlRpcValue, toXmlRpcValue, fromRequest, toResponse, cached);
+
+  return this->advertiseParam(key, options);
+}
+
+template <typename P> ParamClient NodeImpl::paramClient(const std::string&
+    service, bool persistent) {
+  ParamClientOptions options;
+  options.template init<P>(service, persistent);
+  
+  return this->paramClient(options);
+}
+
+template <class PSpec> ParamClient NodeImpl::paramClient(const std::string&
+    service, const typename PSpec::FromResponse& fromResponse, const typename
+    PSpec::ToRequest& toRequest, bool persistent) {
+  ParamClientOptions options;
+  options.template init<PSpec>(service, fromResponse, toRequest, persistent);
+
+  return this->paramClient(options);
 }
 
 }

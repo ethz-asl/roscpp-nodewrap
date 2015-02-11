@@ -25,20 +25,21 @@
 
 #include <ros/ros.h>
 
-#include <roscpp_nodewrap/ListParams.h>
+#include <boost/thread/mutex.hpp>
+
+#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/ParamServer.h>
+
+#include <roscpp_nodewrap/FindParam.h>
 #include <roscpp_nodewrap/HasParam.h>
+#include <roscpp_nodewrap/ListParams.h>
 
 namespace nodewrap {
-  class NodeImpl;
-  
-  using namespace roscpp_nodewrap;
-  
   /** \brief ROS configuration service server
     * 
     * This class provides access to a node's configuration through a ROS
     * service server interface.
     */
-  
   class ConfigServer {
   friend class NodeImpl;
   public:
@@ -47,6 +48,9 @@ namespace nodewrap {
     ConfigServer();
     
     /** \brief Copy constructor
+      * 
+      * \param[in] src The source configuration service server which is
+      *   being copied to this configuration service server.
       */
     ConfigServer(const ConfigServer& src);
     
@@ -54,53 +58,116 @@ namespace nodewrap {
       */
     ~ConfigServer();
     
+    /** \brief Perform shutdown of the configuration service server
+      */
     void shutdown();
-
+      
+    /** \brief Advertise a parameter by this configuration service server
+      */
+    ParamServer advertiseParam(const std::string& key, const
+      ParamServerOptions& options);
+    
+    /** \brief Void pointer conversion
+      */
     inline operator void*() const {
       return (impl && impl->isValid()) ? (void*)1 : (void*)0;
     };
     
-    inline bool operator<(const ConfigServer& configServer) const {
-      return (impl < configServer.impl);
-    };
-
-    inline bool operator==(const ConfigServer& configServer) const {
-      return (impl == configServer.impl);
-    };
-    
-    inline bool operator!=(const ConfigServer& configServer) const {
-      return (impl != configServer.impl);
-    };
-    
   private:
-    /** \brief Private constructor, with full range of options
+    /** \brief Configuration service server implementation
+      * 
+      * This class provides the private implementation of the configuration
+      * service server.
       */
-    ConfigServer(const boost::shared_ptr<NodeImpl>& nodeImpl);
-
     class Impl {
     public:
-      Impl(const boost::shared_ptr<NodeImpl>& nodeImpl);
+      /** \brief Default constructor
+        */
+      Impl(const NodeImplPtr& nodeImpl);
+      
+      /** \brief Destructor
+        */
       ~Impl();
       
+      /** \brief Query if this configuration service server is valid
+        */
       bool isValid() const;
       
+      /** \brief Unadvertise the configuration service server's services
+        */
       void unadvertise();
       
-      bool listParams(ListParams::Request& request, ListParams::Response&
+      /** \brief Callback for listening to updates of the parameters
+        *   advertised by this configuration service server
+        */ 
+      void updateParamCallback(XmlRpc::XmlRpcValue& params,
+        XmlRpc::XmlRpcValue& result);
+
+      /** \brief Service callback listing the parameters advertised by
+        *   this configuration service server
+        */ 
+      bool listParamsCallback(ListParams::Request& request,
+        ListParams::Response& response);
+      
+      /** \brief Service callback for querying if a specific parameter
+        *   has been advertised by this configuration service server
+        */ 
+      bool hasParamCallback(HasParam::Request& request, HasParam::Response&
         response);
-      bool hasParam(HasParam::Request& request, HasParam::Response& response);
       
-      void updateParam(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcValue&
-        result);
+      /** \brief Service callback for finding the parameter service of a
+        *   parameter advertised by this configuration service server
+        */ 
+      bool findParamCallback(FindParam::Request& request, FindParam::Response&
+        response);
       
+      /** \brief Service server listing the parameter services advertised
+        *   by this configuration service server
+        */ 
       ros::ServiceServer listParamsServer;
+      
+      /** \brief Service server for querying if a specific parameter service
+        *   has been advertised by this configuration service server
+        */ 
       ros::ServiceServer hasParamServer;
       
-      boost::shared_ptr<NodeImpl> nodeImpl;
+      /** \brief Service server for finding the parameter service of a
+        *   parameter advertised by this configuration service server
+        */ 
+      ros::ServiceServer findParamServer;
+      
+      /** \brief The node implementation owning this configuration service
+        *   server
+        */ 
+      NodeImplPtr nodeImpl;
+      
+      /** \brief The configuration service server's mutex
+        */ 
+      mutable boost::mutex mutex;
+      
+      /** \brief The parameter services advertised by this configuration
+        *   service server
+        */ 
+      std::map<std::string, ParamServer::ImplWPtr> params;
     };
+    
+    /** \brief Declaration of the configuration service server implementation
+      *   pointer type
+      */
     typedef boost::shared_ptr<Impl> ImplPtr;
     
+    /** \brief Declaration of the configuration service server implementation
+      *   weak pointer type
+      */
+    typedef boost::weak_ptr<Impl> ImplWPtr;
+    
+    /** \brief The configuration service server's implementation
+      */
     ImplPtr impl;
+    
+    /** \brief Constructor (private version)
+      */
+    ConfigServer(const NodeImplPtr& nodeImpl);    
   };
 };
 

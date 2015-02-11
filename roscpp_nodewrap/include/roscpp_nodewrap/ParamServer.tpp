@@ -16,122 +16,78 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <roscpp_nodewrap/ParamServerOptions.h>
+
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-template <typename P> ParamServer::ParamServer(const std::string& key, const
-    P& value, bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl) {
-  this->template init<P>(key, value, cached, nodeImpl);
-}
-
-template <typename P, bool Cached> ParamServer::ParamServer(const std::string&
-    key, const P& value, const boost::shared_ptr<NodeImpl>& nodeImpl) {
-  this->template init<P, Cached>(key, value, nodeImpl);
-}
-
-template <typename P> ParamServer::ImplT<P>::ImplT(const std::string&
-    key, bool cached, const SetValueCallback& setValueCallback, const
-    GetValueCallback& getValueCallback, const boost::shared_ptr<NodeImpl>&
-    nodeImpl) :
-  Impl(key, static_cast<XmlRpc::XmlRpcValue::Type>(
-    ParamTraits<P>::XmlRpcValueType), cached, nodeImpl) {
-  ros::AdvertiseServiceOptions setParamValueOptions;
-  setParamValueOptions.template init<typename SetValueService::Request,
-    typename SetValueService::Response>(getNamespace()+"/set_value",
-    setValueCallback);
-  this->setParamValueServer = this->advertise(setParamValueOptions);
-  
+template <class Spec> ParamServer::ImplT<Spec>::ImplT(const FromXmlRpcValue&
+    fromXmlRpcValue, const ToXmlRpcValue& toXmlRpcValue, const FromRequest&
+    fromRequest, const ToResponse& toResponse, const ParamServerOptions&
+    options, const NodeImplPtr& nodeImpl) :
+  Impl(options, nodeImpl),
+  fromXmlRpcValue(fromXmlRpcValue),
+  toXmlRpcValue(toXmlRpcValue),
+  fromRequest(fromRequest),
+  toResponse(toResponse) {
   ros::AdvertiseServiceOptions getParamValueOptions;
-  getParamValueOptions.template init<typename GetValueService::Request,
-    typename GetValueService::Response>(getNamespace()+"/get_value",
-    getValueCallback);
+  getParamValueOptions.init<GetValueServiceRequest, GetValueServiceResponse>(
+    ros::names::append(options.service, "get_value"),
+    boost::bind(&ParamServer::ImplT<Spec>::getParamValueCallback,
+    this, _1, _2));
+  getParamValueOptions.callback_queue = options.callbackQueue;
+  getParamValueOptions.tracked_object = options.trackedObject;
   this->getParamValueServer = this->advertise(getParamValueOptions);
+  
+  ros::AdvertiseServiceOptions setParamValueOptions;
+  setParamValueOptions.init<SetValueServiceRequest, SetValueServiceResponse>(
+    ros::names::append(options.service, "set_value"),
+    boost::bind(&ParamServer::ImplT<Spec>::setParamValueCallback,
+    this, _1, _2));
+  setParamValueOptions.callback_queue = options.callbackQueue;
+  setParamValueOptions.tracked_object = options.trackedObject;
+  this->setParamValueServer = this->advertise(setParamValueOptions);
 }
 
-template <typename P> ParamServer::ImplT2<P, true>::ImplT2(const
-    std::string& key, const P& value, const boost::shared_ptr<NodeImpl>&
-    nodeImpl) :
-  ImplT<P>(key, true,
-    boost::bind(&ParamServer::ImplT2<P, true>::setParamValue, this, _1, _2),
-    boost::bind(&ParamServer::ImplT2<P, true>::getParamValue, this, _1, _2),
-    nodeImpl),
-  value(value) {
+template <class Spec> ParamServer::ImplT<Spec>::~ImplT() {
 }
 
-template <typename P> ParamServer::ImplT2<P, false>::ImplT2(const
-    std::string& key, const P& value, const boost::shared_ptr<NodeImpl>&
-    nodeImpl) :
-  ImplT<P>(key, false,
-    boost::bind(&ParamServer::ImplT2<P, false>::setParamValue, this, _1, _2),
-    boost::bind(&ParamServer::ImplT2<P, false>::getParamValue, this, _1, _2),
-    nodeImpl) {
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+template <class Spec> bool ParamServer::ImplT<Spec>::getParamValue(
+    Value& value) {
+  XmlRpc::XmlRpcValue xmlRpcValue;
+  this->fromXmlRpcValue(xmlRpcValue, value);
+  return this->getParamXmlRpcValue(xmlRpcValue) && this->fromXmlRpcValue(
+    xmlRpcValue, value);
 }
 
-template <typename P> ParamServer::ImplT<P>::~ImplT() {
-}
-
-template <typename P> ParamServer::ImplT2<P, true>::~ImplT2() {
-}
-
-template <typename P> ParamServer::ImplT2<P, false>::~ImplT2() {
+template <class Spec> bool ParamServer::ImplT<Spec>::setParamValue(
+    const Value& value) {
+  XmlRpc::XmlRpcValue xmlRpcValue;
+  return this->toXmlRpcValue(value, xmlRpcValue) && this->setParamXmlRpcValue(
+    xmlRpcValue);
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-template <typename P> void ParamServer::init(const std::string& key, const
-    P& value, bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl) {
-  if (cached)
-    this->template init<P, true>(key, value, nodeImpl);
-  else
-    this->template init<P, false>(key, value, nodeImpl);
-}
-    
-template <typename P, bool Cached> void ParamServer::init(const std::string&
-    key, const P& value, const boost::shared_ptr<NodeImpl>& nodeImpl) {
-  this->impl.reset(new ParamServer::ImplT2<P, Cached>(key, value, nodeImpl)); 
+template <class Spec> bool ParamServer::ImplT<Spec>::getParamValueCallback(
+    GetValueServiceRequest& request, GetValueServiceResponse& response) {
+  Value value;
+  return this->getParamValue(value) && this->toResponse(value, response);
 }
 
-template <typename P> bool ParamServer::ImplT2<P, true>::setParamValue(
-    typename SetValueService::Request& request,
-    typename SetValueService::Response& response) {
-  messageToValue<P>(request, this->value);
-  return true;
-}
-
-template <typename P> bool ParamServer::ImplT2<P, true>::getParamValue(
-    typename GetValueService::Request& request,
-    typename GetValueService::Response& response) {
-  valueToMessage<P>(this->value, response);
-  return true;
-}
-
-template <typename P> bool ParamServer::ImplT2<P, false>::setParamValue(
-    typename SetValueService::Request& request,
-    typename SetValueService::Response& response) {  
-  P value;
-  
-  messageToValue<P>(request, value);
-  valueToParam<P>(this->nodeImpl->getNodeHandle(), value, this->key);
-  
-  return true;
-}
-
-template <typename P> bool ParamServer::ImplT2<P, false>::getParamValue(
-    typename GetValueService::Request& request,
-    typename GetValueService::Response& response) {
-  P value;
-  
-  if (paramToValue(this->nodeImpl->getNodeHandle(), this->key, value)) {
-    valueToMessage<P>(value, response);
-    return true;
-  }
-  else
-    return false;
+template <class Spec> bool ParamServer::ImplT<Spec>::setParamValueCallback(
+    SetValueServiceRequest& request, SetValueServiceResponse& response) {
+  Value value;
+  return this->fromRequest(request, value) && this->setParamValue(value);
 }
 
 }

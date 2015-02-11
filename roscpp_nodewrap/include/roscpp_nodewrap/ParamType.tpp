@@ -16,34 +16,43 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ParamAdvertiserNode.h"
-
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ParamAdvertiserNode::ParamAdvertiserNode() {
+template <typename T> ParamType::ImplT<T>::ImplT() :
+  Impl(typeid(T)) {
 }
 
-ParamAdvertiserNode::~ParamAdvertiserNode() {
+template <typename T> ParamType::ImplT<T>::~ImplT() {
+}
+
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+template <typename T> const ParamType::ImplPtr&
+    ParamType::ImplT<T>::getInstance() {
+  static ImplPtr instance;
+  
+  if (!instance)
+    instance.reset(new ImplT<T>());
+  
+  return instance;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void ParamAdvertiserNode::init() {
-  NODEWRAP_INFO("Hello!");
-
-//   advertiseParam("chat/name", name, false);
-//   advertiseParam("chat/initiate", initiate);
-//   advertiseParam("chat/say", say, &ChatterNode::sayUpdate);
-}
-
-void ParamAdvertiserNode::cleanup() {
-  NODEWRAP_INFO("Good bye!");
+template <typename T> ParamType ParamType::get() {
+  ParamType type;
+  
+  type.impl = ImplT<T>::getInstance();
+  
+  return type;
 }
 
 }

@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="nodelet" type="nodelet" name="param_services" args="manager" output="screen">
+    <param name="num_worker_threads" value="2"/>
+  </node>
+  <node name="marvin" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ParamServerNode param_services" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/marvin.yaml"/>
+  </node>
+  <node name="arthur" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ParamClientNode param_services" output="screen"/>
+</launch>

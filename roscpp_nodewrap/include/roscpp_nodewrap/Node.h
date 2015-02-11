@@ -31,7 +31,6 @@ namespace nodewrap {
     * This class is a templated wrapper for native ROS nodes. Its sole
     * template parameter is expected to subclass the NodeImpl interface.
     */
-  
   template <class C> class Node {
   public:
     /** \brief Default constructor

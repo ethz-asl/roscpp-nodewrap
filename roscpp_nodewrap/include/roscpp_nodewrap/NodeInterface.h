@@ -31,7 +31,6 @@ namespace nodewrap {
     * This class defines the abstract, minimal interface of all node wrappers
     * and is implemented by NodeImpl.
     */
-
   class NodeInterface {
   public:
     /** \brief Default constructor

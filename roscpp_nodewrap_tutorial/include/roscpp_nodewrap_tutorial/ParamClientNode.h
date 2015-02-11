@@ -16,47 +16,52 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file ParamAdvertiserNode.h
-  * \brief Header file providing the example ParamAdvertiserNode class interface
+/** \file ParamClientNode.h
+  * \brief Header file providing the example ParamClientNode class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_TUTORIAL_PARAM_ADVERTISER_NODE_HPP
-#define ROSCPP_NODEWRAP_TUTORIAL_PARAM_ADVERTISER_NODE_HPP
+#ifndef ROSCPP_NODEWRAP_TUTORIAL_PARAM_CLIENT_NODE_HPP
+#define ROSCPP_NODEWRAP_TUTORIAL_PARAM_CLIENT_NODE_HPP
 
 #include <roscpp_nodewrap/NodeImpl.h>
+#include <roscpp_nodewrap/Nodelet.h>
 
 namespace nodewrap {
-  /** \brief Example parameter advertiser node
+  /** \brief Example parameter client node
     * 
-    * This parameter advertiser node demonstrates the concept of using
-    * parameter service server for advertising a parameter.
+    * This parameter client node demonstrates the concept of using
+    * parameter service clients for subscribing to parameter updates.
     */
-  
-  class ParamAdvertiserNode :
+  class ParamClientNode :
     public NodeImpl {
   public:
     /** \brief Default constructor
       * 
-      * The constructor of the parameter advertiser node is left empty.
+      * The constructor of the parameter client node is left empty.
       */
-    ParamAdvertiserNode();
+    ParamClientNode();
     
     /** \brief Destructor
       * 
-      * The destructor of the parameter advertiser node is left empty.
+      * The destructor of the parameter client node is left empty.
       */
-    virtual ~ParamAdvertiserNode();
-  
+    virtual ~ParamClientNode();
+    
   protected:
-    /** \brief Perform parameter advertiser node initialization
+    /** \brief The parameter service client subscribing the XML/RPC parameter
+      */
+    ParamClient xmlClient;
+    
+    /** \brief Perform parameter client node initialization
       * 
-      * The initialization of the parameter advertiser node involves
-      * advertising the targeted parameter.
+      * The initialization of the parameter client node involves subscribing
+      * to targeted parameter and registering a callback handler to be executed
+      * in case of an update.
       *
       * This is the initializer's implementation:
       * 
         \verbatim
-        void ParamAdvertiserNode::init() {
+        void ParamClientNode::init() {
         }
         \endverbatim
       * 
@@ -64,13 +69,13 @@ namespace nodewrap {
       */
     void init();
     
-    /** \brief Perform parameter advertiser node cleanup
+    /** \brief Perform parameter client node cleanup
       * 
-      * Cleanup of the parameter advertiser node is just bogus. This is the
+      * Cleanup of the parameter client node is just bogus. This is the
       * implementation:
       * 
         \verbatim
-        void ParamAdvertiserNode::cleanup() {
+        void ParamClientNode::cleanup() {
           NODEWRAP_INFO("Good bye!");
         }
         \endverbatim

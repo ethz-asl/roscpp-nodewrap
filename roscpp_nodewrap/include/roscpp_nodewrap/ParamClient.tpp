@@ -16,10 +16,60 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <roscpp_nodewrap/ParamClientOptions.h>
+
 namespace nodewrap {
 
 /*****************************************************************************/
-/* Methods                                                                   */
+/* Constructors and Destructor                                               */
 /*****************************************************************************/
+
+template <class Spec> ParamClient::ImplT<Spec>::ImplT(const FromResponse&
+    fromResponse, const ToRequest& toRequest, const ParamClientOptions&
+    options, const NodeImplPtr& nodeImpl) :
+  Impl(options, nodeImpl),
+  fromResponse(fromResponse),
+  toRequest(toRequest) {
+  std::string ns = ros::names::append("params", options.service);
+  
+  ros::ServiceClientOptions getParamValueOptions;
+  getParamValueOptions.init<GetValueServiceRequest, GetValueServiceResponse>(
+    ros::names::append(ns, "get_value"), options.persistent, options.header);
+  getParamValueOptions.header = options.header;
+  getParamValueOptions.persistent = options.persistent;
+  this->getParamValueClient = this->client(getParamValueOptions);
+  
+  ros::ServiceClientOptions setParamValueOptions;
+  setParamValueOptions.init<SetValueServiceRequest, SetValueServiceResponse>(
+    ros::names::append(ns, "set_value"), options.persistent, options.header);
+  setParamValueOptions.header = options.header;
+  setParamValueOptions.persistent = options.persistent;
+  this->setParamValueClient = this->client(setParamValueOptions);
+}
+
+template <class Spec> ParamClient::ImplT<Spec>::~ImplT() {
+}
+
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+template <typename T> bool ParamClient::setParamValue(const T& value) {
+  return false;
+}
+
+template <typename T> bool ParamClient::getParamValue(T& value) {
+  return false;
+}
+
+template <class Spec> bool ParamClient::ImplT<Spec>::getParamValue(
+    Value& value) {
+  return false;
+}
+
+template <class Spec> bool ParamClient::ImplT<Spec>::setParamValue(
+    const Value& value) {
+  return false;
+}
 
 }

@@ -58,24 +58,27 @@ ros::NodeHandle& NodeImpl::getNodeHandle() const {
 
 ros::AdvertiseOptions NodeImpl::getAdvertiseOptions(const std::string& key,
     const ros::AdvertiseOptions& defaultOptions) const {
-  std::string ns = std::string("publishers/")+key;
+  std::string ns = ros::names::append("publishers", key);
   ros::AdvertiseOptions options = defaultOptions;
   
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
+  options.topic = getParam(ros::names::append(ns, "topic"),
+    defaultOptions.topic);
+  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
     (int)defaultOptions.queue_size);
-  options.latch = getParam(ns+"/latch", defaultOptions.latch);
+  options.latch = getParam(ros::names::append(ns, "latch"),
+    defaultOptions.latch);
   
   return options;
 }
 
 ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& key,
     const ros::SubscribeOptions& defaultOptions) const {
-  std::string ns = std::string("subscribers/")+key;
+  std::string ns = ros::names::append("subscribers", key);
   ros::SubscribeOptions options = defaultOptions;
   
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
+  options.topic = getParam(ros::names::append(ns, "topic"),
+    defaultOptions.topic);
+  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
     (int)defaultOptions.queue_size);
   
   return options;
@@ -84,21 +87,24 @@ ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& key,
 ros::AdvertiseServiceOptions NodeImpl::getAdvertiseServiceOptions(const
     std::string& key, const ros::AdvertiseServiceOptions& defaultOptions)
     const {
-  std::string ns = std::string("servers/")+key;  
+  std::string ns = ros::names::append("servers", key);  
   ros::AdvertiseServiceOptions options = defaultOptions;
   
-  options.service = getParam(ns+"/service", defaultOptions.service);
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
   
   return options;
 }
 
 ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
     key, const ros::ServiceClientOptions& defaultOptions) const {
-  std::string ns = std::string("clients/")+key;  
+  std::string ns = ros::names::append("clients", key);
   ros::ServiceClientOptions options = defaultOptions;
   
-  options.service = getParam(ns+"/service", defaultOptions.service);
-  options.persistent = getParam(ns+"/persistent", defaultOptions.persistent);
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
+  options.persistent = getParam(ros::names::append(ns, "persistent"),
+    defaultOptions.persistent);
   
   return options;
 }
@@ -133,28 +139,16 @@ ros::ServiceClient NodeImpl::serviceClient(const std::string& param, const
   return this->getNodeHandle().serviceClient(options);
 }
 
-ParamServer NodeImpl::advertiseParam(const AdvertiseParamOptions& options) {
-  // BEGIN BOGUS
-//   getNodeHandle().setParam(options.key, options.value);
-//   XmlRpc::XmlRpcValue value;
-//   getNodeHandle().getParamCached(options.key, value);
-  // END BOGUS
-  
+ParamServer NodeImpl::advertiseParam(const std::string& key, const
+    ParamServerOptions& options) {
   if (!configServer)
     configServer = ConfigServer(shared_from_this());
   
-  std::map<std::string, ParamServer>::const_iterator it =
-    paramServers.find(options.key);
+  return configServer.advertiseParam(key, options);
+}
 
-  if (it == paramServers.end()) {
-    ParamServer paramServer(options.key, options.value, options.cached,
-      shared_from_this());
-    paramServers.insert(std::make_pair(options.key, paramServer));
-    
-    return paramServer;
-  }
-  else
-    return it->second;
+ParamClient NodeImpl::paramClient(const ParamClientOptions& options) {
+  return ParamClient(options, shared_from_this());
 }
 
 void NodeImpl::start(const std::string& name, bool nodelet, const

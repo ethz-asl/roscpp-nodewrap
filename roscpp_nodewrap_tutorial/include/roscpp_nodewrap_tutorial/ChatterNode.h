@@ -195,7 +195,6 @@ namespace nodewrap {
       </launch>
       \endverbatim
     */
-  
   class ChatterNode :
     public NodeImpl {
   public:

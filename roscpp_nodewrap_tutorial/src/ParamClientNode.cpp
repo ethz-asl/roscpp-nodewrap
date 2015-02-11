@@ -16,9 +16,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <ros/xmlrpc_manager.h>
+#include "roscpp_nodewrap_tutorial/ParamClientNode.h"
 
-#include "roscpp_nodewrap_tutorial/ParamListenerNode.h"
+NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamClientNode)
 
 namespace nodewrap {
 
@@ -26,57 +26,28 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ParamListenerNode::ParamListenerNode() {
+ParamClientNode::ParamClientNode() {
 }
 
-ParamListenerNode::~ParamListenerNode() {
+ParamClientNode::~ParamClientNode() {
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void ParamListenerNode::init() {
-  NODEWRAP_INFO("Hello!");
+void ParamClientNode::init() {
+  xmlClient = paramClient<XmlRpc::XmlRpcValue>("/marvin/params/xml");
+  xmlClient.waitForExistence();
   
-  NODEWRAP_INFO_STREAM("ParamListenerNode::init() " << __LINE__ << " " << ros::isInitialized());
+  NODEWRAP_INFO("I'm sorry, did you just say you needed my brain?");
   
-  // This is problematic as it prevents cache parameters to be updated!!!
-  ros::XMLRPCManager::instance()->unbind("paramUpdate");
-  ros::XMLRPCManager::instance()->bind("paramUpdate",
-    boost::bind(&ParamListenerNode::paramUpdate, this, _1, _2));
-  
-  bool bogus = false;
-  getNodeHandle().setParam("bogus", bogus);
-  getNodeHandle().getParamCached("bogus", bogus);
-  
-//   NODEWRAP_INFO_STREAM("ChatterNode::init() " << __LINE__);  
-  
-//   advertiseParam("chat/name", name, false);
-//   advertiseParam("chat/initiate", initiate);
-//   advertiseParam("chat/say", say, &ChatterNode::sayUpdate);
+  ROS_INFO("Value of [%s]: %s", xmlClient.getParamName().c_str(),
+    "123");
 }
 
-void ParamListenerNode::cleanup() {
-  NODEWRAP_INFO("Good bye!");
-}
-
-void ParamListenerNode::paramUpdate(XmlRpc::XmlRpcValue& params,
-    XmlRpc::XmlRpcValue& result) {
-  NODEWRAP_INFO_STREAM("ParamListenerNode::paramUpdate() " << __LINE__);
-  
-//   result[0] = 1;
-//   result[1] = std::string("");
-//   result[2] = 0;
-// 
-//   ros::param::update((std::string)params[1], params[2]);
-  
-//   bool trigger = getNodeHandle().getParam("trigger", trigger);
-//   NODEWRAP_INFO_STREAM("params[2] = " << params[2] << " trigger = " << trigger);
-}
-
-void ParamListenerNode::paramUpdate(const std::string& name) {
-  NODEWRAP_INFO("Parameter value changed to %s!", name.c_str());
+void ParamClientNode::cleanup() {
+  NODEWRAP_INFO("So this is it. We're going to die.");
 }
 
 }

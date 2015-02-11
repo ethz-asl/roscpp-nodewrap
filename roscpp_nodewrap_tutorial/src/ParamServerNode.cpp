@@ -16,56 +16,38 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file Nodelet.h
-  * \brief Header file providing the Nodelet class interface
-  */
+#include "roscpp_nodewrap_tutorial/ParamServerNode.h"
 
-#ifndef ROSCPP_NODEWRAP_NODELET_H
-#define ROSCPP_NODEWRAP_NODELET_H
-
-#include <nodelet/nodelet.h>
+NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamServerNode)
 
 namespace nodewrap {
-  /** \brief ROS nodelet template wrapper
-    * 
-    * This class is a templated wrapper for native ROS nodelets. Its sole
-    * template parameter usually subclasses the NodeImpl interface.
-    */
-  template <class C> class Nodelet :
-    public nodelet::Nodelet {
-  public:
-    /** \brief Default constructor
-      * 
-      * \note No constructor overloading is provided to allow for
-      *   construction when dynamically loaded.
-      * 
-      * \see nodelet::Nodelet::Nodelet
-      */
-    Nodelet();
-    
-    /** \brief Destructor
-      */
-    virtual ~Nodelet();
-    
-    /** \brief Virtual override of the ROS nodelet's initialization
-      * 
-      * This method essentially calls C::startup to delegate initialization
-      * to the node implementation.
-      * 
-      * \see nodelet::Nodelet::onInit
-      */
-    void onInit();
-    
-  private:
-  private:
-    /** \brief The nodelet's implementation
-      */
-    boost::shared_ptr<C> impl;
-  };
-};
 
-#include <roscpp_nodewrap/Nodelet.tpp>
+/*****************************************************************************/
+/* Constructors and Destructor                                               */
+/*****************************************************************************/
 
-#include <roscpp_nodewrap/Pluginlib.h>
+ParamServerNode::ParamServerNode() {
+}
 
-#endif
+ParamServerNode::~ParamServerNode() {
+}
+
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
+
+void ParamServerNode::init() {
+  xmlServer = advertiseParam<XmlRpc::XmlRpcValue>("xml");
+  stringServer = advertiseParam<std::string>("string");
+  doubleServer = advertiseParam<double>("double");
+  integerServer = advertiseParam<int>("integer");
+  booleanServer = advertiseParam<bool>("boolean");
+  
+  NODEWRAP_INFO("I think you ought to know I'm feeling very depressed.");
+}
+
+void ParamServerNode::cleanup() {
+  NODEWRAP_INFO("I told you this would all end in tears.");
+}
+
+}

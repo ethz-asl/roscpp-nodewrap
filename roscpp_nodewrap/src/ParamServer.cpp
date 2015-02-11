@@ -16,11 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <ros/master.h>
-#include <ros/names.h>
-#include <ros/xmlrpc_manager.h>
+#include <boost/thread/locks.hpp>
 
 #include <roscpp_nodewrap/NodeImpl.h>
+#include <roscpp_nodewrap/ParamServerOptions.h>
 
 #include "roscpp_nodewrap/ParamServer.h"
 
@@ -37,61 +36,31 @@ ParamServer::ParamServer(const ParamServer& src) :
   impl(src.impl) {
 }
 
-ParamServer::ParamServer(const std::string& key, const XmlRpc::XmlRpcValue&
-    value, bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl) {
-  switch (value.getType()) {
-    case XmlRpc::XmlRpcValue::TypeString:
-      init<std::string>(key, const_cast<XmlRpc::XmlRpcValue&>(value).operator
-        std::string&(), cached, nodeImpl);
-      break;
-    case XmlRpc::XmlRpcValue::TypeDouble:
-      init<double>(key, const_cast<XmlRpc::XmlRpcValue&>(value).operator
-        double&(), cached, nodeImpl);
-      break;
-    case XmlRpc::XmlRpcValue::TypeInt:
-      init<int>(key, const_cast<XmlRpc::XmlRpcValue&>(value).operator
-        int&(), cached, nodeImpl);
-      break;
-    case XmlRpc::XmlRpcValue::TypeBoolean:
-      init<bool>(key, const_cast<XmlRpc::XmlRpcValue&>(value).operator
-        bool&(), cached, nodeImpl);
-      break;
-    default:
-      init<XmlRpc::XmlRpcValue>(key, value, cached, nodeImpl);
-  }
-}
-  
-//   if (cached) {
-//     XmlRpc::XmlRpcValue params, result, payload;
-//     
-//     params[0] = nodeImpl->getNodeHandle().getNamespace();
-//     params[1] = ros::XMLRPCManager::instance()->getServerURI();
-//     params[2] = nodeImpl->getNodeHandle().resolveName(key);
-//     
-//     ros::master::execute("subscribeParam", params, result, payload, false);
-//   }
-// }
-
-ParamServer::Impl::Impl(const std::string& key, XmlRpc::XmlRpcValue::Type
-    type, bool cached, const boost::shared_ptr<NodeImpl>& nodeImpl) :
-  key(key),
-  type(type),
-  cached(cached),
-  nodeImpl(nodeImpl) {
-  ros::AdvertiseServiceOptions getParamNameOptions;
-  getParamNameOptions.init<GetParamName::Request, GetParamName::Response>(
-    getNamespace()+"/get_name", boost::bind(&ParamServer::Impl::getParamName,
-    this, _1, _2));
-  getParamNameServer = advertise(getParamNameOptions);
-  
-  ros::AdvertiseServiceOptions getParamInfoOptions;
-  getParamInfoOptions.init<GetParamInfo::Request, GetParamInfo::Response>(
-    getNamespace()+"/get_info", boost::bind(&ParamServer::Impl::getParamInfo,
-    this, _1, _2));
-  getParamInfoServer = advertise(getParamInfoOptions);
+ParamServer::ParamServer(const ParamServerOptions& options, const NodeImplPtr&
+    nodeImpl) :
+  impl(options.helper->createServer(options, nodeImpl).impl) {
 }
 
 ParamServer::~ParamServer() {
+}
+
+ParamServer::Impl::Impl(const ParamServerOptions& options, const NodeImplPtr&
+    nodeImpl) :
+  service(options.service),
+  name(options.name.empty() ?
+    nodeImpl->getNodeHandle().resolveName(options.service) :
+    nodeImpl->getNodeHandle().resolveName(options.name)),
+  type(options.type),
+  cached(options.cached),
+  nodeImpl(nodeImpl) {
+  ros::AdvertiseServiceOptions getParamInfoOptions;
+  getParamInfoOptions.init<GetParamInfo::Request, GetParamInfo::Response>(
+    ros::names::append(options.service, "get_info"),
+    boost::bind(&ParamServer::Impl::getParamInfoCallback,
+    this, _1, _2));
+  getParamInfoOptions.callback_queue = options.callbackQueue;
+  getParamInfoOptions.tracked_object = options.trackedObject;
+  getParamInfoServer = advertise(getParamInfoOptions);
 }
 
 ParamServer::Impl::~Impl() {
@@ -102,22 +71,31 @@ ParamServer::Impl::~Impl() {
 /* Accessors                                                                 */
 /*****************************************************************************/
 
-std::string ParamServer::getKey() const {
-  if (impl && impl->isValid())
-    return impl->key;
+std::string ParamServer::getService() const {
+  if (impl)
+    return impl->service;
   else
     return std::string();
 }
- 
-std::string ParamServer::Impl::getNamespace() const {
-  return std::string("params/")+key;
+
+bool ParamServer::Impl::getParamXmlRpcValue(XmlRpc::XmlRpcValue& value) {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  if (cached)
+    return nodeImpl->getNodeHandle().getParamCached(name, value);
+  else
+    return nodeImpl->getNodeHandle().getParam(name, value);
+}
+
+bool ParamServer::Impl::setParamXmlRpcValue(const XmlRpc::XmlRpcValue& value) {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  nodeImpl->getNodeHandle().setParam(name, value);
+  return true;
 }
 
 bool ParamServer::Impl::isValid() const {
-  return getParamNameServer.operator void*() &&
-    getParamValueServer.operator void*() &&
-    setParamValueServer.operator void*() &&
-    getParamInfoServer.operator void*();
+  return getParamValueServer && setParamValueServer && getParamInfoServer;
 }
 
 /*****************************************************************************/
@@ -129,63 +107,45 @@ void ParamServer::shutdown() {
     impl->unadvertise();
 }
 
-ros::ServiceServer ParamServer::Impl::advertise(ros::AdvertiseServiceOptions&
-    options) {
-  return nodeImpl->getNodeHandle().advertiseService(options);
+ros::ServiceServer ParamServer::Impl::advertise(const
+    ros::AdvertiseServiceOptions& options) {
+  return nodeImpl->getNodeHandle().advertiseService(
+    const_cast<ros::AdvertiseServiceOptions&>(options));
 }
-      
+
 void ParamServer::Impl::unadvertise() {
   if (isValid()) {
-    getParamNameServer.shutdown();
     getParamValueServer.shutdown();
     setParamValueServer.shutdown();
     getParamInfoServer.shutdown();
   }
 }
 
-bool ParamServer::Impl::getParamName(GetParamName::Request& request,
-    GetParamName::Response& response) {
-  response.name = nodeImpl->getNodeHandle().resolveName(key);
-  return true;
-}
-
-bool ParamServer::Impl::getParamInfo(GetParamInfo::Request& request,
+bool ParamServer::Impl::getParamInfoCallback(GetParamInfo::Request& request,
     GetParamInfo::Response& response) {
-  switch (type) {
-    case XmlRpc::XmlRpcValue::TypeBoolean:
-      response.type = GetParamInfo::Response::TYPE_BOOLEAN;
-      break;
-    case XmlRpc::XmlRpcValue::TypeInt:
-      response.type = GetParamInfo::Response::TYPE_INT;
-      break;
-    case XmlRpc::XmlRpcValue::TypeDouble:
-      response.type = GetParamInfo::Response::TYPE_DOUBLE;
-      break;
-    case XmlRpc::XmlRpcValue::TypeString:
-      response.type = GetParamInfo::Response::TYPE_STRING;
-      break;
-    case XmlRpc::XmlRpcValue::TypeDateTime:
-      response.type = GetParamInfo::Response::TYPE_DATETIME;
-      break;
-    case XmlRpc::XmlRpcValue::TypeBase64:
-      response.type = GetParamInfo::Response::TYPE_BASE64;
-      break;
-    case XmlRpc::XmlRpcValue::TypeArray:
-      response.type = GetParamInfo::Response::TYPE_ARRAY;
-      break;
-    case XmlRpc::XmlRpcValue::TypeStruct:
-      response.type = GetParamInfo::Response::TYPE_STRUCT;
-      break;
-    default:
-      response.type = GetParamInfo::Response::TYPE_INVALID;
+  XmlRpc::XmlRpcValue xmlRpcValue;
+  getParamXmlRpcValue(xmlRpcValue);
+  
+  response.name = name;
+  response.valid = xmlRpcValue.valid();
+  
+  if (response.valid) {
+    response.xmlrpc_type = xmlRpcValue.getType();
+    response.cached = cached;
+    
+    if ((response.xmlrpc_type == XmlRpc::XmlRpcValue::TypeString) ||
+        (response.xmlrpc_type == XmlRpc::XmlRpcValue::TypeBase64) ||
+        (response.xmlrpc_type == XmlRpc::XmlRpcValue::TypeArray) ||
+        (response.xmlrpc_type == XmlRpc::XmlRpcValue::TypeStruct))
+      response.xmlrpc_size = xmlRpcValue.size();
+  }
+  else {
+    response.xmlrpc_type = XmlRpc::XmlRpcValue::TypeInvalid;
+    response.cached = false;
+    response.xmlrpc_size = 0;
   }
   
-//   response.size = value.size();
-//   response.limits = ;
-//   response.members = ;
-
-//   response.valid = value.valid();
-  response.cached = cached;
+  response.strong_type = type.getName();
   
   return true;
 }

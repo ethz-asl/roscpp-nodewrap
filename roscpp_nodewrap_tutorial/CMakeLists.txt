@@ -49,8 +49,8 @@ include_directories(
 ## Declare a cpp library
 add_library(roscpp_nodewrap_tutorial
   src/ChatterNode.cpp
-  src/ParamAdvertiserNode.cpp
-  src/ParamListenerNode.cpp
+  src/ParamClientNode.cpp
+  src/ParamServerNode.cpp
 )
 
 ## Declare a cpp executable
@@ -63,12 +63,12 @@ add_executable(
   src/chatter_supernode.cpp
 )
 add_executable(
-  param_advertiser_node
-  src/param_advertiser_node.cpp
+  param_client_node
+  src/param_client_node.cpp
 )
 add_executable(
-  param_listener_node
-  src/param_listener_node.cpp
+  param_server_node
+  src/param_server_node.cpp
 )
 
 ## Specify libraries to link a library or executable target against
@@ -87,12 +87,12 @@ target_link_libraries(
   ${catkin_LIBRARIES}
 )
 target_link_libraries(
-  param_advertiser_node
+  param_client_node
   roscpp_nodewrap_tutorial
   ${catkin_LIBRARIES}
 )
 target_link_libraries(
-  param_listener_node
+  param_server_node
   roscpp_nodewrap_tutorial
   ${catkin_LIBRARIES}
 )
