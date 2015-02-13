@@ -49,13 +49,10 @@ ParamClient::Impl::Impl(const ParamClientOptions& options, const NodeImplPtr&
   service(options.service),
   type(options.type),
   nodeImpl(nodeImpl) {
-  std::string ns = ros::names::append("params", options.service);
-  
   ros::ServiceClientOptions getParamInfoOptions;
   getParamInfoOptions.init<GetParamInfo::Request, GetParamInfo::Response>(
-    ros::names::append(ns, "get_info"), options.persistent, options.header);
-  getParamInfoOptions.header = options.header;
-  getParamInfoOptions.persistent = options.persistent;
+    ros::names::append(options.service, "get_info"), options.persistent,
+    options.header);
   getParamInfoClient = client(getParamInfoOptions);
 }
 
@@ -74,8 +71,8 @@ std::string ParamClient::getService() const {
     return std::string();
 }
 
-std::string ParamClient::getParamName() {
-  if (impl)
+std::string ParamClient::getParamName(ros::Duration timeout) {
+  if (impl && impl->getParamInfoClient.waitForExistence(timeout))
     return impl->getParamName();
   else
     return std::string();

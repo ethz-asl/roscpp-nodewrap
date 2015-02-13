@@ -33,6 +33,10 @@ template <typename T> ParamType::ImplT<T>::~ImplT() {
 /* Accessors                                                                 */
 /*****************************************************************************/
 
+template <typename T> bool ParamType::equals() const {
+  return impl == ImplT<T>::getInstance();
+}
+
 template <typename T> const ParamType::ImplPtr&
     ParamType::ImplT<T>::getInstance() {
   static ImplPtr instance;

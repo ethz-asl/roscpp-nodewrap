@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/ParamServerOptions.h>
+#include <roscpp_nodewrap/AdvertiseParamOptions.h>
 
 namespace nodewrap {
 
@@ -24,15 +24,11 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-template <class Spec> ParamServer::ImplT<Spec>::ImplT(const FromXmlRpcValue&
-    fromXmlRpcValue, const ToXmlRpcValue& toXmlRpcValue, const FromRequest&
-    fromRequest, const ToResponse& toResponse, const ParamServerOptions&
-    options, const NodeImplPtr& nodeImpl) :
+template <class Spec> ParamServer::ImplT<Spec>::ImplT(const
+    AdvertiseParamOptions& options, const NodeImplPtr& nodeImpl) :
   Impl(options, nodeImpl),
-  fromXmlRpcValue(fromXmlRpcValue),
-  toXmlRpcValue(toXmlRpcValue),
-  fromRequest(fromRequest),
-  toResponse(toResponse) {
+  callbacks(static_cast<const ParamServerCallbacksT<Spec>&>(
+    *options.callbacks)) {
   ros::AdvertiseServiceOptions getParamValueOptions;
   getParamValueOptions.init<GetValueServiceRequest, GetValueServiceResponse>(
     ros::names::append(options.service, "get_value"),
@@ -62,16 +58,15 @@ template <class Spec> ParamServer::ImplT<Spec>::~ImplT() {
 template <class Spec> bool ParamServer::ImplT<Spec>::getParamValue(
     Value& value) {
   XmlRpc::XmlRpcValue xmlRpcValue;
-  this->fromXmlRpcValue(xmlRpcValue, value);
-  return this->getParamXmlRpcValue(xmlRpcValue) && this->fromXmlRpcValue(
-    xmlRpcValue, value);
+  return this->getParamXmlRpcValue(xmlRpcValue) &&
+    this->callbacks.fromXmlRpcValue(xmlRpcValue, value);
 }
 
 template <class Spec> bool ParamServer::ImplT<Spec>::setParamValue(
     const Value& value) {
   XmlRpc::XmlRpcValue xmlRpcValue;
-  return this->toXmlRpcValue(value, xmlRpcValue) && this->setParamXmlRpcValue(
-    xmlRpcValue);
+  return this->callbacks.toXmlRpcValue(value, xmlRpcValue) &&
+    this->setParamXmlRpcValue(xmlRpcValue);
 }
 
 /*****************************************************************************/
@@ -81,13 +76,15 @@ template <class Spec> bool ParamServer::ImplT<Spec>::setParamValue(
 template <class Spec> bool ParamServer::ImplT<Spec>::getParamValueCallback(
     GetValueServiceRequest& request, GetValueServiceResponse& response) {
   Value value;
-  return this->getParamValue(value) && this->toResponse(value, response);
+  return this->getParamValue(value) &&
+    this->callbacks.toResponse(value, response);
 }
 
 template <class Spec> bool ParamServer::ImplT<Spec>::setParamValueCallback(
     SetValueServiceRequest& request, SetValueServiceResponse& response) {
   Value value;
-  return this->fromRequest(request, value) && this->setParamValue(value);
+  return this->callbacks.fromRequest(request, value) &&
+    this->setParamValue(value);
 }
 
 }

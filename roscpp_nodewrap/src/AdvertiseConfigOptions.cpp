@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/ParamServiceHelper.h"
+#include "roscpp_nodewrap/AdvertiseConfigOptions.h"
 
 namespace nodewrap {
 
@@ -24,10 +24,8 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ParamServiceHelper::ParamServiceHelper() {
-}
-
-ParamServiceHelper::~ParamServiceHelper() {
+AdvertiseConfigOptions::AdvertiseConfigOptions() :
+  callbackQueue(0) {
 }
 
 }

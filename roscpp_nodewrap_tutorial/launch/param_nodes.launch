@@ -2,5 +2,7 @@
   <node name="marvin" pkg="roscpp_nodewrap_tutorial" type="param_server_node" output="screen">
     <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/marvin.yaml"/>
   </node>
-  <node name="arthur" pkg="roscpp_nodewrap_tutorial" type="param_client_node" output="screen"/>
+  <node name="arthur" pkg="roscpp_nodewrap_tutorial" type="param_client_node" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/arthur.yaml"/>
+  </node>
 </launch>

@@ -27,6 +27,7 @@
 
 #include <boost/thread/mutex.hpp>
 
+#include <roscpp_nodewrap/AdvertiseConfigOptions.h>
 #include <roscpp_nodewrap/Forwards.h>
 #include <roscpp_nodewrap/ParamServer.h>
 
@@ -62,10 +63,18 @@ namespace nodewrap {
       */
     void shutdown();
       
-    /** \brief Advertise a parameter by this configuration service server
+    /** \brief Advertise a parameter by this configuration service server,
+      *   templated on the parameter type and with standard options
+      */
+    template <typename P> ParamServer advertiseParam(const std::string&
+      key, const std::string& name = std::string(), const std::string&
+      service = std::string(), bool cached = true);
+    
+    /** \brief Advertise a parameter by this configuration service server,
+      *   with full range of options
       */
     ParamServer advertiseParam(const std::string& key, const
-      ParamServerOptions& options);
+      AdvertiseParamOptions& options);
     
     /** \brief Void pointer conversion
       */
@@ -83,7 +92,7 @@ namespace nodewrap {
     public:
       /** \brief Default constructor
         */
-      Impl(const NodeImplPtr& nodeImpl);
+      Impl(const AdvertiseConfigOptions& options, const NodeImplPtr& nodeImpl);
       
       /** \brief Destructor
         */
@@ -96,6 +105,20 @@ namespace nodewrap {
       /** \brief Unadvertise the configuration service server's services
         */
       void unadvertise();
+      
+      /** \brief Advertise a parameter by this configuration service server,
+        *   templated on the parameter type and with standard options
+        *   (implementation)
+        */
+      template <typename P> ParamServer advertiseParam(const std::string&
+        key, const std::string& name = std::string(), const std::string&
+        service = std::string(), bool cached = true);
+      
+      /** \brief Advertise a parameter by this configuration service server,
+        *   with full range of options (implementation)
+        */
+      ParamServer advertiseParam(const std::string& key, const
+        AdvertiseParamOptions& options);
       
       /** \brief Callback for listening to updates of the parameters
         *   advertised by this configuration service server
@@ -136,6 +159,11 @@ namespace nodewrap {
         */ 
       ros::ServiceServer findParamServer;
       
+      /** \brief The name of the configuration service advertised by this
+        *   configuration service server
+        */ 
+      std::string service;
+      
       /** \brief The node implementation owning this configuration service
         *   server
         */ 
@@ -167,8 +195,11 @@ namespace nodewrap {
     
     /** \brief Constructor (private version)
       */
-    ConfigServer(const NodeImplPtr& nodeImpl);    
+    ConfigServer(const AdvertiseConfigOptions& options, const NodeImplPtr&
+      nodeImpl);    
   };
 };
+
+#include <roscpp_nodewrap/ConfigServer.tpp>
 
 #endif

@@ -28,15 +28,12 @@
 #include <boost/thread/mutex.hpp>
 
 #include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/ParamClientCallbacks.h>
 #include <roscpp_nodewrap/ParamType.h>
 
 #include <roscpp_nodewrap/GetParamInfo.h>
 
 namespace nodewrap {
-  class NodeImpl;
-  
-  using namespace roscpp_nodewrap;
-  
   /** \brief ROS parameter service client
     * 
     * This class provides access to a node's parameters through a ROS
@@ -45,8 +42,8 @@ namespace nodewrap {
   class ParamClient {
   friend class ConfigClient;
   friend class NodeImpl;
-  friend class ParamServiceHelper;
-  template <class Spec> friend class ParamServiceHelperT;
+  friend class ParamClientHelper;
+  template <class Spec> friend class ParamClientHelperT;
   public:
     /** \brief Default constructor
       */
@@ -71,17 +68,26 @@ namespace nodewrap {
     /** \brief Query the ROS name of the parameter advertised by the
       *   connected parameter service
       */
-    std::string getParamName();
+    std::string getParamName(ros::Duration timeout = ros::Duration(-1));
     
     /** \brief Modify the value of the parameter advertised by the
       *   connected parameter service
       */
-    template <typename T> bool setParamValue(const T& value);
+    template <typename T> bool setParamValue(const T& value, ros::Duration
+      timeout = ros::Duration(-1));
     
     /** \brief Query the value of the parameter advertised by the
-      *   connected parameter service
+      *   connected parameter service, without an exception being
+      *   thrown
       */
-    template <typename T> bool getParamValue(T& value);
+    template <typename T> bool getParamValue(T& value, ros::Duration
+      timeout = ros::Duration(-1));
+    
+    /** \brief Query the value of the parameter advertised by the
+      *   connected parameter service, with an exception being thrown
+      */
+    template <typename T> T getParamValue(ros::Duration timeout =
+      ros::Duration(-1));
     
     /** \brief Query if this parameter service client is valid
       */
@@ -199,13 +205,41 @@ namespace nodewrap {
       NodeImplPtr nodeImpl;
     };
     
-    /** \brief ROS parameter service client implementation (templated version)
+    /** \brief ROS parameter service client implementation (interface version)
       * 
-      * This class provides the private templated implementation of the
-      * parameter service client.
+      * This class provides the private abstract interface of the parameter
+      * service client implementation, templated on the parameter value type.
+      */
+    template <typename T> class ImplI :
+      public Impl {
+    public:
+      /** \brief Constructor
+        */
+      ImplI(const ParamClientOptions& options, const NodeImplPtr& nodeImpl);
+      
+      /** \brief Destructor
+        */
+      virtual ~ImplI();
+      
+      /** \brief Query the value of the parameter advertised by the
+        *   connected parameter service (abstract declaration)
+        */ 
+      virtual bool getParamValue(T& value) = 0;
+      
+      /** \brief Modify the value of the parameter advertised by the
+        *   connected parameter service (abstract declaration)
+        */
+      virtual bool setParamValue(const T& value) = 0;
+    };
+    
+    /** \brief ROS parameter service client implementation (templated on
+      *   the parameter specification)
+      * 
+      * This class provides the private implementation of the parameter
+      * service client, templated on the parameter specification.
       */
     template <class Spec> class ImplT :
-      public Impl {
+      public ImplI<typename Spec::Value> {
     public:
       /** \brief Definition of the parameter value type derived from the
         *   parameter specifications
@@ -235,49 +269,30 @@ namespace nodewrap {
         *   advertised by the connected parameter service
         */
       typedef typename Spec::SetValueServiceResponse SetValueServiceResponse;
-    
-      /** \brief Definition of the function type derived from the parameter
-        *   specification for assigning the parameter's value from a service
-        *   response
-        */
-      typedef typename Spec::FromResponse FromResponse;
-      
-      /** \brief Definition of the function type derived from the parameter
-        *   specification for assigning the parameter's value to a service
-        *   request
-        */
-      typedef typename Spec::ToRequest ToRequest;
       
       /** \brief Constructor
         */
-      ImplT(const FromResponse& fromResponse, const ToRequest& toRequest,
-        const ParamClientOptions& options, const NodeImplPtr& nodeImpl);
+      ImplT(const ParamClientOptions& options, const NodeImplPtr& nodeImpl);
       
       /** \brief Destructor
         */
       virtual ~ImplT();
       
       /** \brief Query the value of the parameter advertised by the
-        *   connected parameter service
+        *   connected parameter service (implementation)
         */ 
       bool getParamValue(Value& value);
       
       /** \brief Modify the value of the parameter advertised by the
-        *   connected parameter service
+        *   connected parameter service (implementation)
         */
       bool setParamValue(const Value& value);
       
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by the connected parameter service from a service
-        *   response
+      /** \brief The callbacks for assigning the value of the parameter
+        *   advertised by the connected parameter service from/to service
+        *   responses/requests 
         */
-      FromResponse fromResponse;
-      
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by the connected parameter service to a service
-        *   request
-        */
-      ToRequest toRequest;
+      ParamClientCallbacksT<Spec> callbacks;      
     };
     
     /** \brief Declaration of the parameter service client implementation

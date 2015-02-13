@@ -16,51 +16,30 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ParamClientNode.h"
-
-NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamClientNode)
-
 namespace nodewrap {
-
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
-
-ParamClientNode::ParamClientNode() {
-}
-
-ParamClientNode::~ParamClientNode() {
-}
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void ParamClientNode::init() {
-  configClient = NodeImpl::configClient("config");
-  
-  xmlClient = configClient.paramClient<XmlRpc::XmlRpcValue>("xml");
-  stringClient = configClient.paramClient<std::string>("string");
-  doubleClient = configClient.paramClient<double>("double");
-  integerClient = configClient.paramClient<int>("integer");
-  booleanClient = configClient.paramClient<bool>("boolean");
-
-  NODEWRAP_INFO("I'm sorry, did you just say you needed my brain?");
-  
-  NODEWRAP_INFO("Value of [xml]: %s",
-    xmlClient.getParamValue<XmlRpc::XmlRpcValue>().toXml().c_str());
-  NODEWRAP_INFO("Value of [string]: %s",
-    stringClient.getParamValue<std::string>().c_str());
-  NODEWRAP_INFO("Value of [double]: %lf",
-    doubleClient.getParamValue<double>());
-  NODEWRAP_INFO("Value of [integer]: %d",
-    integerClient.getParamValue<int>());
-  NODEWRAP_INFO("Value of [boolean]: %s",
-    booleanClient.getParamValue<bool>() ? "true" : "false");
+template <typename P> ParamServer ConfigServer::advertiseParam(const
+    std::string& key, const std::string& name, const std::string& service,
+    bool cached) {
+  if (impl)
+    return impl->template advertiseParam<P>(key, name, service, cached);
+  else
+    return ParamServer();
 }
 
-void ParamClientNode::cleanup() {
-  NODEWRAP_INFO("So this is it. We're going to die.");
+template <typename P> ParamServer ConfigServer::Impl::advertiseParam(const
+    std::string& key, const std::string& name, const std::string& service,
+    bool cached) {
+  AdvertiseParamOptions options;
+  options.template init<P>(service.empty() ? ros::names::append(this->service,
+    ros::names::append("params", key)) : service, name.empty() ? key : name,
+    cached);
+  
+  return this->advertiseParam(key, options);
 }
 
 }

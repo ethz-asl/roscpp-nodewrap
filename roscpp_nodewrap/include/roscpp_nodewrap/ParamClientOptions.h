@@ -29,6 +29,7 @@
 #include <ros/ros.h>
 
 #include <roscpp_nodewrap/Param.h>
+#include <roscpp_nodewrap/ParamClientCallbacks.h>
 #include <roscpp_nodewrap/ParamSpec.h>
 #include <roscpp_nodewrap/ParamType.h>
 
@@ -49,25 +50,22 @@ namespace nodewrap {
       */ 
     template <typename T, class MGetReq, class MGetRes, class MSetReq,
       class MSetRes> void init(const std::string& service, const
-      boost::function<bool(const MGetRes&, T&)>& fromResponse, const
-      boost::function<bool(const T&, MSetReq&)>& toReqeust, bool
-      persistent = false);
+      ParamClientCallbacksT<ParamSpec<T, MGetReq, MGetRes, MSetReq, MSetRes> >&
+      callbacks, bool persistent = false);
     
     /** \brief Templated initializer for this parameter service client options,
       *   based on the parameter type and the service types
       */ 
     template <typename T, class GetService, class SetService> void init(
-      const std::string& service, const boost::function<bool(const typename
-      GetService::Response&, T&)>& fromResponse, const
-      boost::function<bool(const T&, typename SetService::Request&)>&
-      toRequest, bool persistent = false);
+      const std::string& service, const ParamClientCallbacksT<typename
+      ParamSpecS<T, GetService, SetService>::ToParamSpec>& callbacks,
+      bool persistent = false);
     
     /** \brief Templated initializer for this parameter service client options,
       *   based on the parameter specification
       */ 
-    template <class Spec> void init(const std::string& service, const typename
-      Spec::FromResponse& fromResponse, const typename Spec::ToRequest&
-      toRequest, bool persistent = false);
+    template <class Spec> void initBySpecType(const std::string& service,
+      const ParamClientCallbacksT<Spec>& callbacks, bool persistent = false);
     
     /** \brief Templated initializer for this parameter service client
       *   options, based on the parameter type
@@ -87,7 +85,11 @@ namespace nodewrap {
     
     /** \brief Helper object used for creating the parameter service client
       */
-    ParamServiceHelperPtr helper;
+    ParamClientHelperPtr helper;
+    
+    /** \brief Callbacks used by the parameter service client
+      */
+    ParamClientCallbacksPtr callbacks;
     
     /** \brief Extra key/value pairs to add to the connection header of
       *   the parameter service client

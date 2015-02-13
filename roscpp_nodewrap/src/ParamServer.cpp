@@ -19,7 +19,7 @@
 #include <boost/thread/locks.hpp>
 
 #include <roscpp_nodewrap/NodeImpl.h>
-#include <roscpp_nodewrap/ParamServerOptions.h>
+#include <roscpp_nodewrap/AdvertiseParamOptions.h>
 
 #include "roscpp_nodewrap/ParamServer.h"
 
@@ -36,16 +36,16 @@ ParamServer::ParamServer(const ParamServer& src) :
   impl(src.impl) {
 }
 
-ParamServer::ParamServer(const ParamServerOptions& options, const NodeImplPtr&
-    nodeImpl) :
+ParamServer::ParamServer(const AdvertiseParamOptions& options, const
+    NodeImplPtr& nodeImpl) :
   impl(options.helper->createServer(options, nodeImpl).impl) {
 }
 
 ParamServer::~ParamServer() {
 }
 
-ParamServer::Impl::Impl(const ParamServerOptions& options, const NodeImplPtr&
-    nodeImpl) :
+ParamServer::Impl::Impl(const AdvertiseParamOptions& options, const
+    NodeImplPtr& nodeImpl) :
   service(options.service),
   name(options.name.empty() ?
     nodeImpl->getNodeHandle().resolveName(options.service) :

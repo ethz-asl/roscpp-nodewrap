@@ -16,23 +16,59 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/Exceptions.h"
+/** \file ParamServerHelper.h
+  * \brief Header file providing the ParamServerHelper class interface
+  */
+
+#ifndef ROSCPP_NODEWRAP_PARAM_SERVER_HELPER_H
+#define ROSCPP_NODEWRAP_PARAM_SERVER_HELPER_H
+
+#include <ros/ros.h>
+
+#include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
+  /** \brief ROS parameter service server helper
+    * 
+    * This class provides helper functions which are required to create
+    * parameter service servers.
+    */
+  class ParamServerHelper {
+  friend class ConfigServer;
+  friend class ParamServer;
+  public:
+    /** \brief Constructor
+      */ 
+    ParamServerHelper();
+    
+    /** \brief Destructor
+      */ 
+    virtual ~ParamServerHelper();
+    
+  private:
+    /** \brief Create a parameter service server (virtual declaration)
+      */ 
+    virtual ParamServer createServer(const AdvertiseParamOptions& options,
+      const NodeImplPtr& nodeImpl) = 0;
+  };
+  
+  /** \brief ROS parameter service server helper (templated version)
+    */    
+  template <class Spec> class ParamServerHelperT :
+    public ParamServerHelper {
+  public:
+    /** \brief Constructor
+      */ 
+    ParamServerHelperT();
+    
+  private:
+    /** \brief Create a parameter service server (implementation)
+      */ 
+    ParamServer createServer(const AdvertiseParamOptions& options, const
+      NodeImplPtr& nodeImpl);
+  };
+};
 
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
+#include <roscpp_nodewrap/ParamServerHelper.tpp>
 
-InvalidParamKeyException::InvalidParamKeyException(const std::string& key,
-    const std::string& reason) :
-  ros::Exception("Invalid parameter key ["+key+"]: "+reason) {
-}
-
-ParamTypeMismatchException::ParamTypeMismatchException(const std::string&
-    expectedType, const std::string& providedType) :
-  ros::Exception("Provided parameter type ["+providedType+
-    "] mismatches expected parameter type ["+expectedType+"]") {
-}
-
-}
+#endif

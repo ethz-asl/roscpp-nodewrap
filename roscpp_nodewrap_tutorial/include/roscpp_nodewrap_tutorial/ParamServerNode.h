@@ -30,7 +30,8 @@ namespace nodewrap {
   /** \brief Example parameter server node
     * 
     * This parameter server node demonstrates the concept of using
-    * parameter service server for advertising a parameter.
+    * configuration and parameter service servers for advertising a
+    * node's parameters such that they become accessible by another node.
     */
   class ParamServerNode :
     public NodeImpl {
@@ -48,6 +49,11 @@ namespace nodewrap {
     virtual ~ParamServerNode();
   
   protected:
+    /** \brief The configuration service server advertising the parameters
+      *   of this node
+      */
+    ConfigServer configServer;
+    
     /** \brief The parameter service server advertising the XML/RPC parameter
       */
     ParamServer xmlServer;
@@ -70,13 +76,27 @@ namespace nodewrap {
     
     /** \brief Perform parameter server node initialization
       * 
-      * The initialization of the parameter server node involves advertising
-      * the targeted parameter.
+      * The initialization of the parameter server node involves creating
+      * a configuration service server (from standard options) and then
+      * advertising the different parameters employing the interface methods
+      * of this configuration service server. In constrast to using the node
+      * implementation's interface methods for advertising parameters, the
+      * configuration service server will thus build a dictionary of its
+      * parameters such that the associated services can be identified by a
+      * configuration service client.
       *
       * This is the initializer's implementation:
       * 
         \verbatim
         void ParamServerNode::init() {
+          configServer = advertiseConfig();
+          
+          xmlServer = configServer.advertiseParam<XmlRpc::XmlRpcValue>("xml");
+          stringServer = configServer.advertiseParam<std::string>("string");
+          doubleServer = configServer.advertiseParam<double>("double");
+          integerServer = configServer.advertiseParam<int>("integer");
+          booleanServer = configServer.advertiseParam<bool>("boolean");
+          
           NODEWRAP_INFO("I think you ought to know I'm feeling very depressed.");
         }
         \endverbatim

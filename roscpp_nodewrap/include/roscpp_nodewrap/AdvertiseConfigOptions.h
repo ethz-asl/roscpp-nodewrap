@@ -16,40 +16,44 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ParamServerNode.h"
+/** \file AdvertiseConfigOptions.h
+  * \brief Header file providing the AdvertiseConfigOptions class interface
+  */
 
-NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamServerNode)
+#ifndef ROSCPP_NODEWRAP_ADVERTISE_CONFIG_OPTIONS_H
+#define ROSCPP_NODEWRAP_ADVERTISE_CONFIG_OPTIONS_H
+
+#include <ros/ros.h>
+
+#include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
+  /** \brief ROS advertise configuration service options
+    * 
+    * This class encapsulates all options available for creating a
+    * configuration service server.
+    */
+  class AdvertiseConfigOptions {
+  public:
+    /** \brief Default constructor
+      */
+    AdvertiseConfigOptions();
+    
+    /** \brief The name of the configuration service the configuration
+     *    service server advertises
+      */ 
+    std::string service;
+    
+    /** \brief The callback queue to be used by the configuration service
+      *   server
+      */ 
+    ros::CallbackQueueInterface* callbackQueue;
+    
+    /** \brief A shared pointer to an object to track for the configuration
+      *   service server callbacks
+      */ 
+    ros::VoidConstPtr trackedObject;    
+  };
+};
 
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
-
-ParamServerNode::ParamServerNode() {
-}
-
-ParamServerNode::~ParamServerNode() {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void ParamServerNode::init() {
-  configServer = advertiseConfig();
-  
-  xmlServer = configServer.advertiseParam<XmlRpc::XmlRpcValue>("xml");
-  stringServer = configServer.advertiseParam<std::string>("string");
-  doubleServer = configServer.advertiseParam<double>("double");
-  integerServer = configServer.advertiseParam<int>("integer");
-  booleanServer = configServer.advertiseParam<bool>("boolean");
-  
-  NODEWRAP_INFO("I think you ought to know I'm feeling very depressed.");
-}
-
-void ParamServerNode::cleanup() {
-  NODEWRAP_INFO("I told you this would all end in tears.");
-}
-
-}
+#endif

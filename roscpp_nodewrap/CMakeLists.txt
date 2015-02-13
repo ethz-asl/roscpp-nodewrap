@@ -72,7 +72,10 @@ include_directories(
 
 ## Declare a cpp library
 add_library(roscpp_nodewrap
+  src/AdvertiseConfigOptions.cpp
+  src/AdvertiseParamOptions.cpp
   src/ConfigClient.cpp
+  src/ConfigClientOptions.cpp
   src/ConfigServer.cpp
   src/Exceptions.cpp
   src/NodeImpl.cpp
@@ -80,10 +83,12 @@ add_library(roscpp_nodewrap
   src/Param.cpp
 #   src/ParamCallbackHelper.cpp
   src/ParamClient.cpp
+  src/ParamClientCallbacks.cpp
+  src/ParamClientHelper.cpp
   src/ParamClientOptions.cpp
   src/ParamServer.cpp
-  src/ParamServerOptions.cpp
-  src/ParamServiceHelper.cpp
+  src/ParamServerHelper.cpp
+  src/ParamServerCallbacks.cpp
   src/ParamType.cpp
   src/Signal.cpp
 )

@@ -34,6 +34,15 @@ namespace nodewrap {
     InvalidParamKeyException(const std::string& key, const std::string&
       reason);
   };
+  
+  /** \brief Exception thrown in case of a parameter type mismatch
+    */ 
+  class ParamTypeMismatchException :
+    public ros::Exception {
+  public:
+    ParamTypeMismatchException(const std::string& expectedType, const
+      std::string& providedType);
+  };
 };
 
 #endif

@@ -33,28 +33,36 @@ ConfigClient::ConfigClient(const ConfigClient& src) :
   impl(src.impl) {
 }
 
-ConfigClient::ConfigClient(const std::string& service, const NodeImplPtr&
-    nodeImpl) :
-  impl(new Impl(service ,nodeImpl)) {
+ConfigClient::ConfigClient(const ConfigClientOptions& options, const
+    NodeImplPtr& nodeImpl) :
+  impl(new Impl(options, nodeImpl)) {
 }
 
 ConfigClient::~ConfigClient() {
 }
 
-ConfigClient::Impl::Impl(const std::string& service, const NodeImplPtr&
-    nodeImpl) :
+ConfigClient::Impl::Impl(const ConfigClientOptions& options, const
+    NodeImplPtr& nodeImpl) :
+  service(options.service),
   nodeImpl(nodeImpl) {
-  listParamsClient = nodeImpl->getNodeHandle().serviceClient<
-    ListParams::Request, ListParams::Response>(
-    ros::names::append(service, "list_params"));
+  ros::ServiceClientOptions listParamsOptions;
+  listParamsOptions.init<ListParams::Request, ListParams::Response>(
+    ros::names::append(options.service, "list_params"), options.persistent,
+    options.header);
+  listParamsClient = nodeImpl->getNodeHandle().serviceClient(
+    listParamsOptions);
+    
+  ros::ServiceClientOptions hasParamOptions;
+  hasParamOptions.init<HasParam::Request, HasParam::Response>(
+    ros::names::append(options.service, "has_param"), options.persistent,
+    options.header);
+  hasParamClient = nodeImpl->getNodeHandle().serviceClient(hasParamOptions);
   
-  hasParamClient = nodeImpl->getNodeHandle().serviceClient<
-    HasParam::Request, HasParam::Response>(
-    ros::names::append(service, "has_param"));
-  
-  findParamClient = nodeImpl->getNodeHandle().serviceClient<
-    FindParam::Request, FindParam::Response>(
-    ros::names::append(service, "find_param"));
+  ros::ServiceClientOptions findParamOptions;
+  findParamOptions.init<FindParam::Request, FindParam::Response>(
+    ros::names::append(options.service, "find_param"), options.persistent,
+    options.header);
+  findParamClient = nodeImpl->getNodeHandle().serviceClient(findParamOptions);
 }
 
 ConfigClient::Impl::~Impl() {
@@ -72,22 +80,23 @@ std::string ConfigClient::getService() const {
     return std::string();
 }
 
-std::vector<std::string> ConfigClient::getParamKeys() {
-  if (impl)
+std::vector<std::string> ConfigClient::getParamKeys(ros::Duration timeout) {
+  if (impl && impl->listParamsClient.waitForExistence(timeout))
     return impl->getParamKeys();
   else
     return std::vector<std::string>();
 }
 
-std::string ConfigClient::getParamService(const std::string& key) {
-  if (impl)
+std::string ConfigClient::getParamService(const std::string& key,
+    ros::Duration timeout) {
+  if (impl && impl->findParamClient.waitForExistence(timeout))
     return impl->getParamService(key);
   else
     return std::string();
 }
 
-bool ConfigClient::hasParam(const std::string& key) {
-  if (impl)
+bool ConfigClient::hasParam(const std::string& key, ros::Duration timeout) {
+  if (impl && impl->hasParamClient.waitForExistence(timeout))
     return impl->hasParam(key);
   else
     return false;
@@ -175,17 +184,22 @@ void ConfigClient::shutdown() {
 
 ParamClient ConfigClient::paramClient(const std::string& key, const
     ParamClientOptions& options, ros::Duration timeout) {
+  if (impl && waitForExistence(timeout))
+    return impl->paramClient(key, options);
+  else
+    return ParamClient();
+}
+
+ParamClient ConfigClient::Impl::paramClient(const std::string& key,
+    const ParamClientOptions& options) {
   ParamClient paramClient;
-  
-  if (waitForExistence(timeout)) {
-    std::string paramService = getParamService(key);
+  std::string paramService = getParamService(key);
     
-    if (!paramService.empty()) {
-      ParamClientOptions paramClientOptions = options;
-      paramClientOptions.service = paramService;
-      
-      paramClient = ParamClient(options, impl->nodeImpl);
-    }
+  if (!paramService.empty()) {
+    ParamClientOptions resolvedOptions = options;
+    resolvedOptions.service = paramService;
+    
+    paramClient = ParamClient(resolvedOptions, nodeImpl);
   }
   
   return paramClient;

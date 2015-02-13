@@ -16,51 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ParamClientNode.h"
-
-NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamClientNode)
-
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ParamClientNode::ParamClientNode() {
+template <class Spec> ParamClientCallbacksT<Spec>::ParamClientCallbacksT(
+    const FromResponse& fromResponse, const ToRequest& toRequest) :
+  fromResponse(fromResponse),
+  toRequest(toRequest) {
 }
 
-ParamClientNode::~ParamClientNode() {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void ParamClientNode::init() {
-  configClient = NodeImpl::configClient("config");
-  
-  xmlClient = configClient.paramClient<XmlRpc::XmlRpcValue>("xml");
-  stringClient = configClient.paramClient<std::string>("string");
-  doubleClient = configClient.paramClient<double>("double");
-  integerClient = configClient.paramClient<int>("integer");
-  booleanClient = configClient.paramClient<bool>("boolean");
-
-  NODEWRAP_INFO("I'm sorry, did you just say you needed my brain?");
-  
-  NODEWRAP_INFO("Value of [xml]: %s",
-    xmlClient.getParamValue<XmlRpc::XmlRpcValue>().toXml().c_str());
-  NODEWRAP_INFO("Value of [string]: %s",
-    stringClient.getParamValue<std::string>().c_str());
-  NODEWRAP_INFO("Value of [double]: %lf",
-    doubleClient.getParamValue<double>());
-  NODEWRAP_INFO("Value of [integer]: %d",
-    integerClient.getParamValue<int>());
-  NODEWRAP_INFO("Value of [boolean]: %s",
-    booleanClient.getParamValue<bool>() ? "true" : "false");
-}
-
-void ParamClientNode::cleanup() {
-  NODEWRAP_INFO("So this is it. We're going to die.");
+template <class Spec> ParamClientCallbacksT<Spec>::ParamClientCallbacksT(
+    const ParamClientCallbacksT<Spec>& src) :
+  fromResponse(src.fromResponse),
+  toRequest(src.toRequest) {
 }
 
 }

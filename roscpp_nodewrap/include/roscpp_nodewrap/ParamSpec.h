@@ -62,37 +62,37 @@ namespace nodewrap {
       */
     typedef MSetRes SetValueServiceResponse;
 
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value from an XML/RPC value
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value from an XML/RPC value
       */
     typedef boost::function<bool(const XmlRpc::XmlRpcValue&, T&)>
-      FromXmlRpcValue;
+      FromXmlRpcValueCallback;
       
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value to an XML/RPC value
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value to an XML/RPC value
       */
     typedef boost::function<bool(const T&, XmlRpc::XmlRpcValue&)>
-      ToXmlRpcValue;
+      ToXmlRpcValueCallback;
       
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value from a service request
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value from a service request
       */
-    typedef boost::function<bool(const MSetReq&, T&)> FromRequest;
+    typedef boost::function<bool(const MSetReq&, T&)> FromRequestCallback;
     
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value to a service request
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value to a service request
       */
-    typedef boost::function<bool(const T&, MSetReq&)> ToRequest;
+    typedef boost::function<bool(const T&, MSetReq&)> ToRequestCallback;
     
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value from a service response
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value from a service response
       */
-    typedef boost::function<bool(const MGetRes&, T&)> FromResponse;
+    typedef boost::function<bool(const MGetRes&, T&)> FromResponseCallback;
     
-    /** \brief Definition of the function type for assigning the parameter's
-      *   value to a service response
+    /** \brief Definition of the callback function type for assigning the
+      *   parameter's value to a service response
       */
-    typedef boost::function<bool(const T&, MGetRes&)> ToResponse;
+    typedef boost::function<bool(const T&, MGetRes&)> ToResponseCallback;
   };
   
   /** \brief ROS parameter specification, templated on the parameter type

@@ -16,52 +16,18 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/ParamClient.h>
-#include <roscpp_nodewrap/ParamServer.h>
+#include "roscpp_nodewrap/ParamServerHelper.h"
 
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
-    
-template <class Spec> ParamServiceHelperT<Spec>::ParamServiceHelperT(const
-    FromResponse& fromResponse, const ToRequest& toRequest) :
-  toRequest(toRequest),
-  fromResponse(fromResponse) {
+
+ParamServerHelper::ParamServerHelper() {
 }
 
-template <class Spec> ParamServiceHelperT<Spec>::ParamServiceHelperT(const
-    FromXmlRpcValue& fromXmlRpcValue, const ToXmlRpcValue& toXmlRpcValue,
-    const FromRequest& fromRequest, const ToResponse& toResponse) :
-  fromXmlRpcValue(fromXmlRpcValue),
-  toXmlRpcValue(toXmlRpcValue),
-  fromRequest(fromRequest),
-  toResponse(toResponse) {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-template <class Spec>
-ParamClient ParamServiceHelperT<Spec>::createClient(const ParamClientOptions&
-    options, const NodeImplPtr& nodeImpl) {
-  ParamClient paramClient;
-  paramClient.impl.reset(new ParamClient::ImplT<Spec>(fromResponse,
-    toRequest, options, nodeImpl));
-  
-  return paramClient;
-}
-
-template <class Spec>
-ParamServer ParamServiceHelperT<Spec>::createServer(const ParamServerOptions&
-    options, const NodeImplPtr& nodeImpl) {
-  ParamServer paramServer;
-  paramServer.impl.reset(new ParamServer::ImplT<Spec>(fromXmlRpcValue,
-    toXmlRpcValue, fromRequest, toResponse, options, nodeImpl));
-  
-  return paramServer;
+ParamServerHelper::~ParamServerHelper() {
 }
 
 }

@@ -5,5 +5,7 @@
   <node name="marvin" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ParamServerNode param_services" output="screen">
     <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/marvin.yaml"/>
   </node>
-  <node name="arthur" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ParamClientNode param_services" output="screen"/>
+  <node name="arthur" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ParamClientNode param_services" output="screen">
+    <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/arthur.yaml"/>
+  </node>
 </launch>

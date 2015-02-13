@@ -16,12 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file ParamServerOptions.h
-  * \brief Header file providing the ParamServerOptions class interface
+/** \file AdvertiseParamOptions.h
+  * \brief Header file providing the AdvertiseParamOptions class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_PARAM_SERVER_OPTIONS_H
-#define ROSCPP_NODEWRAP_PARAM_SERVER_OPTIONS_H
+#ifndef ROSCPP_NODEWRAP_ADVERTISE_PARAM_OPTIONS_H
+#define ROSCPP_NODEWRAP_ADVERTISE_PARAM_OPTIONS_H
 
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_abstract.hpp>
@@ -29,53 +29,47 @@
 #include <ros/ros.h>
 
 #include <roscpp_nodewrap/Param.h>
+#include <roscpp_nodewrap/ParamServerCallbacks.h>
 #include <roscpp_nodewrap/ParamSpec.h>
 #include <roscpp_nodewrap/ParamType.h>
 
 namespace nodewrap {
-  /** \brief ROS parameter service server options
+  /** \brief ROS advertise parameter service options
     * 
     * This class encapsulates all options available for creating a parameter
     * service server.
     */
-  class ParamServerOptions {
+  class AdvertiseParamOptions {
   public:
     /** \brief Default constructor
       */
-    ParamServerOptions();
+    AdvertiseParamOptions();
     
-    /** \brief Templated initializer for this parameter service server options,
-      *   based on the parameter type and the service request/response types
+    /** \brief Templated initializer for this advertise parameter service
+      *   options, based on the parameter type and the service request/response
+      *   types
       */ 
     template <typename T, class MGetReq, class MGetRes, class MSetReq,
       class MSetRes> void init(const std::string& service, const std::string&
-      name, const boost::function<bool(const XmlRpc::XmlRpcValue&, T&)>&
-      fromXmlRpcValue, const boost::function<bool(const T&,
-      XmlRpc::XmlRpcValue&)>& toXmlRpcValue, const boost::function<bool(const
-      MSetReq&, T&)>& fromRequest, const boost::function<bool(const T&,
-      MGetRes&)>& toResponse, bool cached = true);
+      name, const ParamServerCallbacksT<ParamSpec<T, MGetReq, MGetRes, MSetReq,
+      MSetRes> >& callbacks, bool cached = true);
     
-    /** \brief Templated initializer for this parameter service server options,
-      *   based on the parameter type and the service types
+    /** \brief Templated initializer for this advertise parameter service
+      *   options, based on the parameter type and the service types
       */ 
     template <typename T, class GetService, class SetService> void init(
       const std::string& service, const std::string& name, const
-      boost::function<bool(const XmlRpc::XmlRpcValue&, T&)>& fromXmlRpcValue,
-      const boost::function<bool(const T&, XmlRpc::XmlRpcValue&)>&
-      toXmlRpcValue, const boost::function<bool(const typename
-      SetService::Request&, T&)>& fromRequest, const boost::function<bool(const
-      T&, typename GetService::Response&)>& toResponse, bool cached = true);
+      ParamServerCallbacksT<typename ParamSpecS<T, GetService,
+      SetService>::ToParamSpec>& callbacks, bool cached = true);
     
-    /** \brief Templated initializer for this parameter service server options,
-      *   based on the parameter specification
+    /** \brief Templated initializer for this advertise parameter service
+      *   options, based on the parameter specification
       */ 
-    template <class Spec> void init(const std::string& service, const
-      std::string& name, const typename Spec::FromXmlRpcValue& fromXmlRpcValue,
-      const typename Spec::ToXmlRpcValue& toXmlRpcValue, const typename
-      Spec::FromRequest& fromRequest, const typename Spec::ToResponse&
-      toResponse, bool cached = true);
+    template <class Spec> void initBySpecType(const std::string& service,
+      const std::string& name, const ParamServerCallbacksT<Spec>& callbacks,
+      bool cached = true);
     
-    /** \brief Templated initializer for this parameter service server
+    /** \brief Templated initializer for this advertise parameter service
       *   options, based on the parameter type
       */ 
     template <typename T> void init(const std::string& service, const
@@ -103,7 +97,11 @@ namespace nodewrap {
 
     /** \brief Helper object used for creating the parameter service server
       */
-    ParamServiceHelperPtr helper;
+    ParamServerHelperPtr helper;
+    
+    /** \brief Callbacks used by the parameter service server
+      */
+    ParamServerCallbacksPtr callbacks;
     
     /** \brief The callback queue to be used by the parameter service server
       */ 
@@ -116,6 +114,6 @@ namespace nodewrap {
   };
 };
 
-#include <roscpp_nodewrap/ParamServerOptions.tpp>
+#include <roscpp_nodewrap/AdvertiseParamOptions.tpp>
 
 #endif

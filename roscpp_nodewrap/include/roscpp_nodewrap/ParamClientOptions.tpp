@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <roscpp_nodewrap/ParamServiceHelper.h>
+#include <roscpp_nodewrap/ParamClientHelper.h>
 
 namespace nodewrap {
 
@@ -25,50 +25,49 @@ namespace nodewrap {
 /*****************************************************************************/
 
 template <typename T, class MGetReq, class MGetRes, class MSetReq,
-  class MSetRes>
+    class MSetRes>
 void ParamClientOptions::init(const std::string& service, const
-      boost::function<bool(const MGetRes&, T&)>& fromResponse, const
-      boost::function<bool(const T&, MSetReq&)>& toRequest, bool persistent) {
+    ParamClientCallbacksT<ParamSpec<T, MGetReq, MGetRes, MSetReq, MSetRes> >&
+    callbacks, bool persistent) {
   this->service = service;
   this->type = ParamType::template get<T>();
   this->persistent = persistent;
-  this->helper.reset(new ParamServiceHelperT<
-    ParamSpec<T, MGetReq, MGetRes, MSetReq, MSetRes> >(fromResponse,
-    toRequest));
+  this->helper.reset(new ParamClientHelperT<
+    ParamSpec<T, MGetReq, MGetRes, MSetReq, MSetRes> >());
+  this->callbacks.reset(new ParamClientCallbacksT<
+    ParamSpec<T, MGetReq, MGetRes, MSetReq, MSetRes> >(callbacks));
 }
 
 template <typename T, class GetService, class SetService>
 void ParamClientOptions::init(const std::string& service, const
-    boost::function<bool(const typename GetService::Response&, T&)>&
-    fromResponse, const boost::function<bool(const T&, typename
-    SetService::Request&)>& toRequest, bool persistent) {
+    ParamClientCallbacksT<typename ParamSpecS<T, GetService,
+    SetService>::ToParamSpec>& callbacks, bool persistent) {
   this->template init<T,
     typename GetService::Request,
     typename GetService::Response,
     typename SetService::Request,
-    typename SetService::Response>(service, fromResponse, toRequest,
-    persistent);
+    typename SetService::Response>(service, callbacks, persistent);
 }
 
 template <class Spec>
-void ParamClientOptions::init(const std::string& service, const typename
-    Spec::FromResponse& fromResponse, const typename Spec::ToRequest&
-    toRequest, bool persistent) {
+void ParamClientOptions::initBySpecType(const std::string& service, const
+    ParamClientCallbacksT<Spec>& callbacks, bool persistent) {
   this->template init<typename Spec::Value,
     typename Spec::GetValueServiceRequest,
     typename Spec::GetValueServiceResponse,
     typename Spec::SetValueServiceRequest,
-    typename Spec::SetValueServiceResponse>(service, fromResponse,
-    toRequest, persistent);
+    typename Spec::SetValueServiceResponse>(service, callbacks, persistent);
 }
 
 template <typename T>
 void ParamClientOptions::init(const std::string& service, bool persistent,
     typename boost::disable_if<typename boost::is_abstract<Param<T> > >::type*
     dummy) {
-  this->template init<typename Param<T>::Spec>(service,
+  ParamClientCallbacksT<typename Param<T>::Spec> callbacks(
     boost::bind(&Param<T>::fromResponse, _1, _2),
-    boost::bind(&Param<T>::toRequest, _1, _2), persistent);
+    boost::bind(&Param<T>::toRequest, _1, _2));
+  this->template initBySpecType<typename Param<T>::Spec>(service, callbacks,
+    persistent);
 }
 
 }

@@ -31,11 +31,10 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
+#include <roscpp_nodewrap/ConfigClient.h>
 #include <roscpp_nodewrap/ConfigServer.h>
 #include <roscpp_nodewrap/ParamClient.h>
-#include <roscpp_nodewrap/ParamClientOptions.h>
 #include <roscpp_nodewrap/ParamServer.h>
-#include <roscpp_nodewrap/ParamServerOptions.h>
 
 namespace nodewrap {
   /** \brief Abstract class implementation of a ROS node(let)
@@ -129,6 +128,18 @@ namespace nodewrap {
     
     /** \brief Retrieve advertise options from the parameter server
       * 
+      * This method takes a parameter name under which the advertise
+      * options may be retrieved from the parameter server and adapts
+      * the default advertise options according to the parameter values.
+      * In particular, the parameter is expected to represent a structure
+      * of the following YAML format:
+      * 
+      * - publishers:
+      *   - param:
+      *     - topic: <string>
+      *     - queue_size: <int>
+      *     - latch: <bool>
+      * 
       * \param[in] key The key referring to the publisher whose advertise
       *   options shall be retrieved.
       * \param[in] defaultOptions The publisher's default advertise options.
@@ -142,6 +153,17 @@ namespace nodewrap {
 
     /** \brief Retrieve subscribe options from the parameter server
       * 
+      * This method takes a parameter name under which the subscribe
+      * options may be retrieved from the parameter server and adapts
+      * the default subscribe options according to the parameter values.
+      * In particular, the parameter is expected to represent a structure
+      * of the following YAML format:
+      * 
+      * - subscribers:
+      *   - param:
+      *     - topic: <string>
+      *     - queue_size: <int>
+      * 
       * \param[in] key The key referring to the subscriber whose subscribe
       *   options shall be retrieved.
       * \param[in] defaultOptions The subscriber's default subscribe options.
@@ -154,6 +176,16 @@ namespace nodewrap {
       ros::SubscribeOptions& defaultOptions) const;
 
     /** \brief Retrieve advertise service options from the parameter server
+      * 
+      * This method takes a parameter name under which the advertise service
+      * options may be retrieved from the parameter server and adapts the
+      * default advertise service options according to the parameter values.
+      * In particular, the parameter is expected to represent a structure of
+      * the following YAML format:
+      * 
+      * - servers:
+      *   - param:
+      *     - service: <string>
       * 
       * \param[in] key The key referring to the service server whose advertise
       *   service options shall be retrieved.
@@ -169,6 +201,17 @@ namespace nodewrap {
 
     /** \brief Retrieve service client options from the parameter server
       * 
+      * This method takes a parameter name under which the service client
+      * options may be retrieved from the parameter server and adapts the
+      * default service client options according to the parameter values.
+      * In particular, the parameter is expected to represent a structure of
+      * the following YAML format:
+      * 
+      * - clients:
+      *   - param:
+      *     - service: <string>
+      *     - persistent: <bool>
+      * 
       * \param[in] key The key referring to the service client whose service
       *   client options shall be retrieved.
       * \param[in] defaultOptions The service client's default service client
@@ -180,6 +223,60 @@ namespace nodewrap {
       */
     ros::ServiceClientOptions getServiceClientOptions(const std::string& key,
       const ros::ServiceClientOptions& defaultOptions) const;
+
+    /** \brief Retrieve advertise configuration service options from the
+      *   parameter server
+      * 
+      * This method takes a parameter name under which the advertise
+      * configuration service options may be retrieved from the parameter
+      * server and adapts the default advertise configuration service
+      * options according to the parameter values. In particular, the
+      * parameter is expected to represent a structure of the following
+      * YAML format:
+      * 
+      * - servers:
+      *   - param:
+      *     - service: <string>
+      * 
+      * \param[in] key The key referring to the advertise configuration service
+      *   whose advertise configuration service options shall be retrieved.
+      * \param[in] defaultOptions The configuration service server's default
+      *   advertise configuration service options.
+      * \return The actual advertise configuration service options if the
+      *   corresponding parameters have been defined or their default values
+      *   otherwise.
+      * 
+      * \see getParam
+      */
+    AdvertiseConfigOptions getAdvertiseConfigOptions(const std::string&
+      key, const AdvertiseConfigOptions& defaultOptions) const;
+
+    /** \brief Retrieve configuration service client options from the
+      *   parameter server
+      * 
+      * This method takes a parameter name under which the configuration
+      * service client options may be retrieved from the parameter
+      * server and adapts the default configuration service client options
+      * according to the parameter values. In particular, the parameter is
+      * expected to represent a structure of the following YAML format:
+      * 
+      * - clients:
+      *   - param:
+      *     - service: <string>
+      *     - persistent: <bool>
+      * 
+      * \param[in] key The key referring to the configuration service client
+      *   whose configuration service client options shall be retrieved.
+      * \param[in] defaultOptions The configuration service client's default
+      *   configuration service client options.
+      * \return The actual configuration service client options if the
+      *   corresponding parameters have been defined or their default values
+      *   otherwise.
+      * 
+      * \see getParam
+      */
+    ConfigClientOptions getConfigClientOptions(const std::string& key, const
+      ConfigClientOptions& defaultOptions) const;
 
     /** \brief Perform node(let) initialization
       * 
@@ -256,16 +353,10 @@ namespace nodewrap {
     /** \brief Advertise a topic, with full range of options
       * 
       * Extending the standard ROS interface for advertising topics, this
-      * implementation takes a parameter name under which the publisher
-      * configuration may be retrieved from the parameter server. In
-      * particular, this parameter is expected to represent a structure of
-      * the following YAML format:
-      * 
-      * - publishers:
-      *   - param:
-      *     - topic: <string>
-      *     - queue_size: <int>
-      *     - latch: <bool>
+      * implementation takes a parameter name under which the  advertise
+      * options may be retrieved from the parameter server and adapts the
+      * default  advertise options according to the parameter values.
+      * See getAdvertiseOptions for details.
       * 
       * \param[in] param The name of the parameter which stores the
       *   configuration of the new publisher.
@@ -326,14 +417,9 @@ namespace nodewrap {
       * 
       * Extending the standard ROS interface for subscribing to topics, this
       * implementation takes a parameter name under which the subscribe
-      * configuration may be retrieved from the parameter server. In
-      * particular, this parameter is expected to represent a structure of
-      * the following YAML format:
-      * 
-      * - subscribers:
-      *   - param:
-      *     - topic: <string>
-      *     - queue_size: <int>
+      * options may be retrieved from the parameter server and adapts the
+      * default subscribe options according to the parameter values.
+      * See getSubscribeOptions for details.
       * 
       * \param[in] param The name of the parameter which stores the
       *   configuration of the new subscriber.
@@ -400,14 +486,10 @@ namespace nodewrap {
     /** \brief Advertise a service, with full range of options
       * 
       * Extending the standard ROS interface for advertising services, this
-      * implementation takes a parameter name under which the service server
-      * configuration may be retrieved from the parameter server. In
-      * particular, this parameter is expected to represent a structure of
-      * the following YAML format:
-      * 
-      * - servers:
-      *   - param:
-      *     - service: <string>
+      * implementation takes a parameter name under which the advertise
+      * service options may be retrieved from the parameter server and adapts
+      * the default advertise service options according to the parameter
+      * values. See getAdvertiseOptions for details.
       * 
       * \param[in] param The name of the parameter which stores the
       *   configuration of the new service server.
@@ -427,7 +509,7 @@ namespace nodewrap {
       *   configuration of the new service client.
       * \param[in] defaultService The default name of the service to
       *   connect to.
-      * \param[in] defaultPersistent  Whether this connection should persist
+      * \param[in] defaultPersistent Whether this connection should persist
       *   by default. Persistent services keep the connection to the remote
       *   host active so that subsequent calls will happen faster. In general
       *   persistent services are discouraged, as they are not as robust to
@@ -455,7 +537,7 @@ namespace nodewrap {
       *   configuration of the new service client.
       * \param[in] defaultService The default name of the service to
       *   connect to.
-      * \param[in] defaultPersistent  Whether this connection should persist
+      * \param[in] defaultPersistent Whether this connection should persist
       *   by default. Persistent services keep the connection to the remote
       *   host active so that subsequent calls will happen faster. In general
       *   persistent services are discouraged, as they are not as robust to
@@ -479,14 +561,9 @@ namespace nodewrap {
       * 
       * Extending the standard ROS interface for creating service clients,
       * this implementation takes a parameter name under which the service
-      * client configuration may be retrieved from the parameter server. In
-      * particular, this parameter is expected to represent a structure of
-      * the following YAML format:
-      * 
-      * - clients:
-      *   - param:
-      *     - service: <string>
-      *     - persistent: <bool>
+      * client options may be retrieved from the parameter server and adapts
+      * the default service client options according to the parameter values.
+      * See getServiceClientOptions for details.
       * 
       * \param[in] param The name of the parameter which stores the
       *   configuration of the new service client.
@@ -499,71 +576,83 @@ namespace nodewrap {
     ros::ServiceClient serviceClient(const std::string& param, const
       ros::ServiceClientOptions& defaultOptions);
     
+    /** \brief Advertise a configuration service, with standard options
+      * 
+      * \param[in] param The name of the parameter which stores the
+      *   configuration of the new configuration service server.
+      * \param[in] defaultService The default service name to advertise on.
+      *   If empty, the services of the configuration service server will
+      *   by default be advertised under the node's private namespace.
+      * \return On success, a configuration service server that, when all
+      *   copies of it go out of scope, will unadvertise this configuration
+      *   service.
+      * 
+      * \see advertiseConfig(const std::string&, const ConfigServerOptions&)
+      *   for a detailed description of the method's behavior.
+      */
+    ConfigServer advertiseConfig(const std::string& param = "config",
+      const std::string& defaultService = std::string());
+    
+    /** \brief Advertise a configuration service, with full range of options
+      * 
+      * The configuration service server provides information about the
+      * parameter services which have been advertised for this node through
+      * the interface method ConfigServer::advertiseParam. In contrast to
+      * the node implementation interface for advertising parameter services,
+      * the configuration service server therefore associates a key with each
+      * of the parameters. These keys may then be enumerated and employed to
+      * identify a particular parameter service.
+      * 
+      * In particular, the configuration services comprise:
+      * 
+      * - list_params: <ListParams>
+      * - has_params: <HasParam>
+      * - find_param: <FindParam>
+      * 
+      * Extending the standard ROS interface for advertising services, this
+      * implementation takes a parameter name under which the advertise
+      * configuration service options may be retrieved from the parameter
+      * server and adapts the default advertise configuration service options
+      * according to the parameter values. See getAdvertiseConfigOptions for
+      * details.
+      * 
+      * \param[in] param The name of the parameter which stores the
+      *   configuration of the new configuration service server.
+      * \param[in] defaultOptions The default advertise configuration service
+      *   options to use.
+      * \return On success, a configuration service server that, when all
+      *   copies of it go out of scope, will unadvertise this configuration
+      *   service.
+      */
+    ConfigServer advertiseConfig(const std::string& param, const
+      AdvertiseConfigOptions& defaultOptions);
+    
     /** \brief Advertise a parameter service, templated on the parameter type
       *   and with standard options
       * 
-      * \param[in] key The key of the parameter to be advertised.
-      * \param[in] service The parameter service name to advertise on. If
-      *   empty, the provided parameter key will instead be used to construct
-      *   the service name as params/key.
       * \param[in] name The name of the parameter under which it can be
-      *   accessed through rosparam. If empty, the provided parameter key
-      *   will instead be assumed to also correspond to the parameter name,
-      *   in which case it would be interpreted as a relative graph resource
-      *   name.
+      *   accessed through rosparam.
+      * \param[in] service The parameter service name to advertise on.
+      *   If empty, the provided parameter name will instead be used to
+      *   construct the service name as params/name, in which case it
+      *   would be interpreted as a relative graph resource name.
       * \param[in] cached If true, the parameter service server will provide
       *   the cached parameter value.
       * \return On success, a parameter service server that, when all copies
       *   of it go out of scope, will unadvertise this parameter service.
       * 
-      * \see advertiseParam(const std::string&, const ParamServerOptions&)
-      *   for a detailed description of the method's behavior.
+      * \see advertiseParam(const AdvertiseParamOptions&) for a detailed
+      *   description of the method's behavior.
       */
-    template <typename P> ParamServer advertiseParam(const std::string& key,
-      const std::string& service = std::string(), const std::string& name =
-      std::string(), bool cached = true);
-    
-    /** \brief Advertise a parameter service, templated on the parameter
-      *   specification and with standard options
-      * 
-      * \param[in] key The key of the parameter to be advertised.
-      * \param[in] fromXmlRpcValue Function for assigning the parameter's
-      *   value from an XML/RPC value.
-      * \param[in] toXmlRpcValue Function for assigning the parameter's
-      *   value to an XML/RPC value.
-      * \param[in] fromRequest Function for assigning the parameter's
-      *   value from a service request.
-      * \param[in] toResponse Function for assigning the parameter's
-      *   value to a service response.
-      * \param[in] service The parameter service name to advertise on. If
-      *   empty, the provided parameter key will instead be used to construct
-      *   the service name as params/key.
-      * \param[in] name The name of the parameter under which it can be
-      *   accessed through rosparam. If empty, the provided parameter key
-      *   will instead be assumed to also correspond to the parameter name,
-      *   in which case it would be interpreted as a relative graph resource
-      *   name.
-      * \param[in] cached If true, the parameter service server will provide
-      *   the cached parameter value.
-      * \return On success, a parameter service server that, when all copies
-      *   of it go out of scope, will unadvertise this parameter service.
-      * 
-      * \see advertiseParam(const std::string&, const ParamServerOptions&)
-      *   for a detailed description of the method's behavior.
-      */
-    template <class PSpec> ParamServer advertiseParam(const std::string&
-      key, const typename PSpec::FromXmlRpcValue& fromXmlRpcValue, const
-      typename PSpec::ToXmlRpcValue& toXmlRpcValue, const typename
-      PSpec::FromRequest& fromRequest, const typename PSpec::ToResponse&
-      toResponse, const std::string& service = std::string(), const
-      std::string& name = std::string(), bool cached = true);
+    template <typename P> ParamServer advertiseParam(const std::string&
+      name, const std::string& service = std::string(), bool cached = true);
     
     /** \brief Advertise a parameter service, with full range of options
       * 
       * To advertise a parameter service, this method employs the service
-      * name specified in the parameter server options as parent namespace
-      * for the services. The service signatures further depend on the
-      * value type of the advertised parameter and must be specified as
+      * name specified in the advertise parameter service options as parent
+      * namespace for the services. The service signatures further depend on
+      * the value type of the advertised parameter and must be specified as
       * template parameters in the templated initializer of the parameter
       * server options. Similarly, the types of the functions required to
       * assign the parameter value from/to its XML/RPC value representation
@@ -581,24 +670,64 @@ namespace nodewrap {
       * where <GetParamValue> and <SetParamValue> would correspond to the
       * service types defined for the advertised parameter.
       * 
-      * On creation of the first parameter service server, a configuration
-      * service server will be instantiated simultaneously. It provides
-      * information about all parameter services which have been advertised
-      * for this node. In particular, the configuration services comprise:
-      * 
-      * - list_params: <ListParams>
-      * - has_params: <HasParam>
-      * 
-      * and may be called to identify a node's parameter services.
-      * 
-      * \param[in] key The key of the parameter to be advertised.
-      * \param[in] options The parameter service server options to use.
+      * \param[in] options The advertise parameter service options to use.
       * \return On success, a parameter service server that, when all copies
       *   of it go out of scope, will unadvertise this parameter service.
       */
-    ParamServer advertiseParam(const std::string& key, const
-      ParamServerOptions& options);
+    ParamServer advertiseParam(const AdvertiseParamOptions& options);
 
+    /** \brief Create a client for a configuration service, with standard
+      *   options
+      * 
+      * \param[in] param The name of the parameter which stores the
+      *   configuration of the new configuration service client.
+      * \param[in] defaultService The default name of the configuration
+      *   service to connect to. If empty, the configuration service
+      *   client will by default connect to the configuration service
+      *   advertised under the node's private namespace.
+      * \param[in] defaultPersistent Whether this connection should persist
+      *   by default. See the overloaded variants of serviceClient for
+      *   details.
+      * \return On success, a configuration service client that, when all
+      *   copies of it go out of scope, will disconnect from the configuration
+      *   service.
+      * 
+      * \see configClient(const std::string&, const ConfigClientOptions&)
+      *   for a detailed description of the method's behavior.
+      */
+    ConfigClient configClient(const std::string& param, const std::string&
+      defaultService = std::string(), bool defaultPersistent = false);
+    
+    /** \brief Create a client for a configuration service, with full range
+      *   of options
+      * 
+      * The configuration service client provides information about the
+      * parameter services which have been advertised for another node through
+      * the interface method ConfigServer::advertiseParam. In contrast to
+      * the node implementation interface for creating parameter service
+      * clients, the configuration service client may therefore identify a
+      * parameter by key. The interface method ConfigServer::paramClient
+      * can thus be employed to create a parameter client whose service
+      * name is not known a-priori.
+      * 
+      * Extending the standard ROS interface for creating service clients,
+      * this implementation takes a parameter name under which the
+      * configuration service client options may be retrieved from the
+      * parameter server and adapts the default configuration service client
+      * options according to the parameter values. See getConfigClientOptions
+      * for details.
+      * 
+      * \param[in] param The name of the parameter which stores the
+      *   configuration of the new configuration service client.
+      * \param[in] defaultOptions The default configuration client options
+      *   to use.
+      * \return On success, a configuration service client that, when all
+      *   copies of it go out of scope, will disconnect from the configuration
+      *   service.
+      */
+    ConfigClient configClient(const std::string& param, const
+      ConfigClientOptions& defaultOptions);
+    
     /** \brief Create a client for a parameter service, templated on the
       *   parameter type and with standard options
       * 
@@ -614,27 +743,6 @@ namespace nodewrap {
       */
     template <typename P> ParamClient paramClient(const std::string& service,
       bool persistent = false);
-    
-    /** \brief Create a client for a parameter service, templated on the
-      *   parameter specification and with standard options
-      * 
-      * \param[in] service The name of the parameter service the parameter
-      *   service client connects to.
-      * \param[in] fromResponse Function for assigning the parameter's
-      *   value from a service response.
-      * \param[in] toRequest Function for assigning the parameter's
-      *   value to a service request.
-      * \param[in] persistent Whether the connection of the parameter service
-      *   client should persist. 
-      * \return On success, a parameter service client that, when all copies
-      *   of it go out of scope, will disconnect from the parameter service.
-      * 
-      * \see paramClient(const ParamClientOptions&) for a detailed description
-      *   of the method's behavior.
-      */
-    template <class PSpec> ParamClient paramClient(const std::string&
-      service, const typename PSpec::FromResponse& fromResponse, const
-      typename PSpec::ToRequest& toRequest, bool persistent = false);
     
     /** \brief Create a client for a parameter service, with full range of
       *   options
@@ -668,14 +776,6 @@ namespace nodewrap {
     /** \brief The node implementation's private ROS node handle
       */
     ros::NodeHandlePtr nodeHandle;
-    
-    /** \brief The node implementation's configuration service server
-      */
-    ConfigServer configServer;
-    
-    /** \brief The node implementation's parameter service servers
-      */
-    std::map<std::string, ParamServer> paramServers;
     
     /** \brief Start the node(let)
       *

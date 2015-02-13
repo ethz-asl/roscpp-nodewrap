@@ -16,51 +16,26 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap_tutorial/ParamClientNode.h"
-
-NODEWRAP_EXPORT_CLASS(roscpp_nodewrap_tutorial, nodewrap::ParamClientNode)
-
 namespace nodewrap {
-
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
-
-ParamClientNode::ParamClientNode() {
-}
-
-ParamClientNode::~ParamClientNode() {
-}
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void ParamClientNode::init() {
-  configClient = NodeImpl::configClient("config");
+template <typename P> ParamClient ConfigClient::paramClient(const std::string&
+    key, bool persistent, ros::Duration timeout) {
+  ParamClientOptions options;
+  options.template init<P>(std::string(), persistent);
   
-  xmlClient = configClient.paramClient<XmlRpc::XmlRpcValue>("xml");
-  stringClient = configClient.paramClient<std::string>("string");
-  doubleClient = configClient.paramClient<double>("double");
-  integerClient = configClient.paramClient<int>("integer");
-  booleanClient = configClient.paramClient<bool>("boolean");
-
-  NODEWRAP_INFO("I'm sorry, did you just say you needed my brain?");
-  
-  NODEWRAP_INFO("Value of [xml]: %s",
-    xmlClient.getParamValue<XmlRpc::XmlRpcValue>().toXml().c_str());
-  NODEWRAP_INFO("Value of [string]: %s",
-    stringClient.getParamValue<std::string>().c_str());
-  NODEWRAP_INFO("Value of [double]: %lf",
-    doubleClient.getParamValue<double>());
-  NODEWRAP_INFO("Value of [integer]: %d",
-    integerClient.getParamValue<int>());
-  NODEWRAP_INFO("Value of [boolean]: %s",
-    booleanClient.getParamValue<bool>() ? "true" : "false");
+  return this->paramClient(key, options, timeout);
 }
 
-void ParamClientNode::cleanup() {
-  NODEWRAP_INFO("So this is it. We're going to die.");
+template <typename P> ParamClient ConfigClient::Impl::paramClient(const
+    std::string& key, bool persistent) {
+  ParamClientOptions options;
+  options.template init<P>(std::string(), persistent);
+  
+  return this->paramClient(key, options);
 }
 
 }

@@ -30,15 +30,15 @@ namespace roscpp_nodewrap {};
 namespace nodewrap {
   using namespace roscpp_nodewrap;
   
-  /** \brief Forward declaration of the node implementation
+  /** \brief Forward declaration of the advertise configuration service
+    *   options
     */
-  class NodeImpl;  
-  /** \brief Forward declaration of the node implementation pointer type
+  class AdvertiseConfigOptions;  
+  
+  /** \brief Forward declaration of the advertise parameter service
+    *   options
     */
-  typedef boost::shared_ptr<NodeImpl> NodeImplPtr;
-  /** \brief Forward declaration of the node implementation weak pointer type
-    */
-  typedef boost::weak_ptr<NodeImpl> NodeImplWPtr;  
+  class AdvertiseParamOptions;  
   
   /** \brief Forward declaration of the configuration service client
     */
@@ -64,21 +64,15 @@ namespace nodewrap {
     */
   typedef boost::weak_ptr<ConfigServer> ConfigServerWPtr;
   
-  /** \brief Forward declaration of the parameter service server
+  /** \brief Forward declaration of the node implementation
     */
-  class ParamServer;
-  /** \brief Forward declaration of the parameter service server
-    *   pointer type
+  class NodeImpl;  
+  /** \brief Forward declaration of the node implementation pointer type
     */
-  typedef boost::shared_ptr<ParamServer> ParamServerPtr;
-  /** \brief Forward declaration of the parameter service server weak
-    *   pointer type
+  typedef boost::shared_ptr<NodeImpl> NodeImplPtr;
+  /** \brief Forward declaration of the node implementation weak pointer type
     */
-  typedef boost::weak_ptr<ParamServer> ParamServerWPtr;
-
-  /** \brief Forward declaration of the parameter service server options
-    */
-  class ParamServerOptions;
+  typedef boost::weak_ptr<NodeImpl> NodeImplWPtr;  
   
   /** \brief Forward declaration of the parameter service client
     */
@@ -92,17 +86,53 @@ namespace nodewrap {
     */
   typedef boost::weak_ptr<ParamClient> ParamClientWPtr;
 
-  /** \brief Forward declaration of the parameter service client options
+  /** \brief Forward declaration of the parameter service client callbacks
     */
-  class ParamClientOptions;
-  
-  /** \brief Forward declaration of the parameter service helper
-    */
-  class ParamServiceHelper;
-  /** \brief Forward declaration of the parameter service helper
+  class ParamClientCallbacks;
+  /** \brief Forward declaration of the parameter service client callbacks
     *   pointer type
     */
-  typedef boost::shared_ptr<ParamServiceHelper> ParamServiceHelperPtr;  
+  typedef boost::shared_ptr<ParamClientCallbacks> ParamClientCallbacksPtr;
+  
+  /** \brief Forward declaration of the parameter service client helper
+    */
+  class ParamClientHelper;
+  /** \brief Forward declaration of the parameter service client helper
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ParamClientHelper> ParamClientHelperPtr;
+  
+  /** \brief Forward declaration of the parameter service client options
+    */
+  class ParamClientOptions;  
+  
+  /** \brief Forward declaration of the parameter service server
+    */
+  class ParamServer;
+  /** \brief Forward declaration of the parameter service server
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ParamServer> ParamServerPtr;
+  /** \brief Forward declaration of the parameter service server weak
+    *   pointer type
+    */
+  typedef boost::weak_ptr<ParamServer> ParamServerWPtr;
+
+  /** \brief Forward declaration of the parameter service server callbacks
+    */
+  class ParamServerCallbacks;
+  /** \brief Forward declaration of the parameter service server callbacks
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ParamServerCallbacks> ParamServerCallbacksPtr;
+  
+  /** \brief Forward declaration of the parameter service server helper
+    */
+  class ParamServerHelper;
+  /** \brief Forward declaration of the parameter service server helper
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ParamServerHelper> ParamServerHelperPtr;
 };
 
 #endif

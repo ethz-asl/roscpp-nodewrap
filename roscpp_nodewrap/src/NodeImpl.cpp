@@ -109,6 +109,30 @@ ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
   return options;
 }
 
+AdvertiseConfigOptions NodeImpl::getAdvertiseConfigOptions(const std::string&
+    key, const AdvertiseConfigOptions& defaultOptions) const {
+  std::string ns = ros::names::append("servers", key);  
+  AdvertiseConfigOptions options = defaultOptions;
+  
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
+  
+  return options;
+}
+
+ConfigClientOptions NodeImpl::getConfigClientOptions(const std::string& key,
+    const ConfigClientOptions& defaultOptions) const {
+  std::string ns = ros::names::append("clients", key);
+  ConfigClientOptions options = defaultOptions;
+  
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
+  options.persistent = getParam(ros::names::append(ns, "persistent"),
+    defaultOptions.persistent);
+  
+  return options;
+}
+
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
@@ -139,12 +163,44 @@ ros::ServiceClient NodeImpl::serviceClient(const std::string& param, const
   return this->getNodeHandle().serviceClient(options);
 }
 
-ParamServer NodeImpl::advertiseParam(const std::string& key, const
-    ParamServerOptions& options) {
-  if (!configServer)
-    configServer = ConfigServer(shared_from_this());
+ConfigServer NodeImpl::advertiseConfig(const std::string& param, const
+    std::string& defaultService) {
+  AdvertiseConfigOptions options, defaultOptions;
   
-  return configServer.advertiseParam(key, options);
+  defaultOptions.service = defaultService.empty() ?
+    getNodeHandle().getNamespace() : defaultService;
+  options = getAdvertiseConfigOptions(param, defaultOptions);
+  
+  return ConfigServer(options, shared_from_this());
+}
+
+ConfigServer NodeImpl::advertiseConfig(const std::string& param, const
+    AdvertiseConfigOptions& defaultOptions) {
+  AdvertiseConfigOptions options = getAdvertiseConfigOptions(param,
+    defaultOptions);
+  return ConfigServer(options, shared_from_this());
+}
+
+ParamServer NodeImpl::advertiseParam(const AdvertiseParamOptions& options) {
+  return ParamServer(options, shared_from_this());
+}
+
+ConfigClient NodeImpl::configClient(const std::string& param, const
+    std::string& defaultService, bool defaultPersistent) {
+  ConfigClientOptions options, defaultOptions;
+  
+  defaultOptions.service = defaultService.empty() ?
+    getNodeHandle().getNamespace() : defaultService;
+  defaultOptions.persistent = defaultPersistent;
+  options = getConfigClientOptions(param, defaultOptions);
+  
+  return ConfigClient(options, shared_from_this());
+}
+
+ConfigClient NodeImpl::configClient(const std::string& param, const
+    ConfigClientOptions& defaultOptions) {
+  ConfigClientOptions options = getConfigClientOptions(param, defaultOptions);
+  return ConfigClient(options, shared_from_this());
 }
 
 ParamClient NodeImpl::paramClient(const ParamClientOptions& options) {

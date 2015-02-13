@@ -28,15 +28,12 @@
 #include <boost/thread/mutex.hpp>
 
 #include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/ParamServerCallbacks.h>
 #include <roscpp_nodewrap/ParamType.h>
 
 #include <roscpp_nodewrap/GetParamInfo.h>
 
 namespace nodewrap {
-  class NodeImpl;
-  
-  using namespace roscpp_nodewrap;
-  
   /** \brief ROS parameter service server
     * 
     * This class provides access to a node's parameters through a ROS
@@ -44,8 +41,9 @@ namespace nodewrap {
     */
   class ParamServer {
   friend class ConfigServer;
-  friend class ParamServiceHelper;
-  template <class Spec> friend class ParamServiceHelperT;
+  friend class NodeImpl;
+  friend class ParamServerHelper;
+  template <class Spec> friend class ParamServerHelperT;
   public:
     /** \brief Default constructor
       */
@@ -105,7 +103,7 @@ namespace nodewrap {
     public:
       /** \brief Constructor
         */
-      Impl(const ParamServerOptions& options, const NodeImplPtr& nodeImpl);
+      Impl(const AdvertiseParamOptions& options, const NodeImplPtr& nodeImpl);
       
       /** \brief Destructor
         */
@@ -221,36 +219,10 @@ namespace nodewrap {
         *   advertised by this parameter service server
         */
       typedef typename Spec::SetValueServiceResponse SetValueServiceResponse;
-    
-      /** \brief Definition of the function type for assigning the parameter's
-        *   value from an XML/RPC value
-        */
-      typedef typename Spec::FromXmlRpcValue FromXmlRpcValue;
-        
-      /** \brief Definition of the function type derived from the parameter
-        *   specification for assigning the parameter's value to an XML/RPC
-        *   value
-        */
-      typedef typename Spec::ToXmlRpcValue ToXmlRpcValue;
-        
-      /** \brief Definition of the function type derived from the parameter
-        *   specification for assigning the parameter's value from a service
-        *   request
-        */
-      typedef typename Spec::FromRequest FromRequest;
-      
-      /** \brief Definition of the function type derived from the parameter
-        *   specification for assigning the parameter's value to a service
-        *   response
-        */
-      typedef typename Spec::ToResponse ToResponse;
-      
+          
       /** \brief Constructor
         */
-      ImplT(const FromXmlRpcValue& fromXmlRpcValue, const ToXmlRpcValue&
-        toXmlRpcValue, const FromRequest& fromRequest, const ToResponse&
-        toResponse, const ParamServerOptions& options, const NodeImplPtr&
-        nodeImpl);
+      ImplT(const AdvertiseParamOptions& options, const NodeImplPtr& nodeImpl);
       
       /** \brief Destructor
         */
@@ -278,29 +250,11 @@ namespace nodewrap {
       bool setParamValueCallback(SetValueServiceRequest& request,
         SetValueServiceResponse& response);
       
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by this parameter service server from an XML/RPC
-        *   value
+      /** \brief The callbacks for assigning the value of the parameter
+        *   advertised by this parameter service from/to XML/RPC values/
+        *   service requests/responses
         */
-      FromXmlRpcValue fromXmlRpcValue;
-      
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by this parameter service server to an XML/RPC
-        *   value
-        */
-      ToXmlRpcValue toXmlRpcValue;
-      
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by this parameter service server from a service
-        *   request
-        */
-      FromRequest fromRequest;
-      
-      /** \brief The function for assigning the value of the parameter
-        *   advertised by this parameter service server to a service
-        *   response
-        */
-      ToResponse toResponse;
+      ParamServerCallbacksT<Spec> callbacks;
     };
     
     /** \brief Declaration of the parameter service server implementation
@@ -319,7 +273,7 @@ namespace nodewrap {
     
     /** \brief Constructor (private version)
       */
-    ParamServer(const ParamServerOptions& options, const NodeImplPtr&
+    ParamServer(const AdvertiseParamOptions& options, const NodeImplPtr&
       nodeImpl);
   };        
 };

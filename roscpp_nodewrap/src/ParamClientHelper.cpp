@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/ParamServerOptions.h"
+#include "roscpp_nodewrap/ParamClientHelper.h"
 
 namespace nodewrap {
 
@@ -24,9 +24,10 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-ParamServerOptions::ParamServerOptions() :
-  callbackQueue(0),
-  cached(false) {
+ParamClientHelper::ParamClientHelper() {
+}
+
+ParamClientHelper::~ParamClientHelper() {
 }
 
 }

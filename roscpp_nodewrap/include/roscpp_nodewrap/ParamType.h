@@ -53,6 +53,11 @@ namespace nodewrap {
       */
     std::string getName() const;
     
+    /** \brief Query if this parameter type equals the specified template
+     *    type
+      */
+    template <typename T> bool equals() const;
+    
     /** \brief Templated accessor for the parameter type
       */
     template <typename T> static ParamType get();

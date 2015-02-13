@@ -25,8 +25,9 @@
 
 #include <ros/ros.h>
 
+#include <roscpp_nodewrap/ConfigClientOptions.h>
 #include <roscpp_nodewrap/Forwards.h>
-#include <roscpp_nodewrap/ParamServer.h>
+#include <roscpp_nodewrap/ParamClient.h>
 
 #include <roscpp_nodewrap/FindParam.h>
 #include <roscpp_nodewrap/HasParam.h>
@@ -64,17 +65,20 @@ namespace nodewrap {
     /** \brief List the keys of the parameters advertised by the connected
       *   configuration service
       */
-    std::vector<std::string> getParamKeys();
+    std::vector<std::string> getParamKeys(ros::Duration timeout =
+      ros::Duration(-1));
     
     /** \brief Query the name of the parameter service associated with a
       *   parameter advertised by the connected configuration service
       */
-    std::string getParamService(const std::string& key);
+    std::string getParamService(const std::string& key, ros::Duration
+      timeout = ros::Duration(-1));
     
     /** \brief Query if a parameter is advertised by the connected
       *   configuration service
       */
-    bool hasParam(const std::string& key);
+    bool hasParam(const std::string& key, ros::Duration timeout =
+      ros::Duration(-1));
     
     /** \brief Query if this configuration service client is valid
       */
@@ -100,7 +104,14 @@ namespace nodewrap {
     void shutdown();
       
     /** \brief Create a client for a parameter service advertised by the
-      *   connected configuration service
+      *   connected configuration service, templated on the parameter type
+      *   and with standard options
+      */
+    template <typename P> ParamClient paramClient(const std::string& key,
+      bool persistent = false, ros::Duration timeout = ros::Duration(-1));
+    
+    /** \brief Create a client for a parameter service advertised by the
+      *   connected configuration service, with full range of options
       */
     ParamClient paramClient(const std::string& key, const ParamClientOptions&
       options, ros::Duration timeout = ros::Duration(-1));
@@ -121,7 +132,7 @@ namespace nodewrap {
     public:
       /** \brief Default constructor
         */
-      Impl(const std::string& service, const NodeImplPtr& nodeImpl);
+      Impl(const ConfigClientOptions& options, const NodeImplPtr& nodeImpl);
       
       /** \brief Destructor
         */
@@ -151,6 +162,20 @@ namespace nodewrap {
         *   this configuration service client
         */
       void disconnect();
+      
+      /** \brief Create a client for a parameter service advertised by the
+        *   connected configuration service, templated on the parameter type
+        *   and with standard options (implementation)
+        */
+      template <typename P> ParamClient paramClient(const std::string& key,
+        bool persistent = false);
+      
+      /** \brief Create a client for a parameter service advertised by the
+        *   connected configuration service, with full range of options
+        *   (implementation)
+        */
+      ParamClient paramClient(const std::string& key, const
+        ParamClientOptions& options);
       
       /** \brief Service client listing the parameter services advertised
         *   by this configuration service client
@@ -194,8 +219,11 @@ namespace nodewrap {
     
     /** \brief Constructor (private version)
       */
-    ConfigClient(const std::string& service, const NodeImplPtr& nodeImpl);
+    ConfigClient(const ConfigClientOptions& options, const NodeImplPtr&
+      nodeImpl);
   };
 };
+
+#include <roscpp_nodewrap/ConfigClient.tpp>
 
 #endif

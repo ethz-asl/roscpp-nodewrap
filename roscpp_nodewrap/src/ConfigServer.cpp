@@ -18,7 +18,7 @@
 
 #include <ros/xmlrpc_manager.h>
 
-#include "roscpp_nodewrap/Exceptions.h"
+#include <roscpp_nodewrap/Exceptions.h>
 #include <roscpp_nodewrap/NodeImpl.h>
 
 #include "roscpp_nodewrap/ConfigServer.h"
@@ -47,14 +47,17 @@ ConfigServer::ConfigServer(const ConfigServer& src) :
   impl(src.impl) {
 }
 
-ConfigServer::ConfigServer(const NodeImplPtr& nodeImpl) :
-  impl(new Impl(nodeImpl)) {
+ConfigServer::ConfigServer(const AdvertiseConfigOptions& options, const
+    NodeImplPtr& nodeImpl) :
+  impl(new Impl(options, nodeImpl)) {
 }
 
 ConfigServer::~ConfigServer() {
 }
 
-ConfigServer::Impl::Impl(const NodeImplPtr& nodeImpl) :
+ConfigServer::Impl::Impl(const AdvertiseConfigOptions& options, const
+    NodeImplPtr& nodeImpl) :
+  service(options.service),
   nodeImpl(nodeImpl) {
   ros::XMLRPCManager::instance()->unbind("paramUpdate");
   ros::XMLRPCManager::instance()->bind("paramUpdate",
@@ -62,22 +65,28 @@ ConfigServer::Impl::Impl(const NodeImplPtr& nodeImpl) :
   
   ros::AdvertiseServiceOptions listParamsOptions;    
   listParamsOptions.init<ListParams::Request, ListParams::Response>(
-    "list_params", boost::bind(&ConfigServer::Impl::listParamsCallback,
-    this, _1, _2));
+    ros::names::append(options.service, "list_params"),
+    boost::bind(&ConfigServer::Impl::listParamsCallback, this, _1, _2));
+  listParamsOptions.callback_queue = options.callbackQueue;
+  listParamsOptions.tracked_object = options.trackedObject;
   listParamsServer = nodeImpl->getNodeHandle().advertiseService(
     listParamsOptions);
   
   ros::AdvertiseServiceOptions hasParamOptions;    
   hasParamOptions.init<HasParam::Request, HasParam::Response>(
-    "has_param", boost::bind(&ConfigServer::Impl::hasParamCallback,
-    this, _1, _2));
+    ros::names::append(options.service, "has_param"),
+    boost::bind(&ConfigServer::Impl::hasParamCallback, this, _1, _2));
+  hasParamOptions.callback_queue = options.callbackQueue;
+  hasParamOptions.tracked_object = options.trackedObject;
   hasParamServer = nodeImpl->getNodeHandle().advertiseService(
     hasParamOptions);
   
   ros::AdvertiseServiceOptions findParamOptions;    
   findParamOptions.init<FindParam::Request, FindParam::Response>(
-    "find_param", boost::bind(&ConfigServer::Impl::findParamCallback,
-    this, _1, _2));
+    ros::names::append(options.service, "find_param"),
+    boost::bind(&ConfigServer::Impl::findParamCallback, this, _1, _2));
+  findParamOptions.callback_queue = options.callbackQueue;
+  findParamOptions.tracked_object = options.trackedObject;
   findParamServer = nodeImpl->getNodeHandle().advertiseService(
     findParamOptions);
 }
@@ -91,7 +100,7 @@ ConfigServer::Impl::~Impl() {
 /*****************************************************************************/
 
 bool ConfigServer::Impl::isValid() const {
-  return listParamsServer && hasParamServer;
+  return listParamsServer && hasParamServer && findParamServer;
 }
 
 /*****************************************************************************/
@@ -104,33 +113,11 @@ void ConfigServer::shutdown() {
 }
 
 ParamServer ConfigServer::advertiseParam(const std::string& key, const
-    ParamServerOptions& options) {
-  boost::mutex::scoped_lock lock(impl->mutex);
-  
-  if (key.empty())
-    throw InvalidParamKeyException(key, "Parameter keys may not be empty");
-  
-  for (size_t i = 0; i < key.size(); ++i) {
-    if (!isalnum(key[i]) && (key[i] != '_') && (key[i] != '/')) {
-      std::stringstream stream;
-      stream << "Character [" << key[i] << "] at element [" <<
-        i << "] is not valid";
-      throw InvalidParamKeyException(key, stream.str());
-    }
-  }
-  
-  ParamServer param;
-  std::map<std::string, ParamServer::ImplWPtr>::iterator it =
-    impl->params.find(key);
-    
-  if (it == impl->params.end()) {
-    param = options.helper->createServer(options, impl->nodeImpl);
-    impl->params.insert(std::make_pair(key, param.impl));
-  }
+    AdvertiseParamOptions& options) {
+  if (impl)
+    return impl->advertiseParam(key, options);
   else
-    param.impl = it->second.lock();
-  
-  return param;
+    return ParamServer();
 }
 
 void ConfigServer::Impl::unadvertise() {
@@ -145,7 +132,37 @@ void ConfigServer::Impl::unadvertise() {
     
     listParamsServer.shutdown();
     hasParamServer.shutdown();
+    findParamServer.shutdown();
   }
+}
+
+ParamServer ConfigServer::Impl::advertiseParam(const std::string& key, const
+    AdvertiseParamOptions& options) {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  if (key.empty())
+    throw InvalidParamKeyException(key, "Parameter keys may not be empty");
+  
+  for (size_t i = 0; i < key.size(); ++i) {
+    if (!isalnum(key[i]) && (key[i] != '_') && (key[i] != '/')) {
+      std::stringstream stream;
+      stream << "Character [" << key[i] << "] at element [" <<
+        i << "] is not valid";
+      throw InvalidParamKeyException(key, stream.str());
+    }
+  }
+  
+  ParamServer paramServer;
+  std::map<std::string, ParamServer::ImplWPtr>::iterator it = params.find(key);
+    
+  if (it == params.end()) {
+    paramServer = options.helper->createServer(options, nodeImpl);
+    params.insert(std::make_pair(key, paramServer.impl));
+  }
+  else
+    paramServer.impl = it->second.lock();
+  
+  return paramServer;
 }
 
 void ConfigServer::Impl::updateParamCallback(XmlRpc::XmlRpcValue& params,
@@ -186,7 +203,8 @@ bool ConfigServer::Impl::findParamCallback(FindParam::Request& request,
   if (it != params.end()) {
     ParamServer::ImplPtr impl = it->second.lock();
     if (impl) {
-      response.service = impl->service;
+      response.service = nodeImpl->getNodeHandle().resolveName(
+        impl->service);
       return true;
     }
   }

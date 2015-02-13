@@ -16,23 +16,59 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/Exceptions.h"
+/** \file ParamClientHelper.h
+  * \brief Header file providing the ParamClientHelper class interface
+  */
+
+#ifndef ROSCPP_NODEWRAP_PARAM_CLIENT_HELPER_H
+#define ROSCPP_NODEWRAP_PARAM_CLIENT_HELPER_H
+
+#include <ros/ros.h>
+
+#include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
+  /** \brief ROS parameter service client helper
+    * 
+    * This class provides helper functions which are required to create
+    * parameter service clients.
+    */
+  class ParamClientHelper {
+  friend class ConfigClient;
+  friend class ParamClient;
+  public:
+    /** \brief Constructor
+      */ 
+    ParamClientHelper();
+    
+    /** \brief Destructor
+      */ 
+    virtual ~ParamClientHelper();
+    
+  private:
+    /** \brief Create a parameter service client (virtual declaration)
+      */ 
+    virtual ParamClient createClient(const ParamClientOptions& options,
+      const NodeImplPtr& nodeImpl) = 0;
+  };
+  
+  /** \brief ROS parameter service client helper (templated version)
+    */    
+  template <class Spec> class ParamClientHelperT :
+    public ParamClientHelper {
+  public:
+    /** \brief Constructor
+      */ 
+    ParamClientHelperT();
+    
+  private:
+    /** \brief Create a parameter service client (implementation)
+      */ 
+    ParamClient createClient(const ParamClientOptions& options, const
+      NodeImplPtr& nodeImpl);
+  };
+};
 
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
+#include <roscpp_nodewrap/ParamClientHelper.tpp>
 
-InvalidParamKeyException::InvalidParamKeyException(const std::string& key,
-    const std::string& reason) :
-  ros::Exception("Invalid parameter key ["+key+"]: "+reason) {
-}
-
-ParamTypeMismatchException::ParamTypeMismatchException(const std::string&
-    expectedType, const std::string& providedType) :
-  ros::Exception("Provided parameter type ["+providedType+
-    "] mismatches expected parameter type ["+expectedType+"]") {
-}
-
-}
+#endif
