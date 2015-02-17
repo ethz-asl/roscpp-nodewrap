@@ -1,3 +1,9 @@
+roscpp-nodewrap (0.1-11) unstable; urgency=low
+
+  * Updated README.md
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 17 Feb 2015 05:43:00 +0100
+
 roscpp-nodewrap (0.1-10) unstable; urgency=low
 
   * Removed code fragments and classes fromf features/advertise_param
