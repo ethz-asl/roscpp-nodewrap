@@ -47,7 +47,7 @@ namespace nodewrap {
     /** \brief Destructor
       */
     virtual ~Nodelet();
-    
+
     /** \brief Virtual override of the ROS nodelet's initialization
       * 
       * This method essentially calls C::startup to delegate initialization
@@ -57,7 +57,15 @@ namespace nodewrap {
       */
     void onInit();
     
-  private:
+    /** \brief Virtual override of the ROS nodelet's unloading
+      *
+      * This method essentially calls C::unload to delegate unloading
+      * to the node implementation.
+      *
+      * \see nodelet::Nodelet::onUnload
+      */
+    void onUnload();
+
   private:
     /** \brief The nodelet's implementation
       */

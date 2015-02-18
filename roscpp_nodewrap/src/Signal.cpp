@@ -73,7 +73,7 @@ void Signal::unbind(int signal_, const Handler& handler) {
       
       if (it->second.empty())
         signal(signal_, SIG_DFL);
-      
+
       return;
     }
   }
@@ -88,7 +88,7 @@ void Signal::signaled(int signal) {
   
   for (std::list<Handler>::iterator jt = it->second.begin();
       jt != it->second.end(); ++jt)
-    (*jt)();
+    (*jt)(signal);
   
   if (signal == SIGINT)
     ros::shutdown();

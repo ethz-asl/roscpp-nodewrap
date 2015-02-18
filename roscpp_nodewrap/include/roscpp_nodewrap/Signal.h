@@ -39,14 +39,14 @@ namespace nodewrap {
   
   class Signal {
   public:
-    typedef boost::function<void()> Handler;
+    typedef boost::function<void(int)> Handler;
 
-    template <typename T> static void bind(int signal, void(T::*fp)(),
+    template <typename T> static void bind(int signal, void(T::*fp)(int),
       T* object);
     
     static void bind(int signal, const Handler& handler);
     
-    template <typename T> static void unbind(int signal, void(T::*fp)(),
+    template <typename T> static void unbind(int signal, void(T::*fp)(int),
       T* object);
     
     static void unbind(int signal, const Handler& handler);
