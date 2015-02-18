@@ -66,7 +66,6 @@ namespace nodewrap {
       */
     void onUnload();
 
-
   private:
     /** \brief The nodelet's implementation
       */

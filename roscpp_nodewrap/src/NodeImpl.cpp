@@ -31,7 +31,7 @@ NodeImpl::NodeImpl() :
 }
 
 NodeImpl::~NodeImpl() {  
-  Signal::unbind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
+  Signal::unbind(SIGINT, &NodeImpl::signaled, this);
 }
 
 /*****************************************************************************/
@@ -105,6 +105,14 @@ ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
 /* Methods                                                                   */
 /*****************************************************************************/
 
+void NodeImpl::unload() {
+  this->shutdown();
+}
+
+void NodeImpl::signaled(int signal) {
+  this->shutdown();
+}
+
 ros::Publisher NodeImpl::advertise(const std::string& param, const
     ros::AdvertiseOptions& defaultOptions) {
   ros::AdvertiseOptions options = getAdvertiseOptions(param, defaultOptions);
@@ -137,27 +145,12 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
   this->nodelet = nodelet;
   this->nodeHandle = nodeHandle;
   
-  Signal::bind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
+  Signal::bind(SIGINT, &NodeImpl::signaled, this);
 
   init();
-
-}
-
-void NodeImpl::unload() {
-  ROS_INFO("Unload %s.", this->name.c_str());
-  this->shutdown();
-}
-
-void NodeImpl::defaultSignalIntHandler(int signal) {
-  ROS_INFO("defaultSignalIntHandler of %s.", this->name.c_str());
-  this->shutdown();
-}
-void NodeImpl::unbindDefaultSigIntHandler() {
-  Signal::unbind(SIGINT, &NodeImpl::defaultSignalIntHandler, this);
 }
 
 void NodeImpl::shutdown() {
-  ROS_INFO("Shutdown %s.", this->name.c_str());
   cleanup();
   
   this->name.clear();

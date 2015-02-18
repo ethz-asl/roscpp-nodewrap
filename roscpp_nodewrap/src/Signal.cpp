@@ -90,14 +90,8 @@ void Signal::signaled(int signal) {
       jt != it->second.end(); ++jt)
     (*jt)(signal);
   
-  if (signal == SIGINT) {
-    /**
-     * All the default sigint handler of ROS does is call shutdown(), which
-     * disconnects everything and unregisters from the master.
-     * This is neccessary to to break out of a spin() loop explicitly.
-     */
+  if (signal == SIGINT)
     ros::shutdown();
-  }
 }
 
 }

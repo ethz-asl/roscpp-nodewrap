@@ -1,3 +1,20 @@
+roscpp-nodewrap (0.1-9) unstable; urgency=low
+
+  * Both the signal and the unload handler, are now protected and virtual
+  * Renamed the default signal handler
+  * Removed the method for unbinding default signal handler (with the
+    default handler being protected, the same behavior can be achieved
+    using Signal::unbind())
+  * Added documentation to both the node signal and the unload handler
+
+ -- gehrinch <gehrinch@ethz.ch>  Thu, 08 Jan 2015 16:45:46 +0100
+ 
+roscpp-nodewrap (0.1-8) unstable; urgency=low
+
+  * Added unload method and added signum to signal handler argument
+
+ -- gehrinch <gehrinch@ethz.ch>  Thu, 08 Jan 2015 16:45:46 +0100
+ 
 roscpp-nodewrap (0.1-7) unstable; urgency=low
 
   * Replaced NodeImpl class adapter by object adapter pattern (allowing

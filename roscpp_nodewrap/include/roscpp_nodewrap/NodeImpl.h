@@ -81,7 +81,6 @@ namespace nodewrap {
       */
     bool isValid() const;
     
-    void unbindDefaultSigIntHandler();
   protected:
     /** \brief Retrieve the node(let)'s ROS node handle
       * 
@@ -192,6 +191,32 @@ namespace nodewrap {
       */
     virtual void cleanup() = 0;
     
+    /** \brief Node(let) signal handler
+      * 
+      * This helper method will be called if the process running the node(let)
+      * receives a SIGINT. The default behavior then is to simply initiate its
+      * shutdown. However, the method is declared virtual such that this
+      * behavior can be adapted in the implementation of the derived node(let).
+      * 
+      * \param[in] signal The signal to be handled which, by implementation,
+      *   should always equate to SIGINT.
+      * 
+      * \see shutdown
+      */
+    virtual void signaled(int signal);
+    
+    /** \brief Unload the nodelet
+      *
+      * This helper method will be called from the nodelet template wrapper
+      * of the node(let) implementation if the nodelet is unloaded. The default
+      * behavior then is to simply initiate its shutdown. However, the method
+      * is declared virtual such that this behavior can be adapted in the
+      * implementation of the derived node(let).
+      * 
+      * \see shutdown
+      */
+    virtual void unload();
+
     /** \brief Advertise a topic, with standard options
       * 
       * \param[in] param The name of the parameter which stores the
@@ -516,13 +541,6 @@ namespace nodewrap {
     void start(const std::string& name, bool nodelet, const
       ros::NodeHandlePtr& nodeHandle);
     
-    /** \brief Unload the nodelet
-      *
-      * This helper method is called from the template wrapper of
-      * the nodelet to unload the nodelet.
-      */
-    void unload();
-
 public:
     /** \brief Shutdown the node(let)
       *
@@ -537,12 +555,6 @@ public:
       * \see ros::shutdown and cleanup
       */
     void shutdown();
-
-  public:
-    /** \brief Default signal handler for SIGINT
-      *
-      */
-    void defaultSignalIntHandler(int signal);
   };
 };
 
