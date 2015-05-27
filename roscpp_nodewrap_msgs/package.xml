@@ -1,0 +1,18 @@
+<package>
+  <name>roscpp_nodewrap_msgs</name>
+  <version>0.1.0</version>
+  <description>
+    C++ implementation of ROS node(let) wrappers (messages and services)
+  </description>
+  <author>Ralf Kaestner</author>
+  <maintainer email="ralf.kaestner@gmail.com">Ralf Kaestner</maintainer>
+  <license>GNU Lesser General Public License (LGPL)</license>
+  <url>http://github.com/ethz-asl/roscpp-nodewrap</url>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>std_srvs</build_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>std_srvs</run_depend>
+</package>

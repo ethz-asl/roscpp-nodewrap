@@ -41,11 +41,11 @@ void WorkerNode::init() {
   flowers = getParam("field/flowers", flowers);
   
   houseKeeping = addWorker("house_keeping", 0, &WorkerNode::doHouseKeeping);
-  NODEWRAP_INFO("Created worker: %s", houseKeeping.getName().c_str());
+  NODEWRAP_INFO("Created worker [%s]", houseKeeping.getName().c_str());
   nursing = addWorker("nursing", 0, &WorkerNode::doNursing);
-  NODEWRAP_INFO("Created worker: %s", nursing.getName().c_str());
+  NODEWRAP_INFO("Created worker [%s]", nursing.getName().c_str());
   collecting = addWorker("collecting", 0, &WorkerNode::doCollecting);
-  NODEWRAP_INFO("Created worker: %s", collecting.getName().c_str());
+  NODEWRAP_INFO("Created worker [%s]", collecting.getName().c_str());
   
   NODEWRAP_INFO("Hello, all workers have been created!");
 }

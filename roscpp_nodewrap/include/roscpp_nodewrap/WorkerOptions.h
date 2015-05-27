@@ -33,23 +33,37 @@ namespace nodewrap {
     * This class encapsulates all options available for creating a
     * timer-controlled node worker.
     */
-  
   class WorkerOptions {
   public:
     /** \brief Default constructor
       */
     WorkerOptions();
 
+    /** \brief The name of the new worker, a valid ROS graph resource name
+      */ 
     std::string name;
     
+    /** \brief The rate at which the worker's work callback will be attempted
+      *   to be invoked by the worker's timer
+      */ 
     ros::Rate rate;
+    
+    /** \brief If true, the worker will be started automatically
+      */ 
+    bool autostart;
+    
+    /** \brief A function to call when the worker should perform its work
+      */ 
     WorkerCallback callback;
     
+    /** \brief The callback queue to be used by the worker's timer
+      */ 
     ros::CallbackQueueInterface* callbackQueue;
     
-    ros::VoidConstPtr trackedObject;
-    
-    bool autostart;
+    /** \brief A shared pointer to an object to track for the worker's
+      *   timer callbacks
+      */ 
+    ros::VoidConstPtr trackedObject;    
   };
 };
 

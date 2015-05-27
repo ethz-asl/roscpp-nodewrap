@@ -44,7 +44,6 @@ namespace nodewrap {
     * This class provides a timer-controlled worker for use with the ROS
     * node implementation.
     */
-  
   class Worker {
   friend class WorkerManager;
   public:
@@ -106,6 +105,10 @@ namespace nodewrap {
       Impl(const std::string& name, const WorkerOptions& defaultOptions,
         const NodeImplPtr& nodeImpl);
       
+      /** \brief Destructor
+        */
+      ~Impl();
+      
       /** \brief Query if this worker is valid
         */
       bool isValid() const;
@@ -164,6 +167,10 @@ namespace nodewrap {
       /** \brief True, if the worker has been canceled
         */ 
       bool canceled;
+      
+      /** \brief Start time of the worker
+        */ 
+      ros::Time startTime;
 
       /** \brief Identifier of the thread running the worker
         * 
@@ -208,6 +215,11 @@ namespace nodewrap {
     /** \brief The worker's implementation
       */
     ImplPtr impl;
+    
+    /** \brief Constructor (private version)
+      */
+    Worker(const std::string& name, const WorkerOptions& defaultOptions,
+      const NodeImplPtr& nodeImpl);
   };
 };
 

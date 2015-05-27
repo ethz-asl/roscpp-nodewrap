@@ -7,7 +7,7 @@ project(roscpp_nodewrap)
 #  Release        : w/o debug symbols, w/ optimization
 #  RelWithDebInfo : w/ debug symbols, w/ optimization
 #  MinSizeRel     : w/o debug symbols, w/ optimization, stripped binaries
-set(CMAKE_BUILD_TYPE RelWithDebInfo)
+# set(CMAKE_BUILD_TYPE RelWithDebInfo)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
@@ -15,26 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   nodelet
-  message_generation
-  std_msgs
-  std_srvs
-)
-
-####################################
-## Generate messages and services ##
-####################################
-## Add service files to be generated
-add_service_files(
-  DIRECTORY srv
-  FILES
-    GetWorkerState.srv
-    HasWorker.srv
-    ListWorkers.srv
-)
-
-## Generate services
-generate_messages(
-  DEPENDENCIES std_msgs std_srvs
+  roscpp_nodewrap_msgs
 )
 
 ###################################
@@ -49,7 +30,10 @@ generate_messages(
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES roscpp_nodewrap
-  CATKIN_DEPENDS nodelet roscpp
+  CATKIN_DEPENDS
+    nodelet
+    roscpp
+    roscpp_nodewrap_msgs
 )
 
 ###########
@@ -65,16 +49,17 @@ include_directories(
 
 ## Declare a cpp library
 add_library(roscpp_nodewrap
+  src/AsyncWorker.cpp
   src/Exceptions.cpp
   src/NodeInterface.cpp
   src/NodeImpl.cpp
   src/Signal.cpp
+  src/SyncWorker.cpp
   src/Worker.cpp
   src/WorkerEvent.cpp
   src/WorkerManager.cpp
   src/WorkerOptions.cpp
 )
-add_dependencies(roscpp_nodewrap roscpp_nodewrap_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(

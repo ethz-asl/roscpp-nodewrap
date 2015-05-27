@@ -93,7 +93,6 @@ namespace nodewrap {
     * For a complete example configuration, see the ROS package which provides
     * this tutorial.
     */
-  
   class WorkerNode :
     public NodeImpl {
   public:

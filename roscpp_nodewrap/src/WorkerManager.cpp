@@ -18,8 +18,8 @@
 
 #include <boost/thread/locks.hpp>
 
-#include "roscpp_nodewrap/NodeImpl.h"
 #include "roscpp_nodewrap/Exceptions.h"
+#include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/WorkerManager.h"
 
@@ -89,7 +89,7 @@ Worker WorkerManager::addWorker(const std::string& name, const WorkerOptions&
     throw InvalidWorkerNameException(name, "Worker name may not be empty");
   
   for (size_t i = 0; i < name.size(); ++i) {
-    if (!isalnum(name[i]) && (name[i] != '_')) {
+    if (!isalnum(name[i]) && (name[i] != '_') && (name[i] != '/')) {
       std::stringstream stream;
       stream << "Character [" << name[i] << "] at element [" << i <<
         "] is not valid";

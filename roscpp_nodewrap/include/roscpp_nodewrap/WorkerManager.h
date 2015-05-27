@@ -41,7 +41,6 @@ namespace nodewrap {
     * This class provides the facilities for managing a collection of
     * node workers.
     */
-  
   class WorkerManager {
   friend class NodeImpl;
   public:
@@ -133,7 +132,7 @@ namespace nodewrap {
       */
     typedef boost::shared_ptr<Impl> ImplPtr;
     
-    /** \brief Declaration of the worker manager  implementation weak pointer
+    /** \brief Declaration of the worker manager implementation weak pointer
       *   type
       */
     typedef boost::weak_ptr<Impl> ImplWPtr;

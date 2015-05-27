@@ -32,7 +32,6 @@ namespace nodewrap {
     * 
     * This class is passed as a parameter to the worker event.
     */
-  
   class WorkerEvent {
   public:
     /** \brief Default constructor

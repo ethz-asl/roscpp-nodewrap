@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(roscpp_nodewrap_tutorial)
+project(roscpp_nodewrap_msgs)
 
 # Set the build type.  Options are:
 #  Coverage       : w/ debug symbols, w/o optimization, w/ code-coverage
@@ -11,13 +11,26 @@ project(roscpp_nodewrap_tutorial)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
-  cmake_modules
-  roscpp
-  rospy
-  nodelet
+  message_generation
   std_msgs
   std_srvs
-  roscpp_nodewrap
+)
+
+####################################
+## Generate messages and services ##
+####################################
+## Add service files to be generated
+add_service_files(
+  DIRECTORY srv
+  FILES
+    GetWorkerState.srv
+    HasWorker.srv
+    ListWorkers.srv
+)
+
+## Generate services
+generate_messages(
+  DEPENDENCIES std_msgs std_srvs
 )
 
 ###################################
@@ -30,62 +43,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES roscpp_nodewrap_tutorial
   CATKIN_DEPENDS
+    message_runtime
     std_msgs
     std_srvs
-    roscpp_nodewrap
-)
-
-###########
-## Build ##
-###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-include_directories(
-  include
-  ${catkin_INCLUDE_DIRS}
-)
-
-## Declare a cpp library
-add_library(roscpp_nodewrap_tutorial
-  src/ChatterNode.cpp
-  src/WorkerNode.cpp
-)
-
-## Declare a cpp executable
-add_executable(
-  chatter_node
-  src/chatter_node.cpp
-)
-add_executable(
-  chatter_supernode
-  src/chatter_supernode.cpp
-)
-add_executable(
-  worker_node
-  src/worker_node.cpp
-)
-
-## Specify libraries to link a library or executable target against
-target_link_libraries(
-  roscpp_nodewrap_tutorial
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(
-  chatter_node
-  roscpp_nodewrap_tutorial
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(
-  chatter_supernode
-  roscpp_nodewrap_tutorial
-  ${catkin_LIBRARIES}
-)
-target_link_libraries(
-  worker_node
-  roscpp_nodewrap_tutorial
-  ${catkin_LIBRARIES}
 )
