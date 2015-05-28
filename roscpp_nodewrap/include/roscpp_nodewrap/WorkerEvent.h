@@ -42,9 +42,9 @@ namespace nodewrap {
       */ 
     ros::Duration expectedCycleTime;
     
-    /** \brief The timing information related to this worker event
+    /** \brief The momentary, actual cycle time of the worker
       */ 
-    ros::TimerEvent timing;
+    ros::Duration actualCycleTime;
   };
 };
 

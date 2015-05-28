@@ -16,59 +16,38 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file WorkerOptions.h
-  * \brief Header file providing the WorkerOptions class interface
-  */
-
-#ifndef ROSCPP_NODEWRAP_WORKER_OPTIONS_H
-#define ROSCPP_NODEWRAP_WORKER_OPTIONS_H
-
-#include <ros/ros.h>
-
-#include <roscpp_nodewrap/Forwards.h>
+#include "roscpp_nodewrap/WorkerQueueCallback.h"
 
 namespace nodewrap {
-  /** \brief ROS worker options
-    * 
-    * This class encapsulates all options available for creating a
-    * node worker.
-    */
-  class WorkerOptions {
-  public:
-    /** \brief Default constructor
-      */
-    WorkerOptions();
 
-    /** \brief The name of the new worker, a valid ROS graph resource name
-      */ 
-    std::string name;
-    
-    /** \brief The rate at which the worker's callback is expected to
-      *   be invoked
-      */ 
-    ros::Rate rate;
-    
-    /** \brief If true, the worker will be started automatically
-      */ 
-    bool autostart;
-    
-    /** \brief If true, the worker will be synchronous
-      */ 
-    bool synchronous;
-    
-    /** \brief A function to call when the worker should perform its work
-      */ 
-    WorkerCallback callback;
-    
-    /** \brief The callback queue to be used by the worker
-      */ 
-    ros::CallbackQueueInterface* callbackQueue;
-    
-    /** \brief A shared pointer to an object to track for the worker
-      *   callbacks
-      */ 
-    ros::VoidConstPtr trackedObject;    
-  };
-};
+/*****************************************************************************/
+/* Constructors and Destructor                                               */
+/*****************************************************************************/
 
-#endif
+WorkerQueueCallback::WorkerQueueCallback(const WorkerQueueCallbackCallback&
+    callback, const ros::VoidConstWPtr& trackedObject, bool hasTrackedObject) :
+  callback(callback),
+  trackedObject(trackedObject),
+  hasTrackedObject(hasTrackedObject) {
+}
+
+WorkerQueueCallback::~WorkerQueueCallback() {  
+}
+
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
+
+ros::CallbackInterface::CallResult WorkerQueueCallback::call() {
+  if (hasTrackedObject) {
+    ros::VoidConstPtr trackedObject = this->trackedObject.lock();
+    if (!trackedObject)
+      return ros::CallbackInterface::Invalid;
+  }
+  
+  callback();
+  
+  return ros::CallbackInterface::Success;
+}
+
+}

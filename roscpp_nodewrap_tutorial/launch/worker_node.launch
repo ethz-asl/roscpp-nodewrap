@@ -2,4 +2,5 @@
   <node name="maya" pkg="roscpp_nodewrap_tutorial" type="worker_node" output="screen">
     <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
   </node>
+  <node pkg="rostopic" type="rostopic" name="wake_nursing" args="pub -r 20 /wake_nursing std_msgs/Empty" output="screen"/>
 </launch>

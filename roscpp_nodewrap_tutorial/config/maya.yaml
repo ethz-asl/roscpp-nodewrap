@@ -1,9 +1,18 @@
+subscribers:
+  wake_nursing:
+    topic: "/wake_nursing"
+    queue_size: 100
+    latch: false
+
 workers:
   house_keeping:
     rate: 10
     autostart: true
-  nursing:
+  fanning:
     rate: 100
+    autostart: true
+  nursing:
+    rate: 20
     autostart: true
   collecting:
     rate: 1000

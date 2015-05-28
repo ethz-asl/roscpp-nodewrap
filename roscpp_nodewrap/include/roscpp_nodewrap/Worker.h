@@ -24,7 +24,6 @@
 #define ROSCPP_NODEWRAP_WORKER_H
 
 #include <ros/ros.h>
-#include <ros/timer.h>
 
 #include <std_srvs/Empty.h>
 
@@ -39,13 +38,14 @@
 #include <roscpp_nodewrap/GetWorkerState.h>
 
 namespace nodewrap {
-  /** \brief ROS node worker
+  /** \brief Abstract ROS node worker
     * 
-    * This class provides a timer-controlled worker for use with the ROS
-    * node implementation.
+    * This class provides the abstract basis of a worker for use with
+    * the ROS node implementation.
     */
   class Worker {
   friend class WorkerManager;
+  friend class WorkerQueueCallback;
   public:
     /** \brief Default constructor
       */
@@ -64,6 +64,18 @@ namespace nodewrap {
     /** \brief Access this worker's name
       */
     std::string getName() const;
+    
+    /** \brief Start the worker
+      */
+    void start();
+      
+    /** \brief Cancel the worker
+      */
+    void cancel(bool block = false);
+            
+    /** \brief Wake the worker
+      */
+    void wake();
     
     /** \brief Perform shutdown of the worker
       */
@@ -93,7 +105,7 @@ namespace nodewrap {
       return (impl != worker.impl);
     };
     
-  private:
+  protected:
     /** \brief ROS node worker implementation
       * 
       * This class provides the private implementation of the node worker.
@@ -107,27 +119,48 @@ namespace nodewrap {
       
       /** \brief Destructor
         */
-      ~Impl();
+      virtual ~Impl();
+      
+      /** \brief Retrieve the ROS node handle of the node implementation
+        *   owning this worker
+        */
+      ros::NodeHandle& getNodeHandle() const;
       
       /** \brief Query if this worker is valid
         */
       bool isValid() const;
       
-      /** \brief Start the worker
+      /** \brief Start the worker (implementation)
         */
       void start();
             
-      /** \brief Cancel the worker
+      /** \brief Start the worker (thread-safe, abstract declaration)
+        */
+      virtual void safeStart() = 0;
+            
+      /** \brief Wake the worker (implementation)
+        */
+      void wake();
+            
+      /** \brief Wake the worker (thread-safe, abstract declaration)
+        */
+      virtual void safeWake() = 0;
+            
+      /** \brief Cancel the worker (implementation)
         */
       void cancel(bool block = false);
+            
+      /** \brief Stop the worker (thread-safe, abstract declaration)
+        */
+      virtual void safeStop() = 0;
             
       /** \brief Unadvertise the worker's services
         */
       void unadvertise();
             
-      /** \brief The timer callback of this worker
+      /** \brief Run this worker once
         */ 
-      void timerCallback(const ros::TimerEvent& timerEvent);
+      void runOnce();
       
       /** \brief Service callback starting this worker
         */ 
@@ -148,13 +181,13 @@ namespace nodewrap {
         */ 
       std::string name;
       
-      /** \brief The expected rate of this worker
+      /** \brief The expected cycle time of this worker
         */ 
-      ros::Rate expectedRate;
+      ros::Duration expectedCycleTime;
       
-      /** \brief The timer controlling this worker
+      /** \brief True, if the worker will be started automatically
         */ 
-      ros::Timer timer;
+      bool autostart;
       
       /** \brief The worker's callback
         */ 
@@ -172,6 +205,14 @@ namespace nodewrap {
         */ 
       ros::Time startTime;
 
+      /** \brief Last cycle time of the worker
+        */ 
+      ros::Time lastCycleTime;
+
+      /** \brief The actual cycle time of this worker
+        */ 
+      ros::Duration actualCycleTime;
+      
       /** \brief Identifier of the thread running the worker
         * 
         * \note The identifier is valid only if the worker is currently
@@ -195,9 +236,9 @@ namespace nodewrap {
         */ 
       mutable boost::mutex mutex;
       
-      /** \brief The worker's condition
+      /** \brief The worker's cancellation condition
         */ 
-      boost::condition condition;
+      boost::condition cancelCondition;
       
       /** \brief The node implementation owning this worker
         */ 
@@ -218,8 +259,7 @@ namespace nodewrap {
     
     /** \brief Constructor (private version)
       */
-    Worker(const std::string& name, const WorkerOptions& defaultOptions,
-      const NodeImplPtr& nodeImpl);
+    Worker(const ImplPtr& impl);
   };
 };
 

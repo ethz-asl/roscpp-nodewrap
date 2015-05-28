@@ -40,9 +40,15 @@ WorkerNode::~WorkerNode() {
 void WorkerNode::init() {
   flowers = getParam("field/flowers", flowers);
   
+  subscriber = subscribe("wake_nursing", "/wake_nursing", 100,
+    &WorkerNode::wakeNursing);
+  NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
+  
   houseKeeping = addWorker("house_keeping", 0, &WorkerNode::doHouseKeeping);
   NODEWRAP_INFO("Created worker [%s]", houseKeeping.getName().c_str());
-  nursing = addWorker("nursing", 0, &WorkerNode::doNursing);
+  fanning = addWorker("fanning", 0, &WorkerNode::doFanning);
+  NODEWRAP_INFO("Created worker [%s]", fanning.getName().c_str());
+  nursing = addWorker("nursing", 0, &WorkerNode::doNursing, true, true);
   NODEWRAP_INFO("Created worker [%s]", nursing.getName().c_str());
   collecting = addWorker("collecting", 0, &WorkerNode::doCollecting);
   NODEWRAP_INFO("Created worker [%s]", collecting.getName().c_str());
@@ -59,12 +65,21 @@ bool WorkerNode::doHouseKeeping(const WorkerEvent& event) {
   return true;
 }
 
-bool WorkerNode::doNursing(const WorkerEvent& event) {
-  NODEWRAP_DEBUG("Feeding the larvae...");
+bool WorkerNode::doFanning(const WorkerEvent& event) {
+  NODEWRAP_DEBUG("Cooling down the hive...");
   
   ros::Duration duration = event.expectedCycleTime*2.0;
   duration.sleep();
   
+  return true;
+}
+
+void WorkerNode::wakeNursing(const std_msgs::Empty::ConstPtr& msg) {
+  nursing.wake();
+}
+
+bool WorkerNode::doNursing(const WorkerEvent& event) {
+  NODEWRAP_DEBUG("Feeding the larvae...");
   return true;
 }
 

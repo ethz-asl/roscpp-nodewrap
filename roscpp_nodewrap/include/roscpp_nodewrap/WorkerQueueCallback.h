@@ -16,58 +16,54 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file WorkerOptions.h
-  * \brief Header file providing the WorkerOptions class interface
+/** \file WorkerQueueCallback.h
+  * \brief Header file providing the WorkerQueueCallback class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_WORKER_OPTIONS_H
-#define ROSCPP_NODEWRAP_WORKER_OPTIONS_H
+#ifndef ROSCPP_NODEWRAP_WORKERQUEUECALLBACK_H
+#define ROSCPP_NODEWRAP_WORKERQUEUECALLBACK_H
 
-#include <ros/ros.h>
+#include <ros/callback_queue_interface.h>
 
 #include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
-  /** \brief ROS worker options
+  /** \brief ROS worker queue callback
     * 
-    * This class encapsulates all options available for creating a
-    * node worker.
+    * This class provides a callback for the worker which can be processed
+    * by ROS callback queues.
     */
-  class WorkerOptions {
+  class WorkerQueueCallback :
+    public ros::CallbackInterface {
   public:
     /** \brief Default constructor
       */
-    WorkerOptions();
+    WorkerQueueCallback(const WorkerQueueCallbackCallback& callback,
+      const ros::VoidConstWPtr& trackedObject, bool hasTrackedObject);
+    
+    /** \brief Destructor
+      */
+    ~WorkerQueueCallback();
 
-    /** \brief The name of the new worker, a valid ROS graph resource name
-      */ 
-    std::string name;
-    
-    /** \brief The rate at which the worker's callback is expected to
-      *   be invoked
-      */ 
-    ros::Rate rate;
-    
-    /** \brief If true, the worker will be started automatically
-      */ 
-    bool autostart;
-    
-    /** \brief If true, the worker will be synchronous
-      */ 
-    bool synchronous;
-    
-    /** \brief A function to call when the worker should perform its work
-      */ 
-    WorkerCallback callback;
-    
-    /** \brief The callback queue to be used by the worker
-      */ 
-    ros::CallbackQueueInterface* callbackQueue;
+    /** \brief Call this worker queue callback.
+      * 
+      * \return The result of the call.
+      */
+    ros::CallbackInterface::CallResult call();
+  private:
+    /** \brief The worker queue callback's callback
+      */
+    WorkerQueueCallbackCallback callback;
     
     /** \brief A shared pointer to an object to track for the worker
       *   callbacks
       */ 
-    ros::VoidConstPtr trackedObject;    
+    ros::VoidConstWPtr trackedObject;
+    
+    /** \brief If true, the worker has an object to track for its
+      *   callbacks
+      */ 
+    bool hasTrackedObject;    
   };
 };
 

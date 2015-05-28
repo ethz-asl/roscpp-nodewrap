@@ -28,7 +28,7 @@
 namespace nodewrap {
   /** \brief ROS synchronous node worker
     * 
-    * This class provides a timer-controlled worker for use with the ROS
+    * This class provides an event-controlled worker for use with the ROS
     * node implementation.
     */
   class SyncWorker :
@@ -44,7 +44,7 @@ namespace nodewrap {
       * \param[in] src The source synchronous worker which is being copied
       *   to this synchronous worker.
       */
-    SyncWorker(const Worker& src);
+    SyncWorker(const SyncWorker& src);
     
     /** \brief Destructor
       */
@@ -68,25 +68,31 @@ namespace nodewrap {
         */
       ~Impl();
       
-      /** \brief Start the worker
+      /** \brief Start the worker (thread-safe implementation)
         */
-      void start();
+      void safeStart();
             
-      /** \brief Cancel the worker
+      /** \brief Wake the worker (thread-safe implementation)
         */
-      void cancel(bool block = false);
+      void safeWake();
             
-      /** \brief Unadvertise the worker's services
+      /** \brief Stop the worker (thread-safe implementation)
         */
-      void unadvertise();
-            
-      /** \brief The timer callback of this worker
-        */ 
-      void timerCallback(const ros::TimerEvent& timerEvent);
+      void safeStop();
       
-      /** \brief The timer controlling this worker
+      /** \brief The callback queue to be used by the worker
         */ 
-      ros::Timer timer;      
+      ros::CallbackQueueInterface* callbackQueue;
+    
+      /** \brief A shared pointer to an object to track for the worker
+        *   callbacks
+        */ 
+      ros::VoidConstWPtr trackedObject;
+      
+      /** \brief If true, the worker has an object to track for its
+        *   callbacks
+        */ 
+      bool hasTrackedObject;    
     };
     
     /** \brief Constructor (private version)

@@ -59,6 +59,7 @@ add_library(roscpp_nodewrap
   src/WorkerEvent.cpp
   src/WorkerManager.cpp
   src/WorkerOptions.cpp
+  src/WorkerQueueCallback.cpp
 )
 
 ## Specify libraries to link a library or executable target against

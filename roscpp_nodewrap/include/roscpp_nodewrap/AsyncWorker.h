@@ -44,7 +44,7 @@ namespace nodewrap {
       * \param[in] src The source asynchronous worker which is being copied
       *   to this asynchronous worker.
       */
-    AsyncWorker(const Worker& src);
+    AsyncWorker(const AsyncWorker& src);
     
     /** \brief Destructor
       */
@@ -68,17 +68,17 @@ namespace nodewrap {
         */
       ~Impl();
       
-      /** \brief Start the worker
+      /** \brief Start the worker (thread-safe implementation)
         */
-      void start();
+      void safeStart();
             
-      /** \brief Cancel the worker
+      /** \brief Wake the worker (thread-safe implementation)
         */
-      void cancel(bool block = false);
+      void safeWake();
             
-      /** \brief Unadvertise the worker's services
+      /** \brief Stop the worker (thread-safe implementation)
         */
-      void unadvertise();
+      void safeStop();
             
       /** \brief The timer callback of this worker
         */ 
@@ -86,7 +86,12 @@ namespace nodewrap {
       
       /** \brief The timer controlling this worker
         */ 
-      ros::Timer timer;      
+      ros::Timer timer;
+      
+      /** \brief If true, the timer controlling this worker needs to
+        *   be reset
+        */ 
+      bool resetTimer;
     };
     
     /** \brief Constructor (private version)

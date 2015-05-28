@@ -60,6 +60,15 @@ namespace nodewrap {
     */
   typedef boost::weak_ptr<WorkerManager> WorkerManagerWPtr;
   
+  /** \brief Forward declaration of the worker queue callback
+    */
+  class WorkerQueueCallback;
+  
+  /** \brief Forward declaration of the worker queue callback function
+    *   type
+    */
+  typedef boost::function<void()> WorkerQueueCallbackCallback;
+  
   /** \brief Forward declaration of the worker event
     */
   class WorkerEvent;

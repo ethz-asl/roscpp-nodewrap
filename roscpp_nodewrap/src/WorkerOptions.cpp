@@ -26,8 +26,9 @@ namespace nodewrap {
 
 WorkerOptions::WorkerOptions() :
   rate(0.0),
-  callbackQueue(0), 
-  autostart(true) {
+  autostart(true),
+  synchronous(false),
+  callbackQueue(0) {
 }
 
 }

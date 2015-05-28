@@ -21,6 +21,9 @@
 #include "roscpp_nodewrap/Exceptions.h"
 #include "roscpp_nodewrap/NodeImpl.h"
 
+#include "roscpp_nodewrap/AsyncWorker.h"
+#include "roscpp_nodewrap/SyncWorker.h"
+
 #include "roscpp_nodewrap/WorkerManager.h"
 
 namespace nodewrap {
@@ -102,8 +105,17 @@ Worker WorkerManager::addWorker(const std::string& name, const WorkerOptions&
     impl->workers.find(name);
     
   if (it == impl->workers.end()) {
-    worker.impl.reset(new Worker::Impl(name, defaultOptions, impl->nodeImpl));
+    if (defaultOptions.synchronous)
+      worker.impl.reset(new SyncWorker::Impl(name, defaultOptions,
+        impl->nodeImpl));
+    else
+      worker.impl.reset(new AsyncWorker::Impl(name, defaultOptions,
+        impl->nodeImpl));
+      
     impl->workers.insert(std::make_pair(name, worker.impl));
+    
+    if (worker.impl->autostart)
+      worker.impl->start();    
   }
   else
     worker.impl = it->second.lock();

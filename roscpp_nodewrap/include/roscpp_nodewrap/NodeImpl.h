@@ -507,12 +507,13 @@ namespace nodewrap {
       *   should perform its work.
       * \param[in] defaultAutostart If true, the worker will by default be
       *   started automatically.
+      * \param[in] synchronous If true, the worker will be synchronous.
       * \return On success, a worker that, when all copies of it go out
       *   of scope, will remove this worker.
       */
     template <class T> Worker addWorker(const std::string& name, const
       ros::Rate& defaultRate, bool(T::*fp)(const WorkerEvent&), bool
-      defaultAutostart = true);
+      defaultAutostart = true, bool synchronous = false);
     
     /** \brief Add a worker, with full range of options
       * 

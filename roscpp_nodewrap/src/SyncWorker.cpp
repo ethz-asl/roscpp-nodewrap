@@ -19,6 +19,9 @@
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 
+#include "roscpp_nodewrap/NodeImpl.h"
+#include "roscpp_nodewrap/WorkerQueueCallback.h"
+
 #include "roscpp_nodewrap/SyncWorker.h"
 
 namespace nodewrap {
@@ -36,7 +39,7 @@ SyncWorker::SyncWorker(const SyncWorker& src) :
 
 SyncWorker::SyncWorker(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)) {
+  Worker(ImplPtr(new Impl(name, defaultOptions, nodeImpl))) {
 }
 
 SyncWorker::~SyncWorker() {  
@@ -44,19 +47,10 @@ SyncWorker::~SyncWorker() {
 
 SyncWorker::Impl::Impl(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker(name, defaultOptions, nodeImpl) {
-  ros::TimerOptions timerOptions;
-  timerOptions.period = (rate > 0.0) ? ros::Duration(1.0/rate) :
-    ros::Duration();
-  timerOptions.oneshot = (rate <= 0.0);
-  timerOptions.autostart = false;
-  timerOptions.callback = boost::bind(&Worker::Impl::timerCallback, this, _1);
-  timerOptions.callback_queue = defaultOptions.callbackQueue;
-  timerOptions.tracked_object = defaultOptions.trackedObject;
-  timer = nodeImpl->getNodeHandle().createTimer(timerOptions);
-  
-  if (autostart)
-    start();
+  Worker::Impl(name, defaultOptions, nodeImpl),
+  callbackQueue(defaultOptions.callbackQueue),
+  trackedObject(defaultOptions.trackedObject),
+  hasTrackedObject(defaultOptions.trackedObject) {
 }
 
 SyncWorker::Impl::~Impl() {
@@ -66,85 +60,21 @@ SyncWorker::Impl::~Impl() {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void SyncWorker::Impl::start() {
-  boost::mutex::scoped_lock lock(mutex);
-
-  if (!started) {
-    started = true;
-    canceled = false;
-    
-    startTime = ros::Time();
-    
-    timer.start();
-  }
+void SyncWorker::Impl::safeStart() {
 }
 
-void SyncWorker::Impl::cancel(bool block) {
-  boost::mutex::scoped_lock lock(mutex);
+void SyncWorker::Impl::safeWake() {
+  ros::CallbackInterfacePtr callback(new WorkerQueueCallback(
+    boost::bind(&Worker::Impl::runOnce, this), trackedObject,
+    hasTrackedObject));
   
-  if (started) {
-    if ((threadId != boost::thread::id()) &&
-        (threadId != boost::this_thread::get_id())) {
-      canceled = true;
-      if (block)
-        condition.wait(lock);
-    }
-    else {
-      timer.stop();
-      started = false;
-      
-      NODEWRAP_WORKER_INFO(
-        "Worker [%s] has been canceled after %.3f second(s).",
-        name.c_str(), (ros::Time::now()-startTime).toSec());
-    }
-  }
+  if (callbackQueue)
+    callbackQueue->addCallback(callback);
+  else
+    getNodeHandle().getCallbackQueue()->addCallback(callback);
 }
 
-void SyncWorker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
-  boost::mutex::scoped_lock lock(mutex);
-  
-  if (startTime.isZero()) {
-    startTime = ros::Time::now();
-    NODEWRAP_WORKER_INFO("Worker [%s] has been started.", name.c_str());
-  }
-  
-  threadId = boost::this_thread::get_id();
-  bool done = false;
-  
-  if (!canceled) {
-    if (callback) {
-      WorkerEvent workerEvent;
-
-      workerEvent.expectedCycleTime = expectedRate.expectedCycleTime();
-      workerEvent.timing = timerEvent;
-  
-      lock.unlock();
-      done = !callback(workerEvent);
-      lock.lock();  
-    }
-  }
-  
-  if (canceled) {
-    timer.stop();
-    condition.notify_all();
-    
-    started = false;
-    canceled = false;
-    
-    NODEWRAP_WORKER_INFO(
-      "Worker [%s] has been canceled after %.3f second(s).",
-      name.c_str(), (ros::Time::now()-startTime).toSec());
-  }
-  else if (done) {
-    timer.stop();
-    started = false;
-    
-    NODEWRAP_WORKER_INFO(
-      "Worker [%s] has finished cleanly after %.3f second(s).",
-      name.c_str(), (ros::Time::now()-startTime).toSec());
-  }
-  
-  threadId = boost::thread::id();
+void SyncWorker::Impl::safeStop() {
 }
 
 }

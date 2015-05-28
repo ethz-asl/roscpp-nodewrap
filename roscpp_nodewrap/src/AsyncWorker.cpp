@@ -16,8 +16,12 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <limits>
+
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
+
+#include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/AsyncWorker.h"
 
@@ -36,7 +40,7 @@ AsyncWorker::AsyncWorker(const AsyncWorker& src) :
 
 AsyncWorker::AsyncWorker(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)) {
+  Worker(ImplPtr(new Impl(name, defaultOptions, nodeImpl))) {
 }
 
 AsyncWorker::~AsyncWorker() {  
@@ -44,19 +48,19 @@ AsyncWorker::~AsyncWorker() {
 
 AsyncWorker::Impl::Impl(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker(name, defaultOptions, nodeImpl) {
+  Worker::Impl(name, defaultOptions, nodeImpl),
+  resetTimer(true) {
   ros::TimerOptions timerOptions;
-  timerOptions.period = (rate > 0.0) ? ros::Duration(1.0/rate) :
-    ros::Duration();
-  timerOptions.oneshot = (rate <= 0.0);
+  
+  timerOptions.period = ros::Duration(0.0);
+  timerOptions.oneshot = expectedCycleTime.isZero();  
   timerOptions.autostart = false;
-  timerOptions.callback = boost::bind(&Worker::Impl::timerCallback, this, _1);
+  timerOptions.callback = boost::bind(&AsyncWorker::Impl::timerCallback,
+    this, _1);
   timerOptions.callback_queue = defaultOptions.callbackQueue;
   timerOptions.tracked_object = defaultOptions.trackedObject;
-  timer = nodeImpl->getNodeHandle().createTimer(timerOptions);
   
-  if (autostart)
-    start();
+  timer = getNodeHandle().createTimer(timerOptions);
 }
 
 AsyncWorker::Impl::~Impl() {
@@ -66,85 +70,26 @@ AsyncWorker::Impl::~Impl() {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void AsyncWorker::Impl::start() {
-  boost::mutex::scoped_lock lock(mutex);
-
-  if (!started) {
-    started = true;
-    canceled = false;
-    
-    startTime = ros::Time();
-    
-    timer.start();
-  }
+void AsyncWorker::Impl::safeStart() {
+  timer.start();
 }
 
-void AsyncWorker::Impl::cancel(bool block) {
-  boost::mutex::scoped_lock lock(mutex);
-  
-  if (started) {
-    if ((threadId != boost::thread::id()) &&
-        (threadId != boost::this_thread::get_id())) {
-      canceled = true;
-      if (block)
-        condition.wait(lock);
-    }
-    else {
-      timer.stop();
-      started = false;
-      
-      NODEWRAP_WORKER_INFO(
-        "Worker [%s] has been canceled after %.3f second(s).",
-        name.c_str(), (ros::Time::now()-startTime).toSec());
-    }
-  }
+void AsyncWorker::Impl::safeWake() {
+  resetTimer = true;
+  timer.setPeriod(ros::Duration(0.0));
+}
+
+void AsyncWorker::Impl::safeStop() {
+  timer.stop();
 }
 
 void AsyncWorker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
-  boost::mutex::scoped_lock lock(mutex);
-  
-  if (startTime.isZero()) {
-    startTime = ros::Time::now();
-    NODEWRAP_WORKER_INFO("Worker [%s] has been started.", name.c_str());
+  if (resetTimer) {
+    timer.setPeriod(expectedCycleTime);
+    resetTimer = false;
   }
-  
-  threadId = boost::this_thread::get_id();
-  bool done = false;
-  
-  if (!canceled) {
-    if (callback) {
-      WorkerEvent workerEvent;
 
-      workerEvent.expectedCycleTime = expectedRate.expectedCycleTime();
-      workerEvent.timing = timerEvent;
-  
-      lock.unlock();
-      done = !callback(workerEvent);
-      lock.lock();  
-    }
-  }
-  
-  if (canceled) {
-    timer.stop();
-    condition.notify_all();
-    
-    started = false;
-    canceled = false;
-    
-    NODEWRAP_WORKER_INFO(
-      "Worker [%s] has been canceled after %.3f second(s).",
-      name.c_str(), (ros::Time::now()-startTime).toSec());
-  }
-  else if (done) {
-    timer.stop();
-    started = false;
-    
-    NODEWRAP_WORKER_INFO(
-      "Worker [%s] has finished cleanly after %.3f second(s).",
-      name.c_str(), (ros::Time::now()-startTime).toSec());
-  }
-  
-  threadId = boost::thread::id();
+  runOnce();
 }
 
 }

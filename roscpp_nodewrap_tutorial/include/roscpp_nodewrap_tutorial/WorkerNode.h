@@ -23,16 +23,19 @@
 #ifndef ROSCPP_NODEWRAP_TUTORIAL_WORKER_NODE_HPP
 #define ROSCPP_NODEWRAP_TUTORIAL_WORKER_NODE_HPP
 
+#include <std_msgs/Empty.h>
+
 #include <roscpp_nodewrap/NodeImpl.h>
 #include <roscpp_nodewrap/Nodelet.h>
 
 namespace nodewrap {
   /** \brief Example worker node
     * 
-    * This worker node demonstrates the concept of using multiple workers
-    * with the ROS node and ROS nodelet template wrappers. For this purpose,
-    * we consider the worker Maya, named after the main character of a German
-    * comic book series about a worker bee, under the following two use cases.
+    * This worker node demonstrates the concept of using multiple asynchronous
+    * and synchronous workers with the ROS node and ROS nodelet template
+    * wrappers. For this purpose, we consider the node called Maya, named after
+    * the main character of a German comic book series about a worker bee,
+    * under the following two use cases.
     * 
     * \section worker_node Worker Node with Single-Threaded Spinner
     * 
@@ -64,6 +67,7 @@ namespace nodewrap {
         <node name="maya" pkg="roscpp_nodewrap_tutorial" type="worker_node" output="screen">
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
         </node>
+        <node pkg="rostopic" type="rostopic" name="wake_nursing" args="pub -r 20 /wake_nursing std_msgs/Empty" output="screen"/>
       </launch>
       \endverbatim
     *
@@ -87,6 +91,7 @@ namespace nodewrap {
         <node name="maya" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/WorkerNode worker" output="screen">
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
         </node>
+        <node pkg="rostopic" type="rostopic" name="wake_nursing" args="pub -r 20 /wake_nursing std_msgs/Empty" output="screen"/>
       </launch>
       \endverbatim
     *
@@ -111,6 +116,15 @@ namespace nodewrap {
     /** \brief The ROS worker performing the house keeping task
       */
     Worker houseKeeping;
+    
+    /** \brief The ROS worker performing the fanning task
+      */
+    Worker fanning;
+    
+    /** \brief The ROS subscriber listening to the topic for waking
+      *   the nursing worker
+      */
+    ros::Subscriber subscriber;
     
     /** \brief The ROS worker performing the nursing task
       */
@@ -141,12 +155,18 @@ namespace nodewrap {
         void WorkerNode::init() {
           flowers = getParam("field/flowers", flowers);
           
+          subscriber = subscribe("wake_nursing", "/wake_nursing", 100,
+            &WorkerNode::wakeNursing);
+          NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
+          
           houseKeeping = addWorker("house_keeping", 0, &WorkerNode::doHouseKeeping);
-          NODEWRAP_INFO("Created worker: %s", houseKeeping.getName().c_str());
+          NODEWRAP_INFO("Created worker [%s]", houseKeeping.getName().c_str());
+          fanning = addWorker("fanning", 0, &WorkerNode::doFanning);
+          NODEWRAP_INFO("Created worker [%s]", fanning.getName().c_str());
           nursing = addWorker("nursing", 0, &WorkerNode::doNursing);
-          NODEWRAP_INFO("Created worker: %s", nursing.getName().c_str());
+          NODEWRAP_INFO("Created worker [%s]", nursing.getName().c_str());
           collecting = addWorker("collecting", 0, &WorkerNode::doCollecting);
-          NODEWRAP_INFO("Created worker: %s", collecting.getName().c_str());
+          NODEWRAP_INFO("Created worker [%s]", collecting.getName().c_str());
           
           NODEWRAP_INFO("Hello, all workers have been created!");
         }
@@ -188,21 +208,21 @@ namespace nodewrap {
       */
     bool doHouseKeeping(const WorkerEvent& event);
     
-    /** \brief Nursing worker callback
+    /** \brief Fanning worker callback
       * 
       * \param[in] event The worker event providing information about the
       *   state of this worker.
       * \return True, if this worker has unfinished work to do.
       * 
-      * The nursing worker callback callback demonstrates the concept of
-      * excessive computation: It will not return to the caller until twice
-      * the expected execution time has elapsed.
+      * The fanning worker callback demonstrates the concept of excessive
+      * computation: It will not return to the caller until twice the
+      * expected execution time has elapsed.
       *
-      * This is the implementation of the nursing worker callback:
+      * This is the implementation of the fanning worker callback:
       * 
         \verbatim
-        bool WorkerNode::doNursing(const WorkerEvent& event) {
-          NODEWRAP_DEBUG("Feeding the larvae...");
+        bool WorkerNode::doFanning(const WorkerEvent& event) {
+          NODEWRAP_DEBUG("Cooling down the hive...");
           
           ros::Duration duration = event.expectedCycleTime*2.0;
           duration.sleep();
@@ -210,6 +230,52 @@ namespace nodewrap {
           return true;
         }
         \endverbatim
+      */
+    bool doFanning(const WorkerEvent& event);
+    
+    /** \brief Wake nursing callback
+      * 
+      * This callback will be invoked every time a new message arrived
+      * on the topic at which the wake nursing subscriber is listening.
+      * 
+      * \param[in] msg A const pointer reference to the received message.
+      * 
+      * This is the callback's implementation:
+      * 
+        \verbatim
+        void WorkerNode::wakeNursing(const std_msgs::Empty::ConstPtr& msg) {
+          nursing.wake();
+        }
+        \endverbatim
+      *
+      * Note that the call to nursing.wake() will wake up the nursing worker
+      * on reception of a message and return immediately, i.e., without
+      * blocking.
+      *
+      * \see wakeNursing
+      */
+    void wakeNursing(const std_msgs::Empty::ConstPtr& msg);
+    
+    /** \brief Nursing worker callback
+      * 
+      * \param[in] event The worker event providing information about the
+      *   state of this worker.
+      * \return True, if this worker has unfinished work to do.
+      * 
+      * The nursing worker callback demonstrates the concept of a synchronous
+      * worker: It is not timer-controlled, but will run once everytime it is
+      * woken up by a non-blocking call to nursing.wake().
+      *
+      * This is the implementation of the nursing worker callback:
+      * 
+        \verbatim
+        bool WorkerNode::doNursing(const WorkerEvent& event) {
+          NODEWRAP_DEBUG("Feeding the larvae...");
+          return true;
+        }
+        \endverbatim
+      *
+      * \see wakeNursing
       */
     bool doNursing(const WorkerEvent& event);
     

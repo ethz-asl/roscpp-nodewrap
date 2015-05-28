@@ -16,12 +16,17 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <limits>
+
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 
 #include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/Worker.h"
+
+#include "roscpp_nodewrap/AsyncWorker.h"
+#include "roscpp_nodewrap/SyncWorker.h"
 
 #define NODEWRAP_WORKER_INFO(...) if (this->nodeImpl->isNodelet()) ROS_INFO_NAMED(this->nodeImpl->getName(), __VA_ARGS__); else ROS_INFO(__VA_ARGS__)
 
@@ -38,9 +43,10 @@ Worker::Worker(const Worker& src) :
   impl(src.impl) {
 }
 
-Worker::Worker(const std::string& name, const WorkerOptions& defaultOptions,
-    const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)) {
+Worker::Worker(const ImplPtr& impl) :
+  impl(impl) {
+  if (impl->autostart)
+    impl->start();
 }
 
 Worker::~Worker() {  
@@ -49,17 +55,18 @@ Worker::~Worker() {
 Worker::Impl::Impl(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
   name(name),
-  expectedRate(0.0),
+  autostart(true),
   callback(defaultOptions.callback),
   started(false),
   canceled(false),
   nodeImpl(nodeImpl) {
   std::string ns = ros::names::append("workers", name);
-  double rate = nodeImpl->getParam(ros::names::append(ns, "rate"),
-    1.0/defaultOptions.rate.expectedCycleTime().toSec());
-  bool autostart = nodeImpl->getParam(ros::names::append(ns, "autostart"),
+  double rate = nodeImpl->getParam(ros::names::append(
+    ns, "rate"), 1.0/defaultOptions.rate.expectedCycleTime().toSec());
+  expectedCycleTime = (rate > 0.0) ? ros::Duration(1.0/rate) :
+    ros::Duration();
+  autostart = nodeImpl->getParam(ros::names::append(ns, "autostart"),
     defaultOptions.autostart);
-  expectedRate = ros::Rate(rate);
   
   ros::AdvertiseServiceOptions startOptions;
   startOptions.init<std_srvs::Empty::Request, std_srvs::Empty::Response>(
@@ -78,19 +85,6 @@ Worker::Impl::Impl(const std::string& name, const WorkerOptions&
     ros::names::append(ns, "get_state"),
     boost::bind(&Worker::Impl::getStateCallback, this, _1, _2));
   getStateServer = nodeImpl->getNodeHandle().advertiseService(getStateOptions);
-  
-  ros::TimerOptions timerOptions;
-  timerOptions.period = (rate > 0.0) ? ros::Duration(1.0/rate) :
-    ros::Duration();
-  timerOptions.oneshot = (rate <= 0.0);
-  timerOptions.autostart = false;
-  timerOptions.callback = boost::bind(&Worker::Impl::timerCallback, this, _1);
-  timerOptions.callback_queue = defaultOptions.callbackQueue;
-  timerOptions.tracked_object = defaultOptions.trackedObject;
-  timer = nodeImpl->getNodeHandle().createTimer(timerOptions);
-  
-  if (autostart)
-    start();
 }
 
 Worker::Impl::~Impl() {
@@ -108,6 +102,10 @@ std::string Worker::getName() const {
     return std::string();
 }
 
+ros::NodeHandle& Worker::Impl::getNodeHandle() const {
+  return nodeImpl->getNodeHandle();
+}
+
 bool Worker::Impl::isValid() const {
   return startServer && cancelServer && getStateServer;
 }
@@ -115,6 +113,21 @@ bool Worker::Impl::isValid() const {
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
+
+void Worker::start() {
+  if (impl)
+    impl->start();
+}
+
+void Worker::cancel(bool block) {
+  if (impl)
+    impl->cancel(block);
+}
+
+void Worker::wake() {
+  if (impl)
+    impl->wake();
+}
 
 void Worker::shutdown() {
   if (impl)
@@ -137,9 +150,17 @@ void Worker::Impl::start() {
     canceled = false;
     
     startTime = ros::Time();
+    lastCycleTime = ros::Time();
     
-    timer.start();
+    safeStart();
   }
+}
+
+void Worker::Impl::wake() {
+  boost::mutex::scoped_lock lock(mutex);
+
+  if (started && (threadId == boost::thread::id()))
+    safeWake();
 }
 
 void Worker::Impl::cancel(bool block) {
@@ -150,20 +171,25 @@ void Worker::Impl::cancel(bool block) {
         (threadId != boost::this_thread::get_id())) {
       canceled = true;
       if (block)
-        condition.wait(lock);
+        cancelCondition.wait(lock);
     }
     else {
-      timer.stop();
+      safeStop();
+      
       started = false;
       
-      NODEWRAP_WORKER_INFO(
-        "Worker [%s] has been canceled after %.3f second(s).",
-        name.c_str(), (ros::Time::now()-startTime).toSec());
+      if (!startTime.isZero())
+        NODEWRAP_WORKER_INFO(
+          "Worker [%s] has been canceled after %.3f second(s).",
+          name.c_str(), (ros::Time::now()-startTime).toSec());
+      else
+        NODEWRAP_WORKER_INFO(
+          "Worker [%s] has been canceled.", name.c_str());
     }
   }
 }
 
-void Worker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
+void Worker::Impl::runOnce() {
   boost::mutex::scoped_lock lock(mutex);
   
   if (startTime.isZero()) {
@@ -176,10 +202,16 @@ void Worker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
   
   if (!canceled) {
     if (callback) {
+      ros::Time now = ros::Time::now();
+      if (lastCycleTime.isZero())
+        actualCycleTime = expectedCycleTime;
+      else
+        actualCycleTime = now-lastCycleTime;
+      lastCycleTime = now;
+      
       WorkerEvent workerEvent;
-
-      workerEvent.expectedCycleTime = expectedRate.expectedCycleTime();
-      workerEvent.timing = timerEvent;
+      workerEvent.expectedCycleTime = expectedCycleTime;
+      workerEvent.actualCycleTime = actualCycleTime;
   
       lock.unlock();
       done = !callback(workerEvent);
@@ -188,8 +220,8 @@ void Worker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
   }
   
   if (canceled) {
-    timer.stop();
-    condition.notify_all();
+    safeStop();
+    cancelCondition.notify_all();
     
     started = false;
     canceled = false;
@@ -199,7 +231,8 @@ void Worker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
       name.c_str(), (ros::Time::now()-startTime).toSec());
   }
   else if (done) {
-    timer.stop();
+    safeStop();
+    
     started = false;
     
     NODEWRAP_WORKER_INFO(
