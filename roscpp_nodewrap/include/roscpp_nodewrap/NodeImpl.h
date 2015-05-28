@@ -31,9 +31,9 @@
 
 #include <roscpp_nodewrap/NodeInterface.h>
 
-#include <roscpp_nodewrap/Worker.h>
-#include <roscpp_nodewrap/WorkerManager.h>
-#include <roscpp_nodewrap/WorkerOptions.h>
+#include <roscpp_nodewrap/worker/Worker.h>
+#include <roscpp_nodewrap/worker/WorkerManager.h>
+#include <roscpp_nodewrap/worker/WorkerOptions.h>
 
 namespace nodewrap {  
   /** \brief Abstract class implementation of a ROS node(let)

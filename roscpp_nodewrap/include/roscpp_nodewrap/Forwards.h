@@ -18,6 +18,7 @@
 
 /** \file Forwards.h
   * \brief Header file providing forward declarations for the node wrapper
+  *   (and its dependencies)
   */
 
 #ifndef ROSCPP_NODEWRAP_FORWARDS_H
@@ -25,10 +26,12 @@
 
 #include <ros/ros.h>
 
-namespace roscpp_nodewrap {};
+#include <roscpp_nodewrap/worker/WorkerForwards.h>
+
+namespace roscpp_nodewrap_msgs {};
   
 namespace nodewrap {
-  using namespace roscpp_nodewrap;
+  using namespace roscpp_nodewrap_msgs;
   
   /** \brief Forward declaration of the node implementation
     */
@@ -39,43 +42,6 @@ namespace nodewrap {
   /** \brief Forward declaration of the node implementation weak pointer type
     */
   typedef boost::weak_ptr<NodeImpl> NodeImplWPtr;
-  
-  /** \brief Forward declaration of the worker
-    */
-  class Worker;
-  /** \brief Forward declaration of the worker pointer type
-    */
-  typedef boost::shared_ptr<Worker> WorkerPtr;
-  /** \brief Forward declaration of the worker weak pointer type
-    */
-  typedef boost::weak_ptr<Worker> WorkerWPtr;
-  
-  /** \brief Forward declaration of the worker manager
-    */
-  class WorkerManager;
-  /** \brief Forward declaration of the worker manager pointer type
-    */
-  typedef boost::shared_ptr<WorkerManager> WorkerManagerPtr;
-  /** \brief Forward declaration of the worker manager weak pointer type
-    */
-  typedef boost::weak_ptr<WorkerManager> WorkerManagerWPtr;
-  
-  /** \brief Forward declaration of the worker queue callback
-    */
-  class WorkerQueueCallback;
-  
-  /** \brief Forward declaration of the worker queue callback function
-    *   type
-    */
-  typedef boost::function<void()> WorkerQueueCallbackCallback;
-  
-  /** \brief Forward declaration of the worker event
-    */
-  class WorkerEvent;
-  
-  /** \brief Forward declaration of the worker callback function type
-    */
-  typedef boost::function<bool(const WorkerEvent&)> WorkerCallback;
 };
 
 #endif

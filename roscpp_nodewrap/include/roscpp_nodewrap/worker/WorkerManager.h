@@ -29,11 +29,12 @@
 #include <boost/thread/mutex.hpp>
 
 #include <roscpp_nodewrap/Forwards.h>
-#include <roscpp_nodewrap/Worker.h>
-#include <roscpp_nodewrap/WorkerOptions.h>
 
-#include <roscpp_nodewrap/HasWorker.h>
-#include <roscpp_nodewrap/ListWorkers.h>
+#include <roscpp_nodewrap/worker/Worker.h>
+#include <roscpp_nodewrap/worker/WorkerOptions.h>
+
+#include <roscpp_nodewrap_msgs/HasWorker.h>
+#include <roscpp_nodewrap_msgs/ListWorkers.h>
 
 namespace nodewrap {
   /** \brief ROS node worker manager

@@ -23,7 +23,7 @@
 
 #include "roscpp_nodewrap/NodeImpl.h"
 
-#include "roscpp_nodewrap/AsyncWorker.h"
+#include "roscpp_nodewrap/worker/AsyncWorker.h"
 
 namespace nodewrap {
 

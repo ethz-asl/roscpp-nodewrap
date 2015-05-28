@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/WorkerEvent.h"
+#include "roscpp_nodewrap/worker/WorkerEvent.h"
 
 namespace nodewrap {
 

@@ -23,10 +23,9 @@
 
 #include "roscpp_nodewrap/NodeImpl.h"
 
-#include "roscpp_nodewrap/Worker.h"
-
-#include "roscpp_nodewrap/AsyncWorker.h"
-#include "roscpp_nodewrap/SyncWorker.h"
+#include "roscpp_nodewrap/worker/Worker.h"
+#include "roscpp_nodewrap/worker/AsyncWorker.h"
+#include "roscpp_nodewrap/worker/SyncWorker.h"
 
 #define NODEWRAP_WORKER_INFO(...) if (this->nodeImpl->isNodelet()) ROS_INFO_NAMED(this->nodeImpl->getName(), __VA_ARGS__); else ROS_INFO(__VA_ARGS__)
 

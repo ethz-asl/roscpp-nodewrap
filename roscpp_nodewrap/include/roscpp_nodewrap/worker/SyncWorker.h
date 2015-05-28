@@ -23,7 +23,7 @@
 #ifndef ROSCPP_NODEWRAP_SYNCWORKER_H
 #define ROSCPP_NODEWRAP_SYNCWORKER_H
 
-#include <roscpp_nodewrap/Worker.h>
+#include <roscpp_nodewrap/worker/Worker.h>
 
 namespace nodewrap {
   /** \brief ROS synchronous node worker

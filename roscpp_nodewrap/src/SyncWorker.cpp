@@ -20,9 +20,9 @@
 #include <boost/thread/locks.hpp>
 
 #include "roscpp_nodewrap/NodeImpl.h"
-#include "roscpp_nodewrap/WorkerQueueCallback.h"
 
-#include "roscpp_nodewrap/SyncWorker.h"
+#include "roscpp_nodewrap/worker/SyncWorker.h"
+#include "roscpp_nodewrap/worker/WorkerQueueCallback.h"
 
 namespace nodewrap {
 

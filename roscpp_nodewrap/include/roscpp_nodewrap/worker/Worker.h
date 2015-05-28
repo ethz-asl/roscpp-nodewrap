@@ -32,10 +32,11 @@
 #include <boost/thread/condition.hpp>
 
 #include <roscpp_nodewrap/Forwards.h>
-#include <roscpp_nodewrap/WorkerEvent.h>
-#include <roscpp_nodewrap/WorkerOptions.h>
 
-#include <roscpp_nodewrap/GetWorkerState.h>
+#include <roscpp_nodewrap/worker/WorkerEvent.h>
+#include <roscpp_nodewrap/worker/WorkerOptions.h>
+
+#include <roscpp_nodewrap_msgs/GetWorkerState.h>
 
 namespace nodewrap {
   /** \brief Abstract ROS node worker

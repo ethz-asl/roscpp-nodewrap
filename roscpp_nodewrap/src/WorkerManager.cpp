@@ -21,10 +21,9 @@
 #include "roscpp_nodewrap/Exceptions.h"
 #include "roscpp_nodewrap/NodeImpl.h"
 
-#include "roscpp_nodewrap/AsyncWorker.h"
-#include "roscpp_nodewrap/SyncWorker.h"
-
-#include "roscpp_nodewrap/WorkerManager.h"
+#include "roscpp_nodewrap/worker/AsyncWorker.h"
+#include "roscpp_nodewrap/worker/SyncWorker.h"
+#include "roscpp_nodewrap/worker/WorkerManager.h"
 
 namespace nodewrap {
 
