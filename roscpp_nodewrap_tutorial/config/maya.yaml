@@ -14,8 +14,20 @@ workers:
   nursing:
     rate: 20
     autostart: true
+    diagnostics:
+      frequency:
+        mean_tolerance:
+          warn: 0.1
+          error: 0.2
+        standard_deviation_tolerance:
+          warn: 0.25
+          error: 0.5
   collecting:
     rate: 1000
     autostart: true
+
+diagnostics:
+  period: 1.0
+    
 field:
   flowers: 10000

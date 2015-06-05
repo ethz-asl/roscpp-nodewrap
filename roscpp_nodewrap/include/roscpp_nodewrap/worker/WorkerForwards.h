@@ -20,8 +20,8 @@
   * \brief Header file providing forward declarations for the node worker
   */
 
-#ifndef ROSCPP_NODEWRAP_WORKERFORWARDS_H
-#define ROSCPP_NODEWRAP_WORKERFORWARDS_H
+#ifndef ROSCPP_NODEWRAP_WORKER_FORWARDS_H
+#define ROSCPP_NODEWRAP_WORKER_FORWARDS_H
 
 #include <ros/ros.h>
 

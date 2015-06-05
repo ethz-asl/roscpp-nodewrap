@@ -28,6 +28,6 @@ int main(int argc, char** argv) {
   Node<WorkerNode> node;
 
   ros::spin();
-    
+  
   return 0;
 }

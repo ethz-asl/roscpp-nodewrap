@@ -86,7 +86,7 @@ namespace nodewrap {
         */
       ~Impl();
       
-      /** \brief Query if this worker manager is valid
+      /** \brief True, if this worker manager is valid
         */
       bool isValid() const;
       
@@ -148,7 +148,8 @@ namespace nodewrap {
     
     /** \brief Add a worker to be managed by this worker manager
       */
-    Worker addWorker(const std::string& name, const WorkerOptions& options);
+    Worker addWorker(const std::string& name, const WorkerOptions&
+      defaultOptions);
   };
 };
 

@@ -25,15 +25,7 @@
 
 #include <ros/exception.h>
 
-namespace nodewrap {
-  /** \brief Exception thrown in case of an invalid worker name
-    */ 
-  class InvalidWorkerNameException :
-    public ros::Exception {
-  public:
-    InvalidWorkerNameException(const std::string& name, const std::string&
-      reason);
-  };
-};
+#include <roscpp_nodewrap/diagnostics/DiagnosticsExceptions.h>
+#include <roscpp_nodewrap/worker/WorkerExceptions.h>
 
 #endif

@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   nodelet
+  diagnostic_updater
   roscpp_nodewrap_msgs
 )
 
@@ -31,8 +32,9 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES roscpp_nodewrap
   CATKIN_DEPENDS
-    nodelet
     roscpp
+    nodelet
+    diagnostic_updater
     roscpp_nodewrap_msgs
 )
 
@@ -50,13 +52,26 @@ include_directories(
 ## Declare a cpp library
 add_library(roscpp_nodewrap
   src/AsyncWorker.cpp
-  src/Exceptions.cpp
+  src/CyclicEventStatistics.cpp
+  src/DiagnosticsExceptions.cpp
+  src/DiagnosticTask.cpp
+  src/DiagnosticTaskOptions.cpp
+  src/DiagnosticUpdater.cpp
+  src/FrequencyStatistics.cpp
+  src/FrequencyTask.cpp
+  src/FrequencyTaskOptions.cpp
   src/NodeInterface.cpp
   src/NodeImpl.cpp
+  src/PeriodStatistics.cpp
   src/Signal.cpp
   src/SyncWorker.cpp
+  src/Timer.cpp
+  src/TimerInfo.cpp
+  src/TimerManager.cpp
+  src/TimerQueueCallback.cpp
   src/Worker.cpp
   src/WorkerEvent.cpp
+  src/WorkerExceptions.cpp
   src/WorkerManager.cpp
   src/WorkerOptions.cpp
   src/WorkerQueueCallback.cpp

@@ -68,6 +68,7 @@ namespace nodewrap {
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
         </node>
         <node pkg="rostopic" type="rostopic" name="wake_nursing" args="pub -r 20 /wake_nursing std_msgs/Empty" output="screen"/>
+        ...
       </launch>
       \endverbatim
     *
@@ -86,12 +87,13 @@ namespace nodewrap {
       \verbatim
       <launch>
         <node pkg="nodelet" type="nodelet" name="worker" args="manager" output="screen">
-          <param name="num_worker_threads" value="3"/>
+          <param name="num_worker_threads" value="2"/>
         </node>
         <node name="maya" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/WorkerNode worker" output="screen">
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya.yaml"/>
         </node>
         <node pkg="rostopic" type="rostopic" name="wake_nursing" args="pub -r 20 /wake_nursing std_msgs/Empty" output="screen"/>
+        ...
       </launch>
       \endverbatim
     *

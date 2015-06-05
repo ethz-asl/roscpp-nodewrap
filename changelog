@@ -1,3 +1,11 @@
+roscpp-nodewrap (0.1-15) unstable; urgency=low
+
+  * Added own high precision timer implementation
+  * Added diagnostics
+  * Major worker revisions
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:20:00 +0100
+
 roscpp-nodewrap (0.1-14) unstable; urgency=low
 
   * Restructured includes

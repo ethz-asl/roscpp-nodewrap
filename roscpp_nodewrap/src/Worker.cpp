@@ -27,7 +27,9 @@
 #include "roscpp_nodewrap/worker/AsyncWorker.h"
 #include "roscpp_nodewrap/worker/SyncWorker.h"
 
-#define NODEWRAP_WORKER_INFO(...) if (this->nodeImpl->isNodelet()) ROS_INFO_NAMED(this->nodeImpl->getName(), __VA_ARGS__); else ROS_INFO(__VA_ARGS__)
+#define NODEWRAP_WORKER_INFO(...) if (this->nodeImpl->isNodelet()) \
+  ROS_INFO_NAMED(this->nodeImpl->getName(), __VA_ARGS__); \
+  else ROS_INFO(__VA_ARGS__)
 
 namespace nodewrap {
 
@@ -60,10 +62,11 @@ Worker::Impl::Impl(const std::string& name, const WorkerOptions&
   canceled(false),
   nodeImpl(nodeImpl) {
   std::string ns = ros::names::append("workers", name);
-  double rate = nodeImpl->getParam(ros::names::append(
-    ns, "rate"), 1.0/defaultOptions.rate.expectedCycleTime().toSec());
-  expectedCycleTime = (rate > 0.0) ? ros::Duration(1.0/rate) :
-    ros::Duration();
+  
+  double expectedFrequency = nodeImpl->getParam(
+    ros::names::append(ns, "rate"), defaultOptions.frequency);
+  expectedCycleTime = (expectedFrequency > 0.0) ?
+    ros::Duration(1.0/expectedFrequency) : ros::Duration(0.0);
   autostart = nodeImpl->getParam(ros::names::append(ns, "autostart"),
     defaultOptions.autostart);
   
@@ -79,11 +82,25 @@ Worker::Impl::Impl(const std::string& name, const WorkerOptions&
     boost::bind(&Worker::Impl::cancelCallback, this, _1, _2));
   cancelServer = nodeImpl->getNodeHandle().advertiseService(cancelOptions);
   
+  ros::AdvertiseServiceOptions getFrequencyOptions;
+  getFrequencyOptions.init<GetWorkerFrequency::Request,
+    GetWorkerFrequency::Response>(ros::names::append(ns, "get_frequency"),
+    boost::bind(&Worker::Impl::getFrequencyCallback, this, _1, _2));
+  getFrequencyServer = nodeImpl->getNodeHandle().advertiseService(
+    getFrequencyOptions);
+  
   ros::AdvertiseServiceOptions getStateOptions;
   getStateOptions.init<GetWorkerState::Request, GetWorkerState::Response>(
     ros::names::append(ns, "get_state"),
     boost::bind(&Worker::Impl::getStateCallback, this, _1, _2));
   getStateServer = nodeImpl->getNodeHandle().advertiseService(getStateOptions);
+  
+  FrequencyTaskOptions frequencyTaskOptions;
+  frequencyTaskOptions.ns = ros::names::append(ns, "diagnostics/frequency");
+  frequencyTaskOptions.expected = expectedFrequency;
+  frequencyTaskOptions.window = ros::Duration(1.0);
+  frequencyTask = nodeImpl->addDiagnosticTask<FrequencyTask>(
+    name+" Frequency", frequencyTaskOptions);
 }
 
 Worker::Impl::~Impl() {
@@ -101,17 +118,31 @@ std::string Worker::getName() const {
     return std::string();
 }
 
-ros::NodeHandle& Worker::Impl::getNodeHandle() const {
-  return nodeImpl->getNodeHandle();
+FrequencyStatistics::Estimates Worker::getStatisticsEstimates() const {
+  if (impl)
+    return impl->getStatisticsEstimates();
+  else
+    return FrequencyStatistics::Estimates();
+}
+
+FrequencyStatistics::Estimates Worker::Impl::getStatisticsEstimates() const {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  return frequencyTask.getStatisticsEstimates();
 }
 
 bool Worker::Impl::isValid() const {
-  return startServer && cancelServer && getStateServer;
+  return startServer && cancelServer && getFrequencyServer &&
+    getStateServer && frequencyTask;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
+
+Timer Worker::Impl::createTimer(const ros::TimerOptions& options) {
+  return nodeImpl->createTimer(options);
+}
 
 void Worker::start() {
   if (impl)
@@ -137,7 +168,11 @@ void Worker::Impl::unadvertise() {
   if (isValid()) {
     startServer.shutdown();
     cancelServer.shutdown();
+    
+    getFrequencyServer.shutdown();
     getStateServer.shutdown();
+    
+    frequencyTask.shutdown();
   }
 }
 
@@ -149,7 +184,7 @@ void Worker::Impl::start() {
     canceled = false;
     
     startTime = ros::Time();
-    lastCycleTime = ros::Time();
+    timeOfLastCycle = ros::Time();
     
     safeStart();
   }
@@ -176,6 +211,7 @@ void Worker::Impl::cancel(bool block) {
       safeStop();
       
       started = false;
+      frequencyTask.stop();
       
       if (!startTime.isZero())
         NODEWRAP_WORKER_INFO(
@@ -194,6 +230,8 @@ void Worker::Impl::runOnce() {
   if (startTime.isZero()) {
     startTime = ros::Time::now();
     NODEWRAP_WORKER_INFO("Worker [%s] has been started.", name.c_str());
+    
+    frequencyTask.start();
   }
   
   threadId = boost::this_thread::get_id();
@@ -201,20 +239,24 @@ void Worker::Impl::runOnce() {
   
   if (!canceled) {
     if (callback) {
-      ros::Time now = ros::Time::now();
-      if (lastCycleTime.isZero())
+      ros::Time timeOfCycle = ros::Time::now();
+      if (timeOfLastCycle.isZero())
         actualCycleTime = expectedCycleTime;
       else
-        actualCycleTime = now-lastCycleTime;
-      lastCycleTime = now;
+        actualCycleTime = timeOfCycle-timeOfLastCycle;
+      timeOfLastCycle = timeOfCycle;
+      
+      frequencyTask.event(timeOfCycle);
       
       WorkerEvent workerEvent;
       workerEvent.expectedCycleTime = expectedCycleTime;
       workerEvent.actualCycleTime = actualCycleTime;
   
-      lock.unlock();
-      done = !callback(workerEvent);
-      lock.lock();  
+      {
+        lock.unlock();
+        done = !callback(workerEvent);
+        lock.lock();  
+      }
     }
   }
   
@@ -224,6 +266,7 @@ void Worker::Impl::runOnce() {
     
     started = false;
     canceled = false;
+    frequencyTask.stop();
     
     NODEWRAP_WORKER_INFO(
       "Worker [%s] has been canceled after %.3f second(s).",
@@ -233,6 +276,7 @@ void Worker::Impl::runOnce() {
     safeStop();
     
     started = false;
+    frequencyTask.stop();
     
     NODEWRAP_WORKER_INFO(
       "Worker [%s] has finished cleanly after %.3f second(s).",
@@ -251,6 +295,15 @@ bool Worker::Impl::startCallback(std_srvs::Empty::Request& request,
 bool Worker::Impl::cancelCallback(std_srvs::Empty::Request& request,
     std_srvs::Empty::Response& response) {
   cancel(false);
+  return true;
+}
+
+bool Worker::Impl::getFrequencyCallback(GetWorkerFrequency::Request& request,
+    GetWorkerFrequency::Response& response) {
+  boost::mutex::scoped_lock lock(mutex);
+
+  frequencyTask.getStatisticsEstimates().toMessage(response.estimates);
+  
   return true;
 }
 

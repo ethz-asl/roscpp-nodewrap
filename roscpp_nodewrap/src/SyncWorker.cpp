@@ -34,12 +34,14 @@ SyncWorker::SyncWorker() {
 }
 
 SyncWorker::SyncWorker(const SyncWorker& src) :
-  Worker(src) {
+  Worker(src),
+  impl(src.impl) {
 }
 
 SyncWorker::SyncWorker(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker(ImplPtr(new Impl(name, defaultOptions, nodeImpl))) {
+  impl(new Impl(name, defaultOptions, nodeImpl)),
+  Worker(impl) {
 }
 
 SyncWorker::~SyncWorker() {  
@@ -71,7 +73,7 @@ void SyncWorker::Impl::safeWake() {
   if (callbackQueue)
     callbackQueue->addCallback(callback);
   else
-    getNodeHandle().getCallbackQueue()->addCallback(callback);
+    nodeImpl->getNodeHandle().getCallbackQueue()->addCallback(callback);
 }
 
 void SyncWorker::Impl::safeStop() {

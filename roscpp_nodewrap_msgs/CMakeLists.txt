@@ -19,10 +19,19 @@ find_package(catkin REQUIRED COMPONENTS
 ####################################
 ## Generate messages and services ##
 ####################################
+## Add message files to be generated
+add_message_files(
+  DIRECTORY msg
+  FILES
+    FrequencyEstimates.msg
+    PeriodEstimates.msg
+)
+
 ## Add service files to be generated
 add_service_files(
   DIRECTORY srv
   FILES
+    GetWorkerFrequency.srv
     GetWorkerState.srv
     HasWorker.srv
     ListWorkers.srv

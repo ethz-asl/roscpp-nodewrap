@@ -39,14 +39,13 @@ namespace nodewrap {
       */
     WorkerOptions();
 
-    /** \brief The name of the new worker, a valid ROS graph resource name
-      */ 
-    std::string name;
-    
-    /** \brief The rate at which the worker's callback is expected to
+    /** \brief The frequency at which the worker's callback is expected to
       *   be invoked
+      * 
+      * \note A frequency of zero states that the worker is non-cyclic
+      *   a should only be run once.
       */ 
-    ros::Rate rate;
+    double frequency;
     
     /** \brief If true, the worker will be started automatically
       */ 
@@ -55,6 +54,10 @@ namespace nodewrap {
     /** \brief If true, the worker will be synchronous
       */ 
     bool synchronous;
+    
+    /** \brief The duration of the window for the worker statistics
+      */ 
+    ros::Duration statisticsWindow;
     
     /** \brief A function to call when the worker should perform its work
       */ 

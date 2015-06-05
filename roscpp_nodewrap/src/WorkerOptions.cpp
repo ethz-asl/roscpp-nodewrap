@@ -25,9 +25,10 @@ namespace nodewrap {
 /*****************************************************************************/
 
 WorkerOptions::WorkerOptions() :
-  rate(0.0),
+  frequency(0.0),
   autostart(true),
   synchronous(false),
+  statisticsWindow(1.0),
   callbackQueue(0) {
 }
 

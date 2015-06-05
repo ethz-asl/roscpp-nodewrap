@@ -24,8 +24,10 @@
 #ifndef ROSCPP_NODEWRAP_FORWARDS_H
 #define ROSCPP_NODEWRAP_FORWARDS_H
 
-#include <ros/ros.h>
+#include <ros/forwards.h>
 
+#include <roscpp_nodewrap/diagnostics/DiagnosticsForwards.h>
+#include <roscpp_nodewrap/timer/TimerForwards.h>
 #include <roscpp_nodewrap/worker/WorkerForwards.h>
 
 namespace roscpp_nodewrap_msgs {};

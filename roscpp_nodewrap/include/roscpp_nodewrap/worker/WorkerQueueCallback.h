@@ -20,8 +20,8 @@
   * \brief Header file providing the WorkerQueueCallback class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_WORKERQUEUECALLBACK_H
-#define ROSCPP_NODEWRAP_WORKERQUEUECALLBACK_H
+#ifndef ROSCPP_NODEWRAP_WORKER_QUEUE_CALLBACK_H
+#define ROSCPP_NODEWRAP_WORKER_QUEUE_CALLBACK_H
 
 #include <ros/callback_queue_interface.h>
 

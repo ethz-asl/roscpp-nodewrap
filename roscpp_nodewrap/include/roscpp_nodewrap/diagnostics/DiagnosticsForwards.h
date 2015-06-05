@@ -16,17 +16,25 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/Exceptions.h"
+/** \file DiagnosticsForwards.h
+  * \brief Header file providing forward declarations for the node diagnostics
+  */
+
+#ifndef ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
+#define ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
+
+#include <ros/ros.h>
 
 namespace nodewrap {
+  /** \brief Forward declaration of the diagnostic updater
+    */
+  class DiagnosticUpdater;
+  /** \brief Forward declaration of the diagnostic updater pointer type
+    */
+  typedef boost::shared_ptr<DiagnosticUpdater> DiagnosticUpdaterPtr;
+  /** \brief Forward declaration of the diagnostic updater weak pointer type
+    */
+  typedef boost::weak_ptr<DiagnosticUpdater> DiagnosticUpdaterWPtr;
+};
 
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
-
-InvalidWorkerNameException::InvalidWorkerNameException(const std::string& name,
-    const std::string& reason) :
-  Exception("Invalid worker name ["+name+"]: "+reason) {
-}
-
-}
+#endif

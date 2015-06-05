@@ -54,49 +54,58 @@ ros::NodeHandle& NodeImpl::getNodeHandle() const {
   return *nodeHandle;
 }
 
-ros::AdvertiseOptions NodeImpl::getAdvertiseOptions(const std::string& key,
+void NodeImpl::setDiagnosticsHardwareId(const std::string& hardwareId) {
+  if (!diagnosticUpdater)
+    diagnosticUpdater = DiagnosticUpdater(shared_from_this());
+  
+  diagnosticUpdater.setHardwareId(hardwareId);
+}
+
+ros::AdvertiseOptions NodeImpl::getAdvertiseOptions(const std::string& ns,
     const ros::AdvertiseOptions& defaultOptions) const {
-  std::string ns = std::string("publishers/")+key;
   ros::AdvertiseOptions options = defaultOptions;
   
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
+  options.topic = getParam(ros::names::append(ns, "topic"),
+    defaultOptions.topic);
+  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
     (int)defaultOptions.queue_size);
-  options.latch = getParam(ns+"/latch", defaultOptions.latch);
+  options.latch = getParam(ros::names::append(ns, "latch"),
+    defaultOptions.latch);
   
   return options;
 }
 
-ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& key,
+ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& ns,
     const ros::SubscribeOptions& defaultOptions) const {
-  std::string ns = std::string("subscribers/")+key;
   ros::SubscribeOptions options = defaultOptions;
   
-  options.topic = getParam(ns+"/topic", defaultOptions.topic);
-  options.queue_size = getParam(ns+"/queue_size",
+  options.topic = getParam(ros::names::append(ns, "topic"),
+    defaultOptions.topic);
+  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
     (int)defaultOptions.queue_size);
   
   return options;
 }
 
 ros::AdvertiseServiceOptions NodeImpl::getAdvertiseServiceOptions(const
-    std::string& key, const ros::AdvertiseServiceOptions& defaultOptions)
+    std::string& ns, const ros::AdvertiseServiceOptions& defaultOptions)
     const {
-  std::string ns = std::string("servers/")+key;  
   ros::AdvertiseServiceOptions options = defaultOptions;
   
-  options.service = getParam(ns+"/service", defaultOptions.service);
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
   
   return options;
 }
 
 ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
-    key, const ros::ServiceClientOptions& defaultOptions) const {
-  std::string ns = std::string("clients/")+key;  
+    ns, const ros::ServiceClientOptions& defaultOptions) const {
   ros::ServiceClientOptions options = defaultOptions;
   
-  options.service = getParam(ns+"/service", defaultOptions.service);
-  options.persistent = getParam(ns+"/persistent", defaultOptions.persistent);
+  options.service = getParam(ros::names::append(ns, "service"),
+    defaultOptions.service);
+  options.persistent = getParam(ros::names::append(ns, "persistent"),
+    defaultOptions.persistent);
   
   return options;
 }
@@ -105,29 +114,38 @@ ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
 /* Methods                                                                   */
 /*****************************************************************************/
 
-ros::Publisher NodeImpl::advertise(const std::string& param, const
+Timer NodeImpl::createTimer(const ros::TimerOptions& options) {
+  if (!timerManager)
+    timerManager = TimerManager(shared_from_this());
+  
+  return timerManager.addTimer(options);
+}
+
+ros::Publisher NodeImpl::advertise(const std::string& name, const
     ros::AdvertiseOptions& defaultOptions) {
-  ros::AdvertiseOptions options = getAdvertiseOptions(param, defaultOptions);
+  ros::AdvertiseOptions options = getAdvertiseOptions(
+    ros::names::append("publishers", name), defaultOptions);
   return this->getNodeHandle().advertise(options);
 }
 
-ros::Subscriber NodeImpl::subscribe(const std::string& param, const
+ros::Subscriber NodeImpl::subscribe(const std::string& name, const
     ros::SubscribeOptions& defaultOptions) {
-  ros::SubscribeOptions options = getSubscribeOptions(param, defaultOptions);
+  ros::SubscribeOptions options = getSubscribeOptions(
+    ros::names::append("subscribers", name), defaultOptions);
   return this->getNodeHandle().subscribe(options);
 }
 
-ros::ServiceServer NodeImpl::advertiseService(const std::string& param,
+ros::ServiceServer NodeImpl::advertiseService(const std::string& name,
     const ros::AdvertiseServiceOptions& defaultOptions) {
   ros::AdvertiseServiceOptions options = getAdvertiseServiceOptions(
-    param, defaultOptions);
+    ros::names::append("servers", name), defaultOptions);
   return this->getNodeHandle().advertiseService(options);
 }
 
-ros::ServiceClient NodeImpl::serviceClient(const std::string& name, const
-    ros::ServiceClientOptions& defaultOptions) {
-  ros::ServiceClientOptions options = getServiceClientOptions(name,
-    defaultOptions);
+ros::ServiceClient NodeImpl::serviceClient(const std::string& name,
+    const ros::ServiceClientOptions& defaultOptions) {
+  ros::ServiceClientOptions options = getServiceClientOptions(
+    ros::names::append("clients", name), defaultOptions);
   return this->getNodeHandle().serviceClient(options);
 }
 
@@ -151,6 +169,8 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
 }
 
 void NodeImpl::shutdown() {
+  if (diagnosticUpdater)
+    diagnosticUpdater.shutdown();
   if (workerManager)
     workerManager.shutdown();
   

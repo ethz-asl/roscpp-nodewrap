@@ -20,16 +20,18 @@
   * \brief Header file providing the AsyncWorker class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_ASYNCWORKER_H
-#define ROSCPP_NODEWRAP_ASYNCWORKER_H
+#ifndef ROSCPP_NODEWRAP_ASYNC_WORKER_H
+#define ROSCPP_NODEWRAP_ASYNC_WORKER_H
+
+#include <ros/callback_queue.h>
 
 #include <roscpp_nodewrap/worker/Worker.h>
 
 namespace nodewrap {
   /** \brief ROS asynchronous node worker
     * 
-    * This class provides a timer-controlled worker for use with the ROS
-    * node implementation.
+    * This class provides a high precision timer-controlled worker for use
+    * with the ROS node implementation.
     */
   class AsyncWorker :
     public Worker {
@@ -84,15 +86,29 @@ namespace nodewrap {
         */ 
       void timerCallback(const ros::TimerEvent& timerEvent);
       
-      /** \brief The timer controlling this worker
+      /** \brief The high precision timer controlling this worker
         */ 
-      ros::Timer timer;
+      Timer timer;
       
       /** \brief If true, the timer controlling this worker needs to
         *   be reset
         */ 
       bool resetTimer;
     };
+    
+    /** \brief Declaration of the asynchronous worker implementation
+      *   pointer type
+      */
+    typedef boost::shared_ptr<Impl> ImplPtr;
+    
+    /** \brief Declaration of the asynchronous worker implementation
+      *   weak pointer type
+      */
+    typedef boost::weak_ptr<Impl> ImplWPtr;
+    
+    /** \brief The asynchronous worker's implementation
+      */
+    ImplPtr impl;
     
     /** \brief Constructor (private version)
       */

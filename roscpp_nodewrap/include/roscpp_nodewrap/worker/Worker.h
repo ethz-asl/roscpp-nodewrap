@@ -36,10 +36,13 @@
 #include <roscpp_nodewrap/worker/WorkerEvent.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
 
+#include <roscpp_nodewrap/diagnostics/FrequencyTask.h>
+
+#include <roscpp_nodewrap_msgs/GetWorkerFrequency.h>
 #include <roscpp_nodewrap_msgs/GetWorkerState.h>
 
 namespace nodewrap {
-  /** \brief Abstract ROS node worker
+  /** \brief Abstract basis of the ROS node worker
     * 
     * This class provides the abstract basis of a worker for use with
     * the ROS node implementation.
@@ -62,10 +65,16 @@ namespace nodewrap {
       */
     ~Worker();
     
-    /** \brief Access this worker's name
+    /** \brief Retrieve this worker's name
       */
     std::string getName() const;
     
+    /** \brief Retrieve the frequency statistics' estimates of this worker
+      * 
+      * \return The frequency statistics' estimates of this worker.
+      */
+    FrequencyStatistics::Estimates getStatisticsEstimates() const;
+      
     /** \brief Start the worker
       */
     void start();
@@ -107,9 +116,10 @@ namespace nodewrap {
     };
     
   protected:
-    /** \brief ROS node worker implementation
+    /** \brief Abstract basis of the ROS node worker implementation
       * 
-      * This class provides the private implementation of the node worker.
+      * This class provides the protected, abstract basis of the node
+      * worker implementation.
       */
     class Impl {
     public:
@@ -122,14 +132,17 @@ namespace nodewrap {
         */
       virtual ~Impl();
       
-      /** \brief Retrieve the ROS node handle of the node implementation
-        *   owning this worker
+      /** \brief Retrieve the frequency statistics' estimates of this worker
         */
-      ros::NodeHandle& getNodeHandle() const;
+      FrequencyStatistics::Estimates getStatisticsEstimates() const;
       
-      /** \brief Query if this worker is valid
+      /** \brief True, if this worker implementation is valid
         */
       bool isValid() const;
+      
+      /** \brief Create a timer for this worker
+        */
+      Timer createTimer(const ros::TimerOptions& options);
       
       /** \brief Start the worker (implementation)
         */
@@ -173,6 +186,11 @@ namespace nodewrap {
       bool cancelCallback(std_srvs::Empty::Request& request,
         std_srvs::Empty::Response& response);
       
+      /** \brief Service callback for querying the frequency of this worker
+        */ 
+      bool getFrequencyCallback(GetWorkerFrequency::Request& request,
+        GetWorkerFrequency::Response& response);
+      
       /** \brief Service callback for querying the state of this worker
         */ 
       bool getStateCallback(GetWorkerState::Request& request,
@@ -206,9 +224,9 @@ namespace nodewrap {
         */ 
       ros::Time startTime;
 
-      /** \brief Last cycle time of the worker
+      /** \brief Time of the last worker cycle
         */ 
-      ros::Time lastCycleTime;
+      ros::Time timeOfLastCycle;
 
       /** \brief The actual cycle time of this worker
         */ 
@@ -229,6 +247,10 @@ namespace nodewrap {
         */ 
       ros::ServiceServer cancelServer;
       
+      /** \brief Service server for querying the frequency of this worker
+        */ 
+      ros::ServiceServer getFrequencyServer;
+      
       /** \brief Service server for querying the state of this worker
         */ 
       ros::ServiceServer getStateServer;
@@ -244,6 +266,11 @@ namespace nodewrap {
       /** \brief The node implementation owning this worker
         */ 
       NodeImplPtr nodeImpl;
+      
+      /** \brief The diagnostic task for monitoring the frequency
+        *   of this worker
+        */ 
+      FrequencyTask frequencyTask;
     };
     
     /** \brief Declaration of the worker implementation pointer type
@@ -258,7 +285,7 @@ namespace nodewrap {
       */
     ImplPtr impl;
     
-    /** \brief Constructor (private version)
+    /** \brief Constructor (protected version)
       */
     Worker(const ImplPtr& impl);
   };

@@ -21,6 +21,8 @@
   <run_depend>roscpp_nodewrap</run_depend>
   <run_depend>rospy</run_depend>
   <run_depend>nodelet</run_depend>
+  <run_depend>diagnostic_aggregator</run_depend>
+  <run_depend>rqt_robot_monitor</run_depend>
   <export>
     <nodelet plugin="${prefix}/nodelet_plugins.xml"/>
   </export>

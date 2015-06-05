@@ -35,12 +35,14 @@ AsyncWorker::AsyncWorker() {
 }
 
 AsyncWorker::AsyncWorker(const AsyncWorker& src) :
-  Worker(src) {
+  Worker(src),
+  impl(src.impl) {
 }
 
 AsyncWorker::AsyncWorker(const std::string& name, const WorkerOptions&
     defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker(ImplPtr(new Impl(name, defaultOptions, nodeImpl))) {
+  impl(new Impl(name, defaultOptions, nodeImpl)),
+  Worker(impl) {
 }
 
 AsyncWorker::~AsyncWorker() {  
@@ -59,8 +61,8 @@ AsyncWorker::Impl::Impl(const std::string& name, const WorkerOptions&
     this, _1);
   timerOptions.callback_queue = defaultOptions.callbackQueue;
   timerOptions.tracked_object = defaultOptions.trackedObject;
-  
-  timer = getNodeHandle().createTimer(timerOptions);
+
+  timer = createTimer(timerOptions);
 }
 
 AsyncWorker::Impl::~Impl() {

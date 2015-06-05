@@ -20,8 +20,8 @@
   * \brief Header file providing the SyncWorker class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_SYNCWORKER_H
-#define ROSCPP_NODEWRAP_SYNCWORKER_H
+#ifndef ROSCPP_NODEWRAP_SYNC_WORKER_H
+#define ROSCPP_NODEWRAP_SYNC_WORKER_H
 
 #include <roscpp_nodewrap/worker/Worker.h>
 
@@ -80,11 +80,11 @@ namespace nodewrap {
         */
       void safeStop();
       
-      /** \brief The callback queue to be used by the worker
+      /** \brief The callback queue used by this worker
         */ 
       ros::CallbackQueueInterface* callbackQueue;
     
-      /** \brief A shared pointer to an object to track for the worker
+      /** \brief A shared pointer to an object being tracked for the worker
         *   callbacks
         */ 
       ros::VoidConstWPtr trackedObject;
@@ -94,6 +94,20 @@ namespace nodewrap {
         */ 
       bool hasTrackedObject;    
     };
+    
+    /** \brief Declaration of the synchronous worker implementation
+      *   pointer type
+      */
+    typedef boost::shared_ptr<Impl> ImplPtr;
+    
+    /** \brief Declaration of the synchronous worker implementation
+      *   weak pointer type
+      */
+    typedef boost::weak_ptr<Impl> ImplWPtr;
+    
+    /** \brief The synchronous worker's implementation
+      */
+    ImplPtr impl;
     
     /** \brief Constructor (private version)
       */

@@ -18,11 +18,11 @@
 
 #include <boost/thread/locks.hpp>
 
-#include "roscpp_nodewrap/Exceptions.h"
 #include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/worker/AsyncWorker.h"
 #include "roscpp_nodewrap/worker/SyncWorker.h"
+#include "roscpp_nodewrap/worker/WorkerExceptions.h"
 #include "roscpp_nodewrap/worker/WorkerManager.h"
 
 namespace nodewrap {
@@ -123,6 +123,8 @@ Worker WorkerManager::addWorker(const std::string& name, const WorkerOptions&
 }
 
 void WorkerManager::Impl::unadvertise() {
+  boost::mutex::scoped_lock lock(mutex);
+  
   if (isValid()) {
     for (std::map<std::string, Worker::ImplWPtr>::iterator it =
         workers.begin(); it != workers.end(); ++it) {
