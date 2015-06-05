@@ -98,6 +98,8 @@ double FrequencyStatistics::getRollingVariance() const {
 FrequencyStatistics::Estimates FrequencyStatistics::getEstimates() const {
   Estimates estimates;
   
+  estimates.timeOfLastEvent = timeOfLastEvent;
+  
   estimates.numSamples = boost::accumulators::count(accumulator);
   if (estimates.numSamples) {
     estimates.min = boost::accumulators::min(accumulator);
@@ -122,6 +124,8 @@ FrequencyStatistics::Estimates FrequencyStatistics::getEstimates() const {
 /*****************************************************************************/
 
 void FrequencyStatistics::Estimates::toMessage(FrequencyEstimates& msg) const {
+  msg.stamp_of_last_event = timeOfLastEvent;
+  
   msg.num_samples = numSamples;
   msg.min = min;
   msg.max = max;

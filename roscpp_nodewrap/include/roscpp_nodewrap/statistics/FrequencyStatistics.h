@@ -67,6 +67,10 @@ namespace nodewrap {
         */
       void toMessage(FrequencyEstimates& msg) const;
       
+      /** \brief Time of the last event considered in the estimates
+        */
+      ros::Time timeOfLastEvent;
+    
       /** \brief The number of samples accumulated to compute the non-rolling
         *   estimates
         */

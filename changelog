@@ -1,3 +1,9 @@
+roscpp-nodewrap (0.1-16) unstable; urgency=low
+
+  * Added stamp of last event to cyclic event estimators and their messages
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:29:00 +0100
+
 roscpp-nodewrap (0.1-15) unstable; urgency=low
 
   * Added own high precision timer implementation

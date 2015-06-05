@@ -98,6 +98,8 @@ ros::Duration PeriodStatistics::getRollingVariance() const {
 PeriodStatistics::Estimates PeriodStatistics::getEstimates() const {
   Estimates estimates;
   
+  estimates.timeOfLastEvent = timeOfLastEvent;
+  
   estimates.numSamples = boost::accumulators::count(accumulator);
   if (estimates.numSamples) {
     estimates.min = ros::Duration(boost::accumulators::min(accumulator));
@@ -123,6 +125,8 @@ PeriodStatistics::Estimates PeriodStatistics::getEstimates() const {
 /*****************************************************************************/
 
 void PeriodStatistics::Estimates::toMessage(PeriodEstimates& msg) const {
+  msg.stamp_of_last_event = timeOfLastEvent;
+  
   msg.num_samples = numSamples;
   msg.min = max.toSec();
   msg.max = min.toSec();
