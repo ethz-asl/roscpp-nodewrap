@@ -16,31 +16,32 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file DiagnosticsForwards.h
-  * \brief Header file providing forward declarations for the node diagnostics
+/** \file FunctionTaskOptions.h
+  * \brief Header file providing the FunctionTaskOptions class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
-#define ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
+#ifndef ROSCPP_NODEWRAP_FUNCTION_TASK_OPTIONS_H
+#define ROSCPP_NODEWRAP_FUNCTION_TASK_OPTIONS_H
 
-#include <ros/ros.h>
-
-#include <diagnostic_updater/diagnostic_updater.h>
+#include <roscpp_nodewrap/diagnostics/DiagnosticTaskOptions.h>
 
 namespace nodewrap {
-  /** \brief Forward declaration of the diagnostic updater
+  /** \brief ROS function task options
+    * 
+    * This class encapsulates all options available for creating a
+    * diagnostic function task.
     */
-  class DiagnosticUpdater;
-  /** \brief Forward declaration of the diagnostic updater pointer type
-    */
-  typedef boost::shared_ptr<DiagnosticUpdater> DiagnosticUpdaterPtr;
-  /** \brief Forward declaration of the diagnostic updater weak pointer type
-    */
-  typedef boost::weak_ptr<DiagnosticUpdater> DiagnosticUpdaterWPtr;
-  
-  /** \brief Forward declaration of the diagnostic task callback function type
-    */
-  typedef diagnostic_updater::TaskFunction DiagnosticTaskCallback;
+  class FunctionTaskOptions :
+    public DiagnosticTaskOptions {
+  public:
+    /** \brief Default constructor
+      */
+    FunctionTaskOptions();
+    
+    /** \brief A function to call when the task should perform diagnostics
+      */ 
+    DiagnosticTaskCallback callback;
+  };
 };
 
 #endif

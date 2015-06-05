@@ -21,3 +21,7 @@ analyzers:
         type: GenericAnalyzer
         path: Collecting
         find_and_remove_prefix: "maya: collecting"
+  field:
+    type: GenericAnalyzer
+    path: Field
+    find_and_remove_prefix: "maya: field"

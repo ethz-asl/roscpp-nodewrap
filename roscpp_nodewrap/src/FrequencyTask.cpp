@@ -16,8 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-
-
 #include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/diagnostics/FrequencyTask.h"

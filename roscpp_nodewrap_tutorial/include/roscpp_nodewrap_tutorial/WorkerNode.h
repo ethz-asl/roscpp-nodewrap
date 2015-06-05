@@ -115,6 +115,11 @@ namespace nodewrap {
       */
     virtual ~WorkerNode();
   protected:
+    /** \brief The ROS diagnostic function task checking the remaining
+      *   number of flowers in the field
+      */
+    FunctionTask task;
+    
     /** \brief The ROS worker performing the house keeping task
       */
     Worker houseKeeping;
@@ -161,6 +166,9 @@ namespace nodewrap {
             &WorkerNode::wakeNursing);
           NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
           
+          task = addDiagnosticTask("field Flowers", &WorkerNode::diagnoseField);
+          NODEWRAP_INFO("Created diagnostic task");
+          
           houseKeeping = addWorker("house_keeping", 0, &WorkerNode::doHouseKeeping);
           NODEWRAP_INFO("Created worker [%s]", houseKeeping.getName().c_str());
           fanning = addWorker("fanning", 0, &WorkerNode::doFanning);
@@ -192,6 +200,30 @@ namespace nodewrap {
       */
     void cleanup();
     
+    /** \brief Field diagnostic function task callback
+      * 
+      * \param[in] status The diagnostic status to be filled in by this
+      *   callback.
+      * 
+      * The field diagnostic function task callback checks the number of
+      * remaining flowers in the field and will issue an error if this number
+      * drops to zero. This is its implementation:
+      * 
+        \verbatim
+        void WorkerNode::diagnoseField(diagnostic_updater::DiagnosticStatusWrapper&
+            status) const {
+          if (!flowers)
+            status.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
+              "Maya ran out of flowers and is starving.");
+          else
+            status.summaryf(diagnostic_msgs::DiagnosticStatus::OK,
+              "Maya still has flowers %d to collect and is happy.", flowers);
+        }
+        \endverbatim
+      */
+    void diagnoseField(diagnostic_updater::DiagnosticStatusWrapper& status)
+      const;
+      
     /** \brief House keeping worker callback
       * 
       * \param[in] event The worker event providing information about the
@@ -307,7 +339,7 @@ namespace nodewrap {
         }
         \endverbatim
       */
-    bool doCollecting(const WorkerEvent& event);
+    bool doCollecting(const WorkerEvent& event);    
   };
 };
 

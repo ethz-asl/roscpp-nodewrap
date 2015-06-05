@@ -16,31 +16,47 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file DiagnosticsForwards.h
-  * \brief Header file providing forward declarations for the node diagnostics
-  */
+#include "roscpp_nodewrap/NodeImpl.h"
 
-#ifndef ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
-#define ROSCPP_NODEWRAP_DIAGNOSTICS_FORWARDS_H
-
-#include <ros/ros.h>
-
-#include <diagnostic_updater/diagnostic_updater.h>
+#include "roscpp_nodewrap/diagnostics/FunctionTask.h"
 
 namespace nodewrap {
-  /** \brief Forward declaration of the diagnostic updater
-    */
-  class DiagnosticUpdater;
-  /** \brief Forward declaration of the diagnostic updater pointer type
-    */
-  typedef boost::shared_ptr<DiagnosticUpdater> DiagnosticUpdaterPtr;
-  /** \brief Forward declaration of the diagnostic updater weak pointer type
-    */
-  typedef boost::weak_ptr<DiagnosticUpdater> DiagnosticUpdaterWPtr;
-  
-  /** \brief Forward declaration of the diagnostic task callback function type
-    */
-  typedef diagnostic_updater::TaskFunction DiagnosticTaskCallback;
-};
 
-#endif
+/*****************************************************************************/
+/* Constructors and Destructor                                               */
+/*****************************************************************************/
+
+FunctionTask::FunctionTask() {
+}
+
+FunctionTask::FunctionTask(const FunctionTask& src) {
+}
+
+FunctionTask::FunctionTask(const std::string& name, const Options&
+    defaultOptions, const NodeImplPtr& nodeImpl) :
+  impl(new Impl(name, defaultOptions, nodeImpl)),
+  DiagnosticTask(impl) {
+}
+    
+FunctionTask::~FunctionTask() {
+}
+    
+FunctionTask::Impl::Impl(const std::string& name, const Options&
+    defaultOptions, const NodeImplPtr& nodeImpl) :
+  nodewrap::DiagnosticTask::Impl(name, nodeImpl),
+  callback(defaultOptions.callback) {
+}
+    
+FunctionTask::Impl::~Impl() {
+}
+
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
+
+void FunctionTask::Impl::run(diagnostic_updater::DiagnosticStatusWrapper&
+    status) {
+  callback(status);
+}
+
+}

@@ -60,6 +60,8 @@ add_library(roscpp_nodewrap
   src/FrequencyStatistics.cpp
   src/FrequencyTask.cpp
   src/FrequencyTaskOptions.cpp
+  src/FunctionTask.cpp
+  src/FunctionTaskOptions.cpp
   src/NodeInterface.cpp
   src/NodeImpl.cpp
   src/PeriodStatistics.cpp

@@ -34,6 +34,7 @@
 #include <roscpp_nodewrap/timer/TimerManager.h>
 
 #include <roscpp_nodewrap/diagnostics/DiagnosticUpdater.h>
+#include <roscpp_nodewrap/diagnostics/FunctionTask.h>
 
 #include <roscpp_nodewrap/worker/Worker.h>
 #include <roscpp_nodewrap/worker/WorkerManager.h>
@@ -578,7 +579,7 @@ namespace nodewrap {
     
     /** \brief Add a diagnostic task, with standard options
       * 
-      * \param[in] task The diagnostic task to be added.
+      * \param[in] name The name of the new task.
       * \return On success, a diagnostic task that, when all copies of it go
       *   out of scope, will remove this task.
       */
@@ -586,13 +587,25 @@ namespace nodewrap {
     
     /** \brief Add a diagnostic task, with full range of options
       * 
-      * \param[in] task The diagnostic task to be added.
+      * \param[in] name The name of the new task.
       * \param[in] defaultOptions The default diagnostic task options to use.
       * \return On success, a diagnostic task that, when all copies of it go
       *   out of scope, will remove this task.
       */
     template <class T> T addDiagnosticTask(const std::string& name,
       const typename T::Options& defaultOptions);
+    
+    /** \brief Add a diagnostic function task
+      * 
+      * \param[in] name The name of the new function task.
+      * \param[in] callback A member function pointer to call when the
+      *   task should perform diagnostics.
+      * \return On success, a diagnostic function task that, when all copies
+      *   of it go out of scope, will remove this task.
+      */
+    template <class T> FunctionTask addDiagnosticTask(const std::string&
+      name, void(T::*callback)(diagnostic_updater::DiagnosticStatusWrapper&)
+      const);
     
   private:
     /** \brief The node implementation's name

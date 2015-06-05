@@ -53,7 +53,8 @@ namespace nodewrap {
       * 
       * The tolerance bounds are represented by a factor in [0, 1] which
       * is symmetrically interpreted as the ratio of the expected frequency
-      * and the diagnosed mean frequency (and vice versa).
+      * and the deviation of the diagnosed mean frequency from the expected
+      * frequency (and vice versa).
       */
     double warnMeanTolerance;
     
@@ -61,29 +62,26 @@ namespace nodewrap {
       * 
       * The tolerance bounds are represented by a factor in [0, 1] which
       * is symmetrically interpreted as the ratio of the expected frequency
-      * and the diagnosed mean frequency (and vice versa).
+      * and the deviation of the diagnosed mean frequency from the expected
+      * frequency (and vice versa).
       */
     double errorMeanTolerance;
     
     /** \brief The warning tolerance of the diagnosed frequency standard
       *   deviation
       * 
-      * The tolerance bounds are represented by a factor in [0, 1] which
-      * is symmetrically interpreted as the ratio of the expected frequency
-      * and the frequencies obtained by symmetrically offsetting the
-      * diagnosed mean frequency by the diagnosed frequency variance
-      * (and vice versa).
+      * The tolerance bound is represented by a factor in [0, 1] which
+      * is interpreted as the ratio of the expected frequency and the
+      * diagnosed frequency standard deviation.
       */
     double warnStandardDeviationTolerance;
     
     /** \brief The error tolerance of the diagnosed frequency standard
       *   deviation
       * 
-      * The tolerance bounds are represented by a factor in [0, 1] which
-      * is symmetrically interpreted as the ratio of the expected frequency
-      * and the frequencies obtained by symmetrically offsetting the
-      * diagnosed mean frequency by the diagnosed frequency variance
-      * (and vice versa).
+      * The tolerance bound is represented by a factor in [0, 1] which
+      * is interpreted as the ratio of the expected frequency and the
+      * diagnosed frequency standard deviation.
       */
     double errorStandardDeviationTolerance;
   };

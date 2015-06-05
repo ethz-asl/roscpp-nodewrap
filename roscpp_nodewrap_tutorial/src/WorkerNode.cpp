@@ -44,6 +44,9 @@ void WorkerNode::init() {
     &WorkerNode::wakeNursing);
   NODEWRAP_INFO("Subscribed to: %s", subscriber.getTopic().c_str());
   
+  task = addDiagnosticTask("field Flowers", &WorkerNode::diagnoseField);
+  NODEWRAP_INFO("Created diagnostic task");
+  
   houseKeeping = addWorker("house_keeping", 0, &WorkerNode::doHouseKeeping);
   NODEWRAP_INFO("Created worker [%s]", houseKeeping.getName().c_str());
   fanning = addWorker("fanning", 0, &WorkerNode::doFanning);
@@ -58,6 +61,16 @@ void WorkerNode::init() {
 
 void WorkerNode::cleanup() {
   NODEWRAP_INFO("Good bye, all workers have been stopped!");
+}
+
+void WorkerNode::diagnoseField(diagnostic_updater::DiagnosticStatusWrapper&
+    status) const {
+  if (!flowers)
+    status.summary(diagnostic_msgs::DiagnosticStatus::ERROR,
+      "Maya ran out of flowers and is starving.");
+  else
+    status.summaryf(diagnostic_msgs::DiagnosticStatus::OK,
+      "Maya still has flowers %d to collect and is happy.", flowers);
 }
 
 bool WorkerNode::doHouseKeeping(const WorkerEvent& event) {

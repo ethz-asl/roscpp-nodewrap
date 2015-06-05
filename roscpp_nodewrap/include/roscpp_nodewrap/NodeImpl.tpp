@@ -176,4 +176,15 @@ template <class T> T NodeImpl::addDiagnosticTask(const std::string& name,
   return this->diagnosticUpdater.template addTask<T>(name, defaultOptions);
 }
 
+template <class T> FunctionTask NodeImpl::addDiagnosticTask(const std::string&
+    name, void(T::*callback)(diagnostic_updater::DiagnosticStatusWrapper&)
+    const) {
+  FunctionTaskOptions options;
+  
+  options.callback = boost::bind(callback, static_cast<T*>(this), _1);;
+  
+  return this->template addDiagnosticTask<FunctionTask>(name, options);
+}
+
+
 }
