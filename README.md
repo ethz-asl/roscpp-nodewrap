@@ -8,7 +8,7 @@ C++ implementation of ROS node(let) wrappers.
 
 **Maintainer:** Ralf Kaestner <ralf.kaestner@gmail.com>
 
-**Licsense:** GNU Lesser General Public License (LGPL)
+**License:** GNU Lesser General Public License (LGPL)
 
 **Operating system(s):** Debian-based Linux
 
