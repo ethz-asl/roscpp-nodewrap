@@ -577,14 +577,6 @@ namespace nodewrap {
     Worker addWorker(const std::string& name, const WorkerOptions&
       defaultOptions);
     
-    /** \brief Add a diagnostic task, with standard options
-      * 
-      * \param[in] name The name of the new task.
-      * \return On success, a diagnostic task that, when all copies of it go
-      *   out of scope, will remove this task.
-      */
-    template <class T> T addDiagnosticTask(const std::string& name);
-    
     /** \brief Add a diagnostic task, with full range of options
       * 
       * \param[in] name The name of the new task.
@@ -593,7 +585,7 @@ namespace nodewrap {
       *   out of scope, will remove this task.
       */
     template <class T> T addDiagnosticTask(const std::string& name,
-      const typename T::Options& defaultOptions);
+      const typename T::Options& defaultOptions = typename T::Options());
     
     /** \brief Add a diagnostic function task
       * 

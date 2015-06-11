@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <limits>
+
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 
@@ -38,22 +40,22 @@ TimerManager::TimerManager() {
 }
 
 TimerManager::TimerManager(const TimerManager& src) :
-  impl(src.impl) {
+  Manager<Timer, int>(src) {
 }
 
-TimerManager::TimerManager(const NodeImplPtr& nodeImpl) :
-  impl(new Impl(nodeImpl)) {
+TimerManager::TimerManager(const NodeImplPtr& node) {
+  impl.reset(new Impl(node));
 }
 
 TimerManager::~TimerManager() {  
 }
 
-TimerManager::Impl::Impl(const NodeImplPtr& nodeImpl) :
+TimerManager::Impl::Impl(const NodeImplPtr& node) :
+  numTimers(0),
   newTimer(false),
-  numHandles(0),
   started(false),
   canceled(false),
-  nodeImpl(nodeImpl) {
+  node(node) {
 }
 
 TimerManager::Impl::~Impl() {
@@ -64,146 +66,153 @@ TimerManager::Impl::~Impl() {
 /* Accessors                                                                 */
 /*****************************************************************************/
 
-void TimerManager::Impl::setPeriod(int timerHandle, const ros::Duration&
-    period) {
-  boost::mutex::scoped_lock timersLock(timersMutex);
-  
-  TimerInfoPtr timerInfo = findTimer(timerHandle);
-
-  if (!timerInfo)
-    return;
-  
-  {
-    boost::mutex::scoped_lock waitingLock(waitingMutex);
-    
-    timerInfo->period = period;
-    timerInfo->nextExpected = ros::Time::now()+period;
-
-    waitingTimers.sort(boost::bind(&TimerManager::Impl::waitingCompare,
-      this, _1, _2));
-  }
-
-  newTimer = true;
-  timersCondition.notify_one();
+const NodeImplPtr& TimerManager::Impl::getNode() const {
+  return node;
 }
 
-bool TimerManager::Impl::hasPending(int timerHandle) {
-  boost::mutex::scoped_lock timersLock(timersMutex);
+void TimerManager::Impl::setTimerPeriod(int handle, const ros::Duration&
+    period) {
+  boost::mutex::scoped_lock lock(timerMutex);
   
-  TimerInfoPtr timerInfo = findTimer(timerHandle);
+  TimerInfoPtr timerInfo = findTimer(handle);
 
-  if (!timerInfo)
-    return false;
+  if (timerInfo) {
+    {
+      boost::mutex::scoped_lock lock(waitingQueueMutex);
+      
+      timerInfo->period = period;
+      timerInfo->expectedTimeOfNextCallback = ros::Time::now()+period;
 
-  if (timerInfo->hasTrackedObject) {
-    ros::VoidConstPtr trackedObject = timerInfo->trackedObject.lock();
-    if (!trackedObject)
-      return false;
+      waitingQueue.sort(boost::bind(
+        &TimerManager::Impl::compareWaitingTimers, this, _1, _2));
+    }
+
+    newTimer = true;
+    timerCondition.notify_one();
   }
+}
 
-  boost::mutex::scoped_lock waitingLock(timerInfo->waitingMutex);
+bool TimerManager::Impl::timerHasPending(int handle) {
+  boost::mutex::scoped_lock lock(timerMutex);
+  
+  TimerInfoPtr timerInfo = findTimer(handle);
 
-  return timerInfo->nextExpected <= ros::Time::now() ||
-    timerInfo->waitingCallbacks;
+  if (timerInfo) {
+    if (timerInfo->hasTrackedObject) {
+      ros::VoidConstPtr trackedObject = timerInfo->trackedObject.lock();
+      if (!trackedObject)
+        return false;
+    }
+
+    boost::mutex::scoped_lock lock(timerInfo->mutex);
+    
+    return (timerInfo->expectedTimeOfNextCallback <= ros::Time::now()) ||
+      timerInfo->numWaitingCallbacks;
+  }
+  else
+    return false;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void TimerManager::shutdown() {
-  if (impl)
-    impl->shutdown();
-}
-
 Timer TimerManager::addTimer(const ros::TimerOptions& options) {
   Timer timer;
   
-  timer.impl.reset(new Timer::Impl(options, impl->nodeImpl));
-  
-  if (timer.impl->autostart)
-    timer.impl->start();
+  if (impl) {
+    {
+      boost::mutex::scoped_lock lock(impl->mutex);
+      
+      int handle = ++impl->as<TimerManager::Impl>().numTimers;
+      timer.impl.reset(new Timer::Impl(options, handle, impl));
+      
+      impl->instances.insert(std::make_pair(handle, timer.impl));
+    }
+    
+    if (timer.impl->as<Timer::Impl>().autostart)
+      timer.impl->as<Timer::Impl>().start();
+  }
     
   return timer;
 }
 
-int TimerManager::Impl::addTimer(const ros::Duration& period, const
-    ros::TimerCallback& callback, ros::CallbackQueueInterface* callbackQueue,
-    const ros::VoidConstPtr& trackedObject, bool oneshot) {
-  TimerInfoPtr timerInfo(new TimerInfo);
+void TimerManager::Impl::startTimer(int handle) {
+  Timer::ImplPtr timerImpl = find(handle);
   
-  timerInfo->period = period;
-  timerInfo->callback = callback;
-  timerInfo->callbackQueue = callbackQueue;
-  timerInfo->lastExpected = ros::Time::now();
-  timerInfo->nextExpected = timerInfo->lastExpected+period;
-  timerInfo->oneshot = oneshot;
-  
-  if (trackedObject) {
-    timerInfo->trackedObject = trackedObject;
-    timerInfo->hasTrackedObject = true;
-  }
-
-  {
-    boost::mutex::scoped_lock handlesLock(handlesMutex);
-    timerInfo->handle = numHandles++;
-  }
-
-  {
-    boost::mutex::scoped_lock timersLock(timersMutex);
-    timerInfos.push_back(timerInfo);
-
-    if (!started) {
-      spinner = boost::thread(boost::bind(&TimerManager::Impl::spin, this));
-      started = true;
+  if (timerImpl) {
+    TimerInfoPtr timerInfo(new TimerInfo);
+    
+    timerInfo->handle = handle;
+    timerInfo->period = timerImpl->as<Timer::Impl>().period;
+    timerInfo->callback = timerImpl->as<Timer::Impl>().callback;
+    timerInfo->callbackQueue = timerImpl->as<Timer::Impl>().callbackQueue;
+    timerInfo->expectedTimeOfLastCallback = ros::Time::now();
+    timerInfo->expectedTimeOfNextCallback =
+      timerInfo->expectedTimeOfLastCallback+timerInfo->period;
+    timerInfo->oneshot = timerImpl->as<Timer::Impl>().oneshot;
+    
+    ros::VoidConstPtr trackedObject = 
+      timerImpl->as<Timer::Impl>().trackedObject.lock();
+      
+    if (trackedObject) {
+      timerInfo->trackedObject = timerImpl->as<Timer::Impl>().trackedObject;
+      timerInfo->hasTrackedObject = true;
     }
 
     {
-      boost::mutex::scoped_lock waitingLock(waitingMutex);
-      
-      waitingTimers.push_back(timerInfo->handle);
-      waitingTimers.sort(boost::bind(&TimerManager::Impl::waitingCompare,
-        this, _1, _2));
+      boost::mutex::scoped_lock lock(timerMutex);
+      timers.push_back(timerInfo);
+
+      if (!started) {
+        spinner = boost::thread(boost::bind(&TimerManager::Impl::spin, this));
+        started = true;
+      }
+
+      {
+        boost::mutex::scoped_lock lock(waitingQueueMutex);
+        
+        waitingQueue.push_back(timerInfo->handle);
+        waitingQueue.sort(boost::bind(
+          &TimerManager::Impl::compareWaitingTimers, this, _1, _2));
+      }
+
+      newTimer = true;
+      timerCondition.notify_all();
     }
-
-    newTimer = true;
-    timersCondition.notify_all();
   }
-
-  return timerInfo->handle;
 }
 
-void TimerManager::Impl::removeTimer(int timerHandle) {
+void TimerManager::Impl::stopTimer(int handle) {
   ros::CallbackQueueInterface* callbackQueue = 0;
   uint64_t id = 0;
 
   {
-    boost::mutex::scoped_lock timersLock(timersMutex);
+    boost::mutex::scoped_lock lock(timerMutex);
 
-    std::vector<TimerInfoPtr>::iterator it = timerInfos.begin();
-    std::vector<TimerInfoPtr>::iterator end = timerInfos.end();
-    
-    for ( ; it != end; ++it) {
+    for (std::list<TimerInfoPtr>::iterator it = timers.begin();
+        it != timers.end(); ++it) {
       const TimerInfoPtr& timerInfo = *it;
       
-      if (timerInfo->handle == timerHandle) {
+      if (timerInfo->handle == handle) {
         timerInfo->removed = true;
         callbackQueue = timerInfo->callbackQueue;
         id = (uint64_t)timerInfo.get();
         
-        timerInfos.erase(it);
+        timers.erase(it);
+        
         break;
       }
     }
 
     {
-      boost::mutex::scoped_lock waitingLock(waitingMutex);
+      boost::mutex::scoped_lock lock(waitingQueueMutex);
 
-      std::list<int>::iterator it = std::find(waitingTimers.begin(),
-        waitingTimers.end(), timerHandle);
+      std::list<int>::iterator it = std::find(waitingQueue.begin(),
+        waitingQueue.end(), handle);
       
-      if (it != waitingTimers.end())
-        waitingTimers.erase(it);
+      if (it != waitingQueue.end())
+        waitingQueue.erase(it);
     }
   }
 
@@ -215,69 +224,69 @@ void TimerManager::Impl::shutdown() {
   canceled = true;
   
   {
-    boost::mutex::scoped_lock timersLock(timersMutex);
-    timersCondition.notify_all();
+    boost::mutex::scoped_lock lock(timerMutex);
+    timerCondition.notify_all();
   }
   
   if (started)
     spinner.join();
 }
 
-bool TimerManager::Impl::waitingCompare(int leftTimerHandle, int
-    rightTimerHandle) {
-  TimerInfoPtr leftTimerInfo = findTimer(leftTimerHandle);
-  TimerInfoPtr rightTimerInfo = findTimer(rightTimerHandle);
+bool TimerManager::Impl::compareWaitingTimers(int leftHandle, int
+    rightHandle) {
+  TimerInfoPtr leftTimerInfo = findTimer(leftHandle);
+  TimerInfoPtr rightTimerInfo = findTimer(rightHandle);
   
   if (!leftTimerInfo || !rightTimerInfo)
     return leftTimerInfo < rightTimerInfo;
 
-  return leftTimerInfo->nextExpected < rightTimerInfo->nextExpected;
+  return (leftTimerInfo->expectedTimeOfNextCallback <
+    rightTimerInfo->expectedTimeOfNextCallback);
 }
 
-TimerInfoPtr TimerManager::Impl::findTimer(int timerHandle) {
-  std::vector<TimerInfoPtr>::iterator it = timerInfos.begin();
-  std::vector<TimerInfoPtr>::iterator end = timerInfos.end();
-  
-  for ( ; it != end; ++it)
-    if ((*it)->handle == timerHandle)
+TimerInfoPtr TimerManager::Impl::findTimer(int handle) {
+  for (std::list<TimerInfoPtr>::iterator it = timers.begin();
+      it != timers.end(); ++it)
+    if ((*it)->handle == handle)
       return *it;
 
   return TimerInfoPtr();
 }
 
-void TimerManager::Impl::schedule(const TimerInfoPtr& timerInfo) {
-  boost::mutex::scoped_lock timersLock(timersMutex);
+void TimerManager::Impl::scheduleTimerCallback(const TimerInfoPtr&
+    timerInfo) {
+  boost::mutex::scoped_lock lock(timerMutex);
 
-  if (timerInfo->removed)
-    return;
+  if (!timerInfo->removed) {
+    updateNextTimerCallback(timerInfo, ros::Time::now());
+    
+    {
+      boost::mutex::scoped_lock lock(waitingQueueMutex);
 
-  updateNext(timerInfo, ros::Time::now());
-  
-  {
-    boost::mutex::scoped_lock waitingLock(waitingMutex);
-
-    waitingTimers.push_back(timerInfo->handle);
-    waitingTimers.sort(boost::bind(&TimerManager::Impl::waitingCompare,
-      this, _1, _2));
-  }
-
-  newTimer = true;
-  timersCondition.notify_one();
-}
-
-void TimerManager::Impl::updateNext(const TimerInfoPtr& timerInfo, const
-    ros::Time& now) {
-  if (!timerInfo->oneshot) {
-    if (timerInfo->nextExpected <= now) {
-      timerInfo->lastExpected = timerInfo->nextExpected;
-      timerInfo->nextExpected += timerInfo->period;
+      waitingQueue.push_back(timerInfo->handle);
+      waitingQueue.sort(boost::bind(
+        &TimerManager::Impl::compareWaitingTimers, this, _1, _2));
     }
 
-    if (timerInfo->nextExpected+timerInfo->period < now)
-      timerInfo->nextExpected = now;
+    newTimer = true;
+    timerCondition.notify_one();
+  }
+}
+
+void TimerManager::Impl::updateNextTimerCallback(const TimerInfoPtr&
+    timerInfo, const ros::Time& now) {
+  if (!timerInfo->oneshot) {
+    if (timerInfo->expectedTimeOfNextCallback <= now) {
+      timerInfo->expectedTimeOfLastCallback =
+        timerInfo->expectedTimeOfNextCallback;
+      timerInfo->expectedTimeOfNextCallback += timerInfo->period;
+    }
+
+    if (timerInfo->expectedTimeOfNextCallback+timerInfo->period < now)
+      timerInfo->expectedTimeOfNextCallback = now;
   }
   else
-    timerInfo->nextExpected = ros::Time(
+    timerInfo->expectedTimeOfNextCallback = ros::Time(
       std::numeric_limits<int>::max(), 999999999);
 }
 
@@ -287,20 +296,18 @@ void TimerManager::Impl::spin() {
   while (!canceled) {
     ros::Time sleepEnd;
 
-    boost::mutex::scoped_lock timersLock(timersMutex);
+    boost::mutex::scoped_lock lock(timerMutex);
 
     if (ros::Time::now() < now) {
       now = ros::Time::now();
 
-      std::vector<TimerInfoPtr>::iterator it = timerInfos.begin();
-      std::vector<TimerInfoPtr>::iterator end = timerInfos.end();
-      
-      for ( ; it != end; ++it) {
+      for (std::list<TimerInfoPtr>::iterator it = timers.begin();
+           it != timers.end(); ++it) {
         const TimerInfoPtr& timerInfo = *it;
 
-        if (now < timerInfo->lastExpected) {
-          timerInfo->lastExpected = now;
-          timerInfo->lastExpected = now+timerInfo->period;
+        if (now < timerInfo->expectedTimeOfLastCallback) {
+          timerInfo->expectedTimeOfLastCallback = now;
+          timerInfo->expectedTimeOfNextCallback = now+timerInfo->period;
         }
       }
     }
@@ -308,33 +315,36 @@ void TimerManager::Impl::spin() {
     now = ros::Time::now();
 
     {
-      boost::mutex::scoped_lock waitlock(waitingMutex);
+      boost::mutex::scoped_lock lock(waitingQueueMutex);
 
-      if (!waitingTimers.empty()) {
-        TimerInfoPtr timerInfo = findTimer(waitingTimers.front());
+      if (!waitingQueue.empty()) {
+        TimerInfoPtr timerInfo = findTimer(waitingQueue.front());
 
-        while (!waitingTimers.empty() && timerInfo && 
-            (timerInfo->nextExpected <= now)) {
+        while (!waitingQueue.empty() && timerInfo && 
+            (timerInfo->expectedTimeOfNextCallback <= now)) {
           now = ros::Time::now();
 
-          ros::CallbackInterfacePtr callback(new TimerQueueCallback(
-            shared_from_this(), timerInfo, timerInfo->lastExpected,
-            timerInfo->lastActual, timerInfo->nextExpected));
+          ros::CallbackInterfacePtr callback(
+            new TimerQueueCallback(shared_from_this(), timerInfo,
+              timerInfo->expectedTimeOfLastCallback,
+              timerInfo->actualTimeOfLastCallback,
+              timerInfo->expectedTimeOfNextCallback)
+          );
           
           ros::CallbackQueueInterface* callbackQueue =
             timerInfo->callbackQueue ? timerInfo->callbackQueue :
-            nodeImpl->getNodeHandle().getCallbackQueue();
+            node->getNodeHandle().getCallbackQueue();
           callbackQueue->addCallback(callback, (uint64_t)timerInfo.get());
 
-          waitingTimers.pop_front();
-          if (waitingTimers.empty())
+          waitingQueue.pop_front();
+          if (waitingQueue.empty())
             break;
 
-          timerInfo = findTimer(waitingTimers.front());
+          timerInfo = findTimer(waitingQueue.front());
         }
 
         if (timerInfo)
-          sleepEnd = timerInfo->nextExpected;
+          sleepEnd = timerInfo->expectedTimeOfNextCallback;
       }
       else
         sleepEnd = now+ros::Duration(0.1);
@@ -350,13 +360,12 @@ void TimerManager::Impl::spin() {
         break;
 
       if (ros::Time::isSystemTime()) {
-        int remainingUsecs = std::max((int)(
-          (sleepEnd-now).toSec()*1e6), 1);
-        timersCondition.timed_wait(timersLock,
+        int remainingUsecs = std::max((int)((sleepEnd-now).toSec()*1e6), 1);
+        timerCondition.timed_wait(lock,
           boost::posix_time::microseconds(remainingUsecs));
       }
       else
-        timersCondition.timed_wait(timersLock,
+        timerCondition.timed_wait(lock,
           boost::posix_time::milliseconds(1));
     }
 

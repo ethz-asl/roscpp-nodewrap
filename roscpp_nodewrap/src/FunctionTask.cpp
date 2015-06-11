@@ -16,8 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/NodeImpl.h"
-
 #include "roscpp_nodewrap/diagnostics/FunctionTask.h"
 
 namespace nodewrap {
@@ -29,21 +27,16 @@ namespace nodewrap {
 FunctionTask::FunctionTask() {
 }
 
-FunctionTask::FunctionTask(const FunctionTask& src) {
+FunctionTask::FunctionTask(const FunctionTask& src) :
+  DiagnosticTask(src) {
 }
 
-FunctionTask::FunctionTask(const std::string& name, const Options&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)),
-  DiagnosticTask(impl) {
-}
-    
 FunctionTask::~FunctionTask() {
 }
     
-FunctionTask::Impl::Impl(const std::string& name, const Options&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  nodewrap::DiagnosticTask::Impl(name, nodeImpl),
+FunctionTask::Impl::Impl(const Options& defaultOptions, const std::string&
+    name, const ManagerImplPtr& manager) :
+  DiagnosticTask::Impl(name, manager),
   callback(defaultOptions.callback) {
 }
     

@@ -52,9 +52,11 @@ include_directories(
 ## Declare a cpp library
 add_library(roscpp_nodewrap
   src/AsyncWorker.cpp
+  src/CompositeTask.cpp
   src/CyclicEventStatistics.cpp
   src/DiagnosticsExceptions.cpp
   src/DiagnosticTask.cpp
+  src/DiagnosticTaskManager.cpp
   src/DiagnosticTaskOptions.cpp
   src/DiagnosticUpdater.cpp
   src/FrequencyStatistics.cpp

@@ -61,8 +61,8 @@ namespace nodewrap {
     public:
       /** \brief Constructor
         */
-      Impl(const std::string& name, const WorkerOptions& defaultOptions,
-        const NodeImplPtr& nodeImpl);
+      Impl(const WorkerOptions& defaultOptions, const std::string& name,
+        const ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -94,25 +94,6 @@ namespace nodewrap {
         */ 
       bool hasTrackedObject;    
     };
-    
-    /** \brief Declaration of the synchronous worker implementation
-      *   pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the synchronous worker implementation
-      *   weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The synchronous worker's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (private version)
-      */
-    SyncWorker(const std::string& name, const WorkerOptions& defaultOptions,
-      const NodeImplPtr& nodeImpl);
   };
 };
 

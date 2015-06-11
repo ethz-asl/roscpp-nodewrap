@@ -39,8 +39,9 @@ namespace nodewrap {
     /** \brief Default constructor
       */
     TimerQueueCallback(const TimerManager::ImplPtr& manager, const
-      TimerInfoPtr& timerInfo, const ros::Time& lastExpected, const
-      ros::Time& lastActual, const ros::Time& currentExpected);
+      TimerInfoPtr& timerInfo, const ros::Time& expectedTimeOfLastCallback,
+      const ros::Time& actualTimeOfLastCallback, const ros::Time&
+      expectedTimeOfCurrentCallback);
     
     /** \brief Destructor
       */
@@ -63,15 +64,15 @@ namespace nodewrap {
     
     /** \brief The expected time of the timer's last callback
       */ 
-    ros::Time lastExpected;
+    ros::Time expectedTimeOfLastCallback;
     
     /** \brief The actual time of the timer's last callback
       */ 
-    ros::Time lastActual;
+    ros::Time actualTimeOfLastCallback;
     
     /** \brief The expected time of the timer's current callback
       */ 
-    ros::Time currentExpected;
+    ros::Time expectedTimeOfCurrentCallback;
 
     /** \brief True, if the callback has been invoked
       */ 

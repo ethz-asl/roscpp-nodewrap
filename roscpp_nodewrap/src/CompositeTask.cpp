@@ -16,9 +16,10 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h"
+#include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticTask.h"
+#include "roscpp_nodewrap/diagnostics/CompositeTask.h"
 
 namespace nodewrap {
 
@@ -26,71 +27,69 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-DiagnosticTask::DiagnosticTask() {
+CompositeTask::CompositeTask() {
 }
 
-DiagnosticTask::DiagnosticTask(const DiagnosticTask& src) :
-  Managed<DiagnosticTask, std::string>(src) {
+CompositeTask::CompositeTask(const CompositeTask& src) :
+  DiagnosticTask(src),
+  DiagnosticTaskManager(src) {
 }
 
-DiagnosticTask::~DiagnosticTask() {  
+CompositeTask::~CompositeTask() {
 }
-
-DiagnosticTask::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Managed<nodewrap::DiagnosticTask, std::string>::Impl(name, manager),
-  task(name, boost::bind(&DiagnosticTask::Impl::run, this, _1)),
-  started(false) {
+    
+CompositeTask::Impl::Impl(const Options& defaultOptions, const std::string&
+    name, const ManagerImplPtr& manager) :
+  DiagnosticTask::Impl(name, manager) {
 }
-
-DiagnosticTask::Impl::~Impl() {
-  shutdown();
-}
-
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-std::string DiagnosticTask::getName() const {
-  return getIdentifier();
-}
-
-bool DiagnosticTask::Impl::isValid() const {
-  return true;
+    
+CompositeTask::Impl::~Impl() {
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticTask::start() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().start();
+void CompositeTask::Impl::startTask(diagnostic_updater::DiagnosticTask&
+    task) {
+  boost::mutex::scoped_lock lock(taskMutex);
+  
+  tasks.push_back(task.getName());
 }
 
-void DiagnosticTask::stop() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().stop();
+void CompositeTask::Impl::stopTask(const std::string& name) {
+  boost::mutex::scoped_lock lock(taskMutex);
+  
+  tasks.remove(name);
 }
 
-void DiagnosticTask::Impl::start() {
-  if (!started) {
-    manager->as<DiagnosticTaskManager::Impl>().startTask(task);
-    
-    started = true;
+void CompositeTask::Impl::run(diagnostic_updater::DiagnosticStatusWrapper&
+    status) {
+  diagnostic_updater::DiagnosticStatusWrapper originalStatus;
+  diagnostic_updater::DiagnosticStatusWrapper combinedStatus;
+  
+  originalStatus.summary(status);
+
+  boost::mutex::scoped_lock lock(taskMutex);
+  
+  for (std::list<std::string>::iterator it = tasks.begin();
+       it != tasks.end(); ++it) {
+    boost::mutex::scoped_lock lock(mutex);
+  
+    std::map<std::string, DiagnosticTask::ImplWPtr>::iterator jt =
+      instances.find(*it);
+    DiagnosticTask::ImplPtr taskImpl = jt->second.lock();
+  
+    if (taskImpl) {
+      status.summary(originalStatus);
+      
+      taskImpl->as<DiagnosticTask::Impl>().run(status);
+      
+      combinedStatus.mergeSummary(status);
+    }
   }
-}
-
-void DiagnosticTask::Impl::stop() {
-  if (started) {
-    started = false;
-    
-    manager->as<DiagnosticTaskManager::Impl>().stopTask(task.getName());
-  }
-}
-
-void DiagnosticTask::Impl::shutdown() {
-  stop();
+  
+  status.summary(combinedStatus);
 }
 
 }

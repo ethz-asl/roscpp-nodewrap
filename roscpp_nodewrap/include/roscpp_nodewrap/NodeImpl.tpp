@@ -163,11 +163,6 @@ template <class T> Worker NodeImpl::addWorker(const std::string& name,
   return this->addWorker(name, defaultOptions);
 }
 
-template <class T> T NodeImpl::addDiagnosticTask(const std::string& name) {
-  typename T::Options defaultOptions;
-  return this->template addDiagnosticTask<T>(name, defaultOptions);
-}
-
 template <class T> T NodeImpl::addDiagnosticTask(const std::string& name,
     const typename T::Options& defaultOptions) {
   if (!this->diagnosticUpdater)

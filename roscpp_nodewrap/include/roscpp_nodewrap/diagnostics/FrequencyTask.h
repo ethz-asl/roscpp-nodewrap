@@ -23,6 +23,8 @@
 #ifndef ROSCPP_NODEWRAP_FREQUENCY_TASK_H
 #define ROSCPP_NODEWRAP_FREQUENCY_TASK_H
 
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 
 #include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
@@ -38,7 +40,7 @@ namespace nodewrap {
     */
   class FrequencyTask :
     public DiagnosticTask {
-  friend class DiagnosticUpdater;
+  friend class DiagnosticTaskManager;
   public:
     /** \brief Forward declaration of the frequency task options
       */
@@ -64,27 +66,19 @@ namespace nodewrap {
     FrequencyStatistics getStatistics() const;
     
     /** \brief Retrieve the frequency statistics' estimates of this
-      *   diagnostic task
+      *   frequency task
       */
     FrequencyStatistics::Estimates getStatisticsEstimates() const;
     
-    /** \brief Start this diagnostic task
-      */
-    void start();
-    
-    /** \brief Signal this diagnostic task that the monitored event
+    /** \brief Signal this frequency task that the monitored event
       *   has occurred
       * 
       * \param[in] timeOfEvent The time of the event.
       */
     inline void event(const ros::Time& timeOfEvent = ros::Time::now()) {
       if (impl)
-        impl->event(timeOfEvent);
+        impl->as<FrequencyTask::Impl>().event(timeOfEvent);
     };
-    
-    /** \brief Stop this diagnostic task
-      */
-    void stop();
     
   private:
     /** \brief ROS frequency task implementation
@@ -97,28 +91,28 @@ namespace nodewrap {
     public:        
       /** \brief Constructor
         */
-      Impl(const std::string& name, const Options& defaultOptions, const
-        NodeImplPtr& nodeImpl);
+      Impl(const Options& defaultOptions, const std::string& name, const
+        ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
       ~Impl();
       
-      /** \brief Retrieve the frequency statistics of this diagnostic task
+      /** \brief Retrieve the frequency statistics of this frequency task
         *   (implementation)
         */
       FrequencyStatistics getStatistics() const;
       
       /** \brief Retrieve the frequency statistics' estimates of this
-        *   diagnostic task (implementation)
+        *   frequency task (implementation)
         */
       FrequencyStatistics::Estimates getStatisticsEstimates() const;
       
-      /** \brief Start this diagnostic task (implementation)
+      /** \brief Stop this frequency task (implementation)
         */
-      void start();
+      void stop();
       
-      /** \brief Signal this diagnostic task that the monitored event
+      /** \brief Signal this frequency task that the monitored event
         *   has occurred (implementation)
         */
       inline void event(const ros::Time& timeOfEvent = ros::Time::now()) {
@@ -126,10 +120,6 @@ namespace nodewrap {
         
         statistics.event(timeOfEvent);
       };
-      
-      /** \brief Stop this diagnostic task (implementation)
-        */
-      void stop();
       
       /** \brief Fill out this frequency task's status
         */
@@ -165,29 +155,10 @@ namespace nodewrap {
         */
       double errorStandardDeviationTolerance;
       
-      /** \brief True, if this frequency task has been started
-        */
-      bool started;
+      /** \brief The frequency task's mutex
+        */ 
+      mutable boost::mutex mutex;
     };
-      
-    /** \brief Declaration of the frequency task implementation
-      *   pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the frequency task implementation
-      *   weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The frequency task's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (private version)
-      */
-    FrequencyTask(const std::string& name, const Options& defaultOptions,
-      const NodeImplPtr& nodeImpl);
   };
 };
 

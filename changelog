@@ -1,3 +1,10 @@
+roscpp-nodewrap (0.1-18) unstable; urgency=low
+
+  * Revised base classes
+  * Added composite diagnostic task
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 11 Jun 2015 07:26:00 +0100
+
 roscpp-nodewrap (0.1-17) unstable; urgency=low
 
   * Added diagnostic function task

@@ -24,27 +24,30 @@ namespace nodewrap {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-template <class T> T DiagnosticUpdater::addTask(const std::string& name,
+template <class T> T DiagnosticTaskManager::addTask(const std::string& name,
     const typename T::Options& defaultOptions) {
-  boost::mutex::scoped_lock lock(this->impl->mutex);
-  
-  if (name.empty())
-    throw InvalidDiagnosticTaskNameException(name,
-      "Task name may not be empty");
-    
   T task;
-  std::map<std::string, DiagnosticTask::ImplWPtr>::iterator it =
-    this->impl->tasks.find(name);
+  
+  if (this->impl) {
+    boost::mutex::scoped_lock lock(this->impl->mutex);
     
-  if (it == this->impl->tasks.end()) {
-    task.impl.reset(new typename T::Impl(name, defaultOptions,
-      this->impl->nodeImpl));
+    if (name.empty())
+      throw InvalidDiagnosticTaskNameException(name,
+        "Task name may not be empty");
+      
+    std::map<std::string, DiagnosticTask::ImplWPtr>::iterator it =
+      this->impl->instances.find(name);
+      
+    if (it == this->impl->instances.end()) {
+      task.impl.reset(new typename T::Impl(defaultOptions, name, this->impl));
 
-    this->impl->tasks.insert(std::make_pair(name, task.impl));
+      this->impl->instances.insert(std::make_pair(name, task.impl));
+      
+      task.impl->template as<DiagnosticTask::Impl>().start();
+    }
+    else
+      task.impl = it->second.lock();
   }
-  else
-    task.impl = boost::static_pointer_cast<typename T::Impl>(
-      it->second.lock());
   
   return task;
 }

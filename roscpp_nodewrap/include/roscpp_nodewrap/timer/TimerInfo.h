@@ -62,19 +62,19 @@ namespace nodewrap {
 
     /** \brief The timer's last callback duration
       */ 
-    ros::WallDuration lastCallbackDuration;
+    ros::WallDuration durationOfLastCallback;
 
     /** \brief The expected time of the timer's last callback
       */ 
-    ros::Time lastExpected;
+    ros::Time expectedTimeOfLastCallback;
     
     /** \brief The expected time of the timer's next callback
       */ 
-    ros::Time nextExpected;
+    ros::Time expectedTimeOfNextCallback;
 
     /** \brief The actual time of the timer's last callback
       */ 
-    ros::Time lastActual;
+    ros::Time actualTimeOfLastCallback;
 
     /** \brief If true, the timer has been removed
       */ 
@@ -88,13 +88,9 @@ namespace nodewrap {
       */ 
     bool hasTrackedObject;
 
-    /** \brief The timer's mutex guarding its wait operations
-      */ 
-    boost::mutex waitingMutex;
-    
     /** \brief The timer's number of waiting callbacks
       */ 
-    size_t waitingCallbacks;
+    size_t numWaitingCallbacks;
 
     /** \brief If true, the timer is non-cyclic
       */ 
@@ -102,7 +98,12 @@ namespace nodewrap {
 
     /** \brief The timer's total number of callback calls
       */ 
-    size_t totalCalls;
+    size_t totalNumCalls;
+    
+    /** \brief The mutex guarding this timer information
+      */ 
+    boost::mutex mutex;
+    
   };
 };
 

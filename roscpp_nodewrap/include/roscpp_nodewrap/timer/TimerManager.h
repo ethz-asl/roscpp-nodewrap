@@ -24,14 +24,8 @@
 #define ROSCPP_NODEWRAP_TIMER_MANAGER_H
 
 #include <list>
-#include <vector>
 
-#include <ros/ros.h>
-
-#include <boost/enable_shared_from_this.hpp>
-
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+#include <roscpp_nodewrap/Manager.h>
 
 #include <roscpp_nodewrap/timer/Timer.h>
 
@@ -41,7 +35,8 @@ namespace nodewrap {
     * This class provides the facilities for managing a collection of
     * high precision timers.
     */
-  class TimerManager {
+  class TimerManager :
+    public Manager<Timer, int> {
   friend class NodeImpl;
   friend class Timer;
   friend class TimerQueueCallback;
@@ -60,16 +55,10 @@ namespace nodewrap {
     /** \brief Destructor
       */
     ~TimerManager();
-    
-    /** \brief Perform shutdown of the timer manager
+        
+    /** \brief Add a timer to be managed by this timer manager
       */
-    void shutdown();
-      
-    /** \brief Void pointer conversion
-      */
-    inline operator void*() const {
-      return impl ? (void*)1 : (void*)0;
-    };
+    Timer addTimer(const ros::TimerOptions& options);
     
   private:    
     /** \brief ROS high precision timer manager implementation
@@ -78,89 +67,89 @@ namespace nodewrap {
       * precision time manager.
       */
     class Impl :
-      public boost::enable_shared_from_this<Impl> {
+      public Manager<Timer, int>::Impl {
     public:
       /** \brief Default constructor
         */
-      Impl(const NodeImplPtr& nodeImpl);
+      Impl(const NodeImplPtr& node);
       
       /** \brief Destructor
         */
       ~Impl();
       
+      /** \brief Retrieve the node owning this timer manager
+        */ 
+      const NodeImplPtr& getNode() const;
+      
       /** \brief Set the period of the referred timer
         */
-      void setPeriod(int timerHandle, const ros::Duration& period);
+      void setTimerPeriod(int handle, const ros::Duration& period);
       
       /** \brief True, if the referred timer has pending callbacks
         */
-      bool hasPending(int timerHandle);
+      bool timerHasPending(int handle);
     
-      /** \brief Add a timer
+      /** \brief Start the referred timer
         */
-      int addTimer(const ros::Duration& period, const ros::TimerCallback&
-        callback, ros::CallbackQueueInterface* callbackQueue, const
-        ros::VoidConstPtr& trackedObject, bool oneshot);
+      void startTimer(int handle);
       
-      /** \brief Remove the referred timer
+      /** \brief Stop the referred timer
         */
-      void removeTimer(int timerHandle);
+      void stopTimer(int handle);
       
       /** \brief Perform shutdown of the timer manager (implementation)
         */
       void shutdown();
       
-      /** \brief Compare two timers with respect to their callback times
+      /** \brief Compare two waiting timers with respect to their absolute
+        *   callback times
         */ 
-      bool waitingCompare(int leftTimerHandle, int rightTimerHandle);
+      bool compareWaitingTimers(int leftHandle, int rightHandle);
       
-      /** \brief Find timer by handle
+      /** \brief Find the referred timer
         */ 
-      TimerInfoPtr findTimer(int timerHandle);
+      TimerInfoPtr findTimer(int handle);
       
       /** \brief Schedule timer callback
         */ 
-      void schedule(const TimerInfoPtr& timerInfo);
+      void scheduleTimerCallback(const TimerInfoPtr& timerInfo);
       
       /** \brief Update the expected time of a timer's next callback
         */ 
-      void updateNext(const TimerInfoPtr& timerInfo, const ros::Time& now);
+      void updateNextTimerCallback(const TimerInfoPtr& timerInfo, const
+        ros::Time& now);
       
       /** \brief Spin over pending timer callbacks
         */ 
       void spin();
 
-      /** \brief The timer informations of the managed timers
+      /** \brief The timers managed by this timer manager
         */ 
-      std::vector<TimerInfoPtr> timerInfos;
+      std::list<TimerInfoPtr> timers;
+
+      /** \brief The number of timers managed by this timer manager
+        */ 
+      size_t numTimers;
       
       /** \brief The mutex guarding the manager's timers
         */ 
-      boost::mutex timersMutex;
+      boost::mutex timerMutex;
       
       /** \brief The condition for signaling timer events
         */ 
-      boost::condition_variable timersCondition;
+      boost::condition_variable timerCondition;
       
       /** \brief True, if a new timer is awaiting scheduling
         */ 
       volatile bool newTimer;
 
-      /** \brief The mutex guarding the timer wait operations
+      /** \brief The mutex guarding the waiting timers
         */ 
-      boost::mutex waitingMutex;
+      boost::mutex waitingQueueMutex;
       
-      /** \brief The handles of the waiting timer
+      /** \brief The waiting timers queued by handle
         */ 
-      std::list<int> waitingTimers;
-
-      /** \brief The manager's number of timer handles
-        */ 
-      size_t numHandles;
-      
-      /** \brief The mutex guarding the manager's timer handles
-        */ 
-      boost::mutex handlesMutex;
+      std::list<int> waitingQueue;
 
       /** \brief The manager's spinner
         */ 
@@ -176,29 +165,12 @@ namespace nodewrap {
       
       /** \brief The node implementation owning this timer manager
         */ 
-      NodeImplPtr nodeImpl;
+      NodeImplPtr node;
     };
-    
-    /** \brief Declaration of the timer manager implementation pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the timer manager implementation weak pointer
-      *   type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The timer manager's implementation
-      */
-    ImplPtr impl;
     
     /** \brief Constructor (private version)
       */
-    TimerManager(const NodeImplPtr& nodeImpl);
-    
-    /** \brief Add a timer to be managed by this timer manager
-      */
-    Timer addTimer(const ros::TimerOptions& options);
+    TimerManager(const NodeImplPtr& node);
   };
 };
 

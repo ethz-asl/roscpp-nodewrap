@@ -18,79 +18,46 @@
 
 #include "roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h"
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticTask.h"
-
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-DiagnosticTask::DiagnosticTask() {
+DiagnosticTaskManager::DiagnosticTaskManager() {
 }
 
-DiagnosticTask::DiagnosticTask(const DiagnosticTask& src) :
-  Managed<DiagnosticTask, std::string>(src) {
+DiagnosticTaskManager::DiagnosticTaskManager(const DiagnosticTaskManager&
+    src) :
+  Manager<DiagnosticTask, std::string>(src) {
 }
 
-DiagnosticTask::~DiagnosticTask() {  
+DiagnosticTaskManager::~DiagnosticTaskManager() {  
 }
 
-DiagnosticTask::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Managed<nodewrap::DiagnosticTask, std::string>::Impl(name, manager),
-  task(name, boost::bind(&DiagnosticTask::Impl::run, this, _1)),
-  started(false) {
+DiagnosticTaskManager::Impl::Impl() {
 }
-
-DiagnosticTask::Impl::~Impl() {
+    
+DiagnosticTaskManager::Impl::~Impl() {
   shutdown();
-}
-
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-std::string DiagnosticTask::getName() const {
-  return getIdentifier();
-}
-
-bool DiagnosticTask::Impl::isValid() const {
-  return true;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticTask::start() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().start();
-}
-
-void DiagnosticTask::stop() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().stop();
-}
-
-void DiagnosticTask::Impl::start() {
-  if (!started) {
-    manager->as<DiagnosticTaskManager::Impl>().startTask(task);
-    
-    started = true;
+void DiagnosticTaskManager::Impl::shutdown() {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  for (std::map<std::string, DiagnosticTask::ImplWPtr>::iterator it =
+      instances.begin(); it != instances.end(); ++it) {
+    DiagnosticTask::ImplPtr task = it->second.lock();
+  
+    if (task) {
+      task->as<DiagnosticTask::Impl>().stop();
+      task->shutdown();
+    }
   }
-}
-
-void DiagnosticTask::Impl::stop() {
-  if (started) {
-    started = false;
-    
-    manager->as<DiagnosticTaskManager::Impl>().stopTask(task.getName());
-  }
-}
-
-void DiagnosticTask::Impl::shutdown() {
-  stop();
 }
 
 }

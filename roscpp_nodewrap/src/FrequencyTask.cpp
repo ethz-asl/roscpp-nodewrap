@@ -29,50 +29,44 @@ namespace nodewrap {
 FrequencyTask::FrequencyTask() {
 }
 
-FrequencyTask::FrequencyTask(const FrequencyTask& src) {
+FrequencyTask::FrequencyTask(const FrequencyTask& src) :
+  DiagnosticTask(src) {
 }
 
-FrequencyTask::FrequencyTask(const std::string& name, const Options&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)),
-  DiagnosticTask(impl) {
-}
-    
 FrequencyTask::~FrequencyTask() {
 }
     
-FrequencyTask::Impl::Impl(const std::string& name, const Options&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  nodewrap::DiagnosticTask::Impl(name, nodeImpl),
+FrequencyTask::Impl::Impl(const Options& defaultOptions, const std::string&
+    name, const ManagerImplPtr& manager) :
+  DiagnosticTask::Impl(name, manager),
   statistics(0),
   expected(0.0),
   warnMeanTolerance(0.05),
   errorMeanTolerance(0.1),
   warnStandardDeviationTolerance(0.05),
-  errorStandardDeviationTolerance(0.1),
-  started(false) {
+  errorStandardDeviationTolerance(0.1) {
   std::string ns = defaultOptions.ns.empty() ?
     ros::names::append("diagnostics/frequency", name) :
     defaultOptions.ns;
   
-  window = ros::Duration(nodeImpl->getParam(
+  window = ros::Duration(getNode()->getParam(
     ros::names::append(ns, "window"), defaultOptions.window.toSec()));
   
-  warnMeanTolerance = nodeImpl->getParam(
+  warnMeanTolerance = getNode()->getParam(
     ros::names::append(ns, "mean_tolerance/warn"),
     defaultOptions.warnMeanTolerance);
-  errorMeanTolerance = nodeImpl->getParam(
+  errorMeanTolerance = getNode()->getParam(
     ros::names::append(ns, "mean_tolerance/error"),
     defaultOptions.errorMeanTolerance);
   
-  warnStandardDeviationTolerance = nodeImpl->getParam(
+  warnStandardDeviationTolerance = getNode()->getParam(
     ros::names::append(ns, "standard_deviation_tolerance/warn"),
     defaultOptions.warnStandardDeviationTolerance);
-  errorStandardDeviationTolerance = nodeImpl->getParam(
+  errorStandardDeviationTolerance = getNode()->getParam(
     ros::names::append(ns, "standard_deviation_tolerance/error"),
     defaultOptions.errorStandardDeviationTolerance);
   
-  expected = nodeImpl->getParam(
+  expected = getNode()->getParam(
     ros::names::append(ns, "expected"), defaultOptions.expected);
   statistics.setRollingWindowSize(window.toSec()*expected);
 }
@@ -86,7 +80,7 @@ FrequencyTask::Impl::~Impl() {
 
 FrequencyStatistics FrequencyTask::getStatistics() const {
   if (impl)
-    return impl->getStatistics();
+    return impl->as<FrequencyTask::Impl>().getStatistics();
   else
     return FrequencyStatistics();
 }
@@ -94,7 +88,7 @@ FrequencyStatistics FrequencyTask::getStatistics() const {
 FrequencyStatistics::Estimates FrequencyTask::getStatisticsEstimates()
     const {
   if (impl)
-    return impl->getStatisticsEstimates();
+    return impl->as<FrequencyTask::Impl>().getStatisticsEstimates();
   else
     return FrequencyStatistics::Estimates();
 }
@@ -116,30 +110,12 @@ FrequencyStatistics::Estimates FrequencyTask::Impl::getStatisticsEstimates()
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void FrequencyTask::start() {
-  if (impl)
-    impl->start();
-}
-
-void FrequencyTask::stop() {
-  if (impl)
-    impl->stop();
-}
-
-void FrequencyTask::Impl::start() {
-  boost::mutex::scoped_lock lock(mutex);
-
-  if (!started)
-    started = true;
-}
-
 void FrequencyTask::Impl::stop() {
   boost::mutex::scoped_lock lock(mutex);
   
-  if (started) {
-    started = false;
-    statistics.clear();
-  }
+  statistics.clear();
+  
+  DiagnosticTask::Impl::stop();
 }
 
 void FrequencyTask::Impl::run(diagnostic_updater::DiagnosticStatusWrapper&

@@ -16,9 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h"
-
-#include "roscpp_nodewrap/diagnostics/DiagnosticTask.h"
+#include <boost/thread.hpp>
+#include <boost/thread/locks.hpp>
 
 namespace nodewrap {
 
@@ -26,71 +25,80 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-DiagnosticTask::DiagnosticTask() {
+template <class T, typename I>
+Manager<T, I>::Manager() {
 }
 
-DiagnosticTask::DiagnosticTask(const DiagnosticTask& src) :
-  Managed<DiagnosticTask, std::string>(src) {
+template <class T, typename I>
+Manager<T, I>::Manager(const Manager<T, I>& src) :
+  impl(src.impl) {
 }
 
-DiagnosticTask::~DiagnosticTask() {  
+template <class T, typename I>
+Manager<T, I>::~Manager() {  
 }
 
-DiagnosticTask::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Managed<nodewrap::DiagnosticTask, std::string>::Impl(name, manager),
-  task(name, boost::bind(&DiagnosticTask::Impl::run, this, _1)),
-  started(false) {
+template <class T, typename I>
+Manager<T, I>::Impl::Impl() {
 }
-
-DiagnosticTask::Impl::~Impl() {
-  shutdown();
-}
-
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-std::string DiagnosticTask::getName() const {
-  return getIdentifier();
-}
-
-bool DiagnosticTask::Impl::isValid() const {
-  return true;
+    
+template <class T, typename I>
+Manager<T, I>::Impl::~Impl() {
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticTask::start() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().start();
+template <class T, typename I>
+void Manager<T, I>::shutdown() {
+  if (this->impl)
+    this->impl->shutdown();
 }
 
-void DiagnosticTask::stop() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().stop();
+template <class T, typename I>
+void Manager<T, I>::Impl::add(const typename T::ImplPtr& instance) {
+  boost::mutex::scoped_lock lock(this->mutex);
+
+  this->instances[instance->identifier] = instance;
 }
 
-void DiagnosticTask::Impl::start() {
-  if (!started) {
-    manager->as<DiagnosticTaskManager::Impl>().startTask(task);
-    
-    started = true;
+template <class T, typename I>
+typename T::ImplPtr Manager<T, I>::Impl::remove(const I& identifier) {
+  boost::mutex::scoped_lock lock(this->mutex);
+
+  typename T::ImplPtr instance;
+  
+  typename std::map<I, typename T::ImplWPtr>::iterator it =
+    this->instances.find(identifier);
+  if (it != this->instances.end()) {
+    instance = it->second.lock();
+    this->instances.erase(it);
   }
+  
+  return instance;
 }
 
-void DiagnosticTask::Impl::stop() {
-  if (started) {
-    started = false;
+template <class T, typename I>
+typename T::ImplPtr Manager<T, I>::Impl::find(const I& identifier) const {
+  boost::mutex::scoped_lock lock(this->mutex);
+  
+  typename std::map<I, typename T::ImplWPtr>::const_iterator it =
+    this->instances.find(identifier);
+  if (it != this->instances.end())
+    return it->second.lock();
     
-    manager->as<DiagnosticTaskManager::Impl>().stopTask(task.getName());
-  }
+  return typename T::ImplPtr();
 }
 
-void DiagnosticTask::Impl::shutdown() {
-  stop();
+template <class T, typename I>
+template <class D> D& Manager<T, I>::Impl::as() {
+  return *static_cast<D*>(this);
+}
+
+template <class T, typename I>
+template <class D> const D& Manager<T, I>::Impl::as() const {
+  return *static_cast<const D*>(this);
 }
 
 }

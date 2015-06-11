@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/NodeImpl.h"
+#include "roscpp_nodewrap/timer/TimerManager.h"
 
 #include "roscpp_nodewrap/timer/Timer.h"
 
@@ -30,32 +30,27 @@ Timer::Timer() {
 }
 
 Timer::Timer(const Timer& src) :
-  impl(src.impl) {
-}
-
-Timer::Timer(const ros::TimerOptions& options, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(options, nodeImpl)) {
+  Managed<Timer, int>(src) {
 }
 
 Timer::~Timer() {  
 }
 
-Timer::Impl::Impl(const ros::TimerOptions& options, const NodeImplPtr&
-    nodeImpl) :
+Timer::Impl::Impl(const ros::TimerOptions& options, int handle, const
+    ManagerImplPtr& manager) :
+  Managed<Timer, int>::Impl(handle, manager),
   started(false),
-  handle(-1),
   period(options.period),
   autostart(options.autostart),
   oneshot(options.oneshot),
   callback(options.callback),
   callbackQueue(options.callback_queue),
   trackedObject(options.tracked_object),
-  hasTrackedObject(options.tracked_object),
-  nodeImpl(nodeImpl) {
+  hasTrackedObject(options.tracked_object) {
 }
 
 Timer::Impl::~Impl() {
-  stop();
+  shutdown();
 }
 
 /*****************************************************************************/
@@ -64,24 +59,24 @@ Timer::Impl::~Impl() {
 
 void Timer::setPeriod(const ros::Duration& period) {
   if (impl)
-    impl->setPeriod(period);
+    impl->as<Timer::Impl>().setPeriod(period);
 }
 
 bool Timer::hasPending() {
   if (impl)
-    return impl->hasPending();
+    return impl->as<Timer::Impl>().hasPending();
   else
     return false;
 }
 
 void Timer::Impl::setPeriod(const ros::Duration& period) {
   this->period = period;
-  nodeImpl->timerManager.impl->setPeriod(handle, period);
+  manager->as<TimerManager::Impl>().setTimerPeriod(identifier, period);
 }
 
 bool Timer::Impl::hasPending() {
-  if (isValid() && handle != -1)
-    return  nodeImpl->timerManager.impl->hasPending(handle);
+  if (isValid() && started)
+    return manager->as<TimerManager::Impl>().timerHasPending(identifier);
   else
     return false;
 }
@@ -96,22 +91,17 @@ bool Timer::Impl::isValid() const {
 
 void Timer::start() {
   if (impl)
-    impl->start();
+    impl->as<Timer::Impl>().start();
 }
 
 void Timer::stop() {
   if (impl)
-    impl->stop();
+    impl->as<Timer::Impl>().stop();
 }
 
 void Timer::Impl::start() {
   if (!started) {
-    ros::VoidConstPtr trackedObject;
-    if (hasTrackedObject)
-      trackedObject = this->trackedObject.lock();
-
-    handle = nodeImpl->timerManager.impl->addTimer(period, callback,
-      callbackQueue, trackedObject, oneshot);
+    manager->as<TimerManager::Impl>().startTimer(identifier);
     
     started = true;
   }
@@ -120,9 +110,13 @@ void Timer::Impl::start() {
 void Timer::Impl::stop() {
   if (started) {
     started = false;
-    nodeImpl->timerManager.impl->removeTimer(handle);
-    handle = -1;
+    
+    manager->as<TimerManager::Impl>().stopTimer(identifier);
   }
+}
+
+void Timer::Impl::shutdown() {
+  stop();
 }
 
 }

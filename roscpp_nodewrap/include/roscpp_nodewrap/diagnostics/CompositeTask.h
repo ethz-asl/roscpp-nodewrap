@@ -16,53 +16,57 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file FunctionTask.h
-  * \brief Header file providing the FunctionTask class interface
+/** \file CompositeTask.h
+  * \brief Header file providing the CompositeTask class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_FUNCTION_TASK_H
-#define ROSCPP_NODEWRAP_FUNCTION_TASK_H
+#ifndef ROSCPP_NODEWRAP_COMPOSITE_TASK_H
+#define ROSCPP_NODEWRAP_COMPOSITE_TASK_H
 
-#include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
-#include <roscpp_nodewrap/diagnostics/FunctionTaskOptions.h>
+#include <list>
 
+#include <roscpp_nodewrap/diagnostics/DiagnosticTaskOptions.h>
+#include <roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h>
 
 namespace nodewrap {
-  /** \brief Diagnostic function task
+  /** \brief Composite diagnostic task
     * 
-    * This class provides a diagnostic task which calls a function.
+    * This class provides a diagnostic task which is composed of other
+    * diagnostic tasks.
     */
-  class FunctionTask :
-    public DiagnosticTask {
+  class CompositeTask :
+    public DiagnosticTask,
+    public DiagnosticTaskManager {
   friend class DiagnosticTaskManager;
   public:
-    /** \brief Forward declaration of the function task options
+    /** \brief Forward declaration of the composite task options
       */
-    typedef FunctionTaskOptions Options;
+    typedef DiagnosticTaskOptions Options;
     
     /** \brief Default constructor
       */
-    FunctionTask();
+    CompositeTask();
     
     /** \brief Copy constructor
       * 
-      * \param[in] src The source function task which is being copied
-      *   to this function task.
+      * \param[in] src The source composite task which is being copied
+      *   to this composite task.
       */
-    FunctionTask(const FunctionTask& src);
+    CompositeTask(const CompositeTask& src);
     
     /** \brief Destructor
       */
-    ~FunctionTask();
+    ~CompositeTask();
 
   private:
-    /** \brief ROS function task implementation
+    /** \brief ROS composite task implementation
       * 
-      * This class provides the private implementation of the function
+      * This class provides the private implementation of the composite
       * task.
       */
     class Impl :
-      public DiagnosticTask::Impl {
+      public DiagnosticTask::Impl,
+      public DiagnosticTaskManager::Impl {
     public:        
       /** \brief Constructor
         */
@@ -73,13 +77,25 @@ namespace nodewrap {
         */
       ~Impl();
       
-      /** \brief Fill out this function task's status
+      /** \brief Start the provided task (implementation)
+        */
+      void startTask(diagnostic_updater::DiagnosticTask& task);
+      
+      /** \brief Stop the referred task (implementation)
+        */
+      void stopTask(const std::string& name);
+      
+      /** \brief Fill out this composite task's status
         */
       void run(diagnostic_updater::DiagnosticStatusWrapper& status);
       
-      /** \brief The function called when the task should perform diagnostics
+      /** \brief The diagnostic tasks by name
         */ 
-      DiagnosticTaskCallback callback;
+      std::list<std::string> tasks;
+      
+      /** \brief The mutex guarding the tasks
+        */ 
+      boost::mutex taskMutex;
     };
   };
 };

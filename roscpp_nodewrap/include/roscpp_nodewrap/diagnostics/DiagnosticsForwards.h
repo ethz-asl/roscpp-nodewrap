@@ -28,6 +28,27 @@
 #include <diagnostic_updater/diagnostic_updater.h>
 
 namespace nodewrap {
+  /** \brief Forward declaration of the diagnostic task
+    */
+  class DiagnosticTask;
+  /** \brief Forward declaration of the diagnostic task pointer type
+    */
+  typedef boost::shared_ptr<DiagnosticTask> DiagnosticTaskPtr;
+  /** \brief Forward declaration of the diagnostic task weak pointer type
+    */
+  typedef boost::weak_ptr<DiagnosticTask> DiagnosticTaskWPtr;
+  
+  /** \brief Forward declaration of the diagnostic task manager
+    */
+  class DiagnosticTaskManager;
+  /** \brief Forward declaration of the diagnostic task manager pointer type
+    */
+  typedef boost::shared_ptr<DiagnosticTaskManager> DiagnosticTaskManagerPtr;
+  /** \brief Forward declaration of the diagnostic task manager weak pointer
+    *   type
+    */
+  typedef boost::weak_ptr<DiagnosticTaskManager> DiagnosticTaskManagerWPtr;
+  
   /** \brief Forward declaration of the diagnostic updater
     */
   class DiagnosticUpdater;

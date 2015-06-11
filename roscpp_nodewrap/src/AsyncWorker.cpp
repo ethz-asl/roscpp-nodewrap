@@ -16,12 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <limits>
-
-#include <boost/thread.hpp>
-#include <boost/thread/locks.hpp>
-
-#include "roscpp_nodewrap/NodeImpl.h"
+#include "roscpp_nodewrap/timer/Timer.h"
 
 #include "roscpp_nodewrap/worker/AsyncWorker.h"
 
@@ -35,22 +30,15 @@ AsyncWorker::AsyncWorker() {
 }
 
 AsyncWorker::AsyncWorker(const AsyncWorker& src) :
-  Worker(src),
-  impl(src.impl) {
-}
-
-AsyncWorker::AsyncWorker(const std::string& name, const WorkerOptions&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)),
-  Worker(impl) {
+  Worker(src) {
 }
 
 AsyncWorker::~AsyncWorker() {  
 }
 
-AsyncWorker::Impl::Impl(const std::string& name, const WorkerOptions&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker::Impl(name, defaultOptions, nodeImpl),
+AsyncWorker::Impl::Impl(const WorkerOptions& defaultOptions, const
+    std::string& name, const ManagerImplPtr& manager) :
+  Worker::Impl(defaultOptions, name, manager),
   resetTimer(true) {
   ros::TimerOptions timerOptions;
   

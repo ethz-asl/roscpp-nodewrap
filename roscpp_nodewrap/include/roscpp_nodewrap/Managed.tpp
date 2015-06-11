@@ -16,9 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h"
-
-#include "roscpp_nodewrap/diagnostics/DiagnosticTask.h"
+#include "roscpp_nodewrap/Manager.h"
 
 namespace nodewrap {
 
@@ -26,71 +24,70 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-DiagnosticTask::DiagnosticTask() {
+template <class T, typename I>
+Managed<T, I>::Managed() {
 }
 
-DiagnosticTask::DiagnosticTask(const DiagnosticTask& src) :
-  Managed<DiagnosticTask, std::string>(src) {
+template <class T, typename I>
+Managed<T, I>::Managed(const Managed<T, I>& src) :
+  impl(src.impl) {
 }
 
-DiagnosticTask::~DiagnosticTask() {  
+template <class T, typename I>
+Managed<T, I>::~Managed() {  
 }
 
-DiagnosticTask::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Managed<nodewrap::DiagnosticTask, std::string>::Impl(name, manager),
-  task(name, boost::bind(&DiagnosticTask::Impl::run, this, _1)),
-  started(false) {
+template <class T, typename I>
+Managed<T, I>::Impl::Impl(const I& identifier, const ManagerImplPtr& manager) :
+  identifier(identifier),
+  manager(manager) {
 }
 
-DiagnosticTask::Impl::~Impl() {
-  shutdown();
+template <class T, typename I>
+Managed<T, I>::Impl::~Impl() {
+  manager->remove(this->identifier);
 }
 
 /*****************************************************************************/
 /* Accessors                                                                 */
 /*****************************************************************************/
 
-std::string DiagnosticTask::getName() const {
-  return getIdentifier();
+template <class T, typename I>
+I Managed<T, I>::getIdentifier() const {
+  if (this->impl)
+    return this->impl->getIdentifier();
+  else
+    return I();
 }
 
-bool DiagnosticTask::Impl::isValid() const {
-  return true;
+template <class T, typename I>
+const NodeImplPtr& Managed<T, I>::Impl::getNode() const {
+  return manager->getNode();
+}
+
+template <class T, typename I>
+const I& Managed<T, I>::Impl::getIdentifier() const {
+  return this->identifier;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticTask::start() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().start();
+template <class T, typename I>
+void Managed<T, I>::shutdown() {
+  if (this->impl)
+    this->impl->shutdown();
 }
 
-void DiagnosticTask::stop() {
-  if (impl)
-    impl->as<DiagnosticTask::Impl>().stop();
+template <class T, typename I>
+template <class D> D& Managed<T, I>::Impl::as() {
+  return *static_cast<D*>(this);
 }
 
-void DiagnosticTask::Impl::start() {
-  if (!started) {
-    manager->as<DiagnosticTaskManager::Impl>().startTask(task);
-    
-    started = true;
-  }
-}
-
-void DiagnosticTask::Impl::stop() {
-  if (started) {
-    started = false;
-    
-    manager->as<DiagnosticTaskManager::Impl>().stopTask(task.getName());
-  }
-}
-
-void DiagnosticTask::Impl::shutdown() {
-  stop();
+template <class T, typename I>
+template <class D> const D& Managed<T, I>::Impl::as() const {
+  return *static_cast<const D*>(this);
 }
 
 }
