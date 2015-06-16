@@ -23,67 +23,29 @@
 #ifndef ROSCPP_NODEWRAP_FREQUENCY_TASK_OPTIONS_H
 #define ROSCPP_NODEWRAP_FREQUENCY_TASK_OPTIONS_H
 
-#include <roscpp_nodewrap/diagnostics/DiagnosticTaskOptions.h>
+#include <roscpp_nodewrap/statistics/FrequencyStatistics.h>
+
+#include <roscpp_nodewrap/diagnostics/StatisticsTaskOptions.h>
 
 namespace nodewrap {
   /** \brief ROS frequency task options
     * 
     * This class encapsulates all options available for creating a
-    * diagnostic task to monitor the frequency of a cyclic event.
+    * diagnostic task to monitor the frequency of an event.
     */
   class FrequencyTaskOptions :
-    public DiagnosticTaskOptions {
+    public StatisticsTaskOptions<FrequencyStatistics> {
   public:
     /** \brief Default constructor
       */
     FrequencyTaskOptions();
     
-    /** \brief The window of the frequency task's statistics
+    /** \brief The window duration of the task's statistics
       *
-      * The window size of the statistics is determined by the defined
-      * window duration and the expected mean frequency. 
+      * The window duration and the expected frequency determine the
+      * maximum number of rolling samples of the task's statistics.
       */
-    ros::Duration window;
-    
-    /** \brief The expected frequency to be diagnosed in [Hz]
-      */
-    double expected;
-    
-    /** \brief The warning tolerance of the diagnosed mean frequency
-      * 
-      * The tolerance bounds are represented by a factor in [0, 1] which
-      * is symmetrically interpreted as the ratio of the expected frequency
-      * and the deviation of the diagnosed mean frequency from the expected
-      * frequency (and vice versa).
-      */
-    double warnMeanTolerance;
-    
-    /** \brief The error tolerance of the diagnosed mean frequency
-      * 
-      * The tolerance bounds are represented by a factor in [0, 1] which
-      * is symmetrically interpreted as the ratio of the expected frequency
-      * and the deviation of the diagnosed mean frequency from the expected
-      * frequency (and vice versa).
-      */
-    double errorMeanTolerance;
-    
-    /** \brief The warning tolerance of the diagnosed frequency standard
-      *   deviation
-      * 
-      * The tolerance bound is represented by a factor in [0, 1] which
-      * is interpreted as the ratio of the expected frequency and the
-      * diagnosed frequency standard deviation.
-      */
-    double warnStandardDeviationTolerance;
-    
-    /** \brief The error tolerance of the diagnosed frequency standard
-      *   deviation
-      * 
-      * The tolerance bound is represented by a factor in [0, 1] which
-      * is interpreted as the ratio of the expected frequency and the
-      * diagnosed frequency standard deviation.
-      */
-    double errorStandardDeviationTolerance;
+    ros::Duration windowDuration;
   };
 };
 

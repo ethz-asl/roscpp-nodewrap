@@ -61,55 +61,6 @@ void NodeImpl::setDiagnosticsHardwareId(const std::string& hardwareId) {
   diagnosticUpdater.setHardwareId(hardwareId);
 }
 
-ros::AdvertiseOptions NodeImpl::getAdvertiseOptions(const std::string& ns,
-    const ros::AdvertiseOptions& defaultOptions) const {
-  ros::AdvertiseOptions options = defaultOptions;
-  
-  options.topic = getParam(ros::names::append(ns, "topic"),
-    defaultOptions.topic);
-  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
-    (int)defaultOptions.queue_size);
-  options.latch = getParam(ros::names::append(ns, "latch"),
-    defaultOptions.latch);
-  
-  return options;
-}
-
-ros::SubscribeOptions NodeImpl::getSubscribeOptions(const std::string& ns,
-    const ros::SubscribeOptions& defaultOptions) const {
-  ros::SubscribeOptions options = defaultOptions;
-  
-  options.topic = getParam(ros::names::append(ns, "topic"),
-    defaultOptions.topic);
-  options.queue_size = getParam(ros::names::append(ns, "queue_size"),
-    (int)defaultOptions.queue_size);
-  
-  return options;
-}
-
-ros::AdvertiseServiceOptions NodeImpl::getAdvertiseServiceOptions(const
-    std::string& ns, const ros::AdvertiseServiceOptions& defaultOptions)
-    const {
-  ros::AdvertiseServiceOptions options = defaultOptions;
-  
-  options.service = getParam(ros::names::append(ns, "service"),
-    defaultOptions.service);
-  
-  return options;
-}
-
-ros::ServiceClientOptions NodeImpl::getServiceClientOptions(const std::string&
-    ns, const ros::ServiceClientOptions& defaultOptions) const {
-  ros::ServiceClientOptions options = defaultOptions;
-  
-  options.service = getParam(ros::names::append(ns, "service"),
-    defaultOptions.service);
-  options.persistent = getParam(ros::names::append(ns, "persistent"),
-    defaultOptions.persistent);
-  
-  return options;
-}
-
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
@@ -121,32 +72,44 @@ Timer NodeImpl::createTimer(const ros::TimerOptions& options) {
   return timerManager.addTimer(options);
 }
 
-ros::Publisher NodeImpl::advertise(const std::string& name, const
-    ros::AdvertiseOptions& defaultOptions) {
-  ros::AdvertiseOptions options = getAdvertiseOptions(
-    ros::names::append("publishers", name), defaultOptions);
-  return this->getNodeHandle().advertise(options);
+Publisher NodeImpl::advertise(const std::string& name, const PublisherOptions&
+    defaultOptions) {
+  Publisher publisher;
+  
+  publisher.impl.reset(new Publisher::Impl(name, shared_from_this()));
+  publisher.impl->init(defaultOptions);
+  
+  return publisher;
 }
 
-ros::Subscriber NodeImpl::subscribe(const std::string& name, const
-    ros::SubscribeOptions& defaultOptions) {
-  ros::SubscribeOptions options = getSubscribeOptions(
-    ros::names::append("subscribers", name), defaultOptions);
-  return this->getNodeHandle().subscribe(options);
+Subscriber NodeImpl::subscribe(const std::string& name, const
+    SubscriberOptions& defaultOptions) {
+  Subscriber subscriber;
+  
+  subscriber.impl.reset(new Subscriber::Impl(name, shared_from_this()));
+  subscriber.impl->init(defaultOptions);
+  
+  return subscriber;
 }
 
-ros::ServiceServer NodeImpl::advertiseService(const std::string& name,
-    const ros::AdvertiseServiceOptions& defaultOptions) {
-  ros::AdvertiseServiceOptions options = getAdvertiseServiceOptions(
-    ros::names::append("servers", name), defaultOptions);
-  return this->getNodeHandle().advertiseService(options);
+ServiceServer NodeImpl::advertiseService(const std::string& name, const
+    ServiceServerOptions& defaultOptions) {
+  ServiceServer serviceServer;
+  
+  serviceServer.impl.reset(new ServiceServer::Impl(name, shared_from_this()));
+  serviceServer.impl->init(defaultOptions);
+  
+  return serviceServer;
 }
 
-ros::ServiceClient NodeImpl::serviceClient(const std::string& name,
-    const ros::ServiceClientOptions& defaultOptions) {
-  ros::ServiceClientOptions options = getServiceClientOptions(
-    ros::names::append("clients", name), defaultOptions);
-  return this->getNodeHandle().serviceClient(options);
+ServiceClient NodeImpl::serviceClient(const std::string& name, const
+    ServiceClientOptions& defaultOptions) {
+  ServiceClient serviceClient;
+  
+  serviceClient.impl.reset(new ServiceClient::Impl(name, shared_from_this()));
+  serviceClient.impl->init(defaultOptions);
+  
+  return serviceClient;
 }
 
 Worker NodeImpl::addWorker(const std::string& name, const WorkerOptions&

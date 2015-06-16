@@ -1,0 +1,35 @@
+pub_rate: 1.0
+base_path: ''
+analyzers:
+  bob:
+    type: AnalyzerGroup
+    path: Bob
+    analyzers:
+      publisher:
+        type: GenericAnalyzer
+        path: Publisher
+        find_and_remove_prefix: "bob: Publisher chat"
+      subscriber:
+        type: GenericAnalyzer
+        path: Subscriber
+        find_and_remove_prefix: "bob: Subscriber chat"
+      service_server:
+        type: GenericAnalyzer
+        path: Service Server
+        find_and_remove_prefix: "bob: ServiceServer call"
+  alice:
+    type: AnalyzerGroup
+    path: Alice
+    analyzers:
+      publisher:
+        type: GenericAnalyzer
+        path: Publisher
+        find_and_remove_prefix: "alice: Publisher chat"
+      subscriber:
+        type: GenericAnalyzer
+        path: Subscriber
+        find_and_remove_prefix: "alice: Subscriber chat"
+      service_server:
+        type: GenericAnalyzer
+        path: Service Server
+        find_and_remove_prefix: "alice: ServiceServer call"

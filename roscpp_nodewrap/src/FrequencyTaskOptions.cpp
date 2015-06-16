@@ -25,12 +25,7 @@ namespace nodewrap {
 /*****************************************************************************/
 
 FrequencyTaskOptions::FrequencyTaskOptions() :
-  window(1.0),
-  expected(0.0),
-  warnMeanTolerance(0.05),
-  errorMeanTolerance(0.1),
-  warnStandardDeviationTolerance(0.05),
-  errorStandardDeviationTolerance(0.1) {
+  windowDuration(1.0) {
 }
 
 }

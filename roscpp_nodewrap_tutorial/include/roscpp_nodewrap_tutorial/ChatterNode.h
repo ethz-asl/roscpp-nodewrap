@@ -70,6 +70,7 @@ namespace nodewrap {
         <node name="bob" pkg="roscpp_nodewrap_tutorial" type="chatter_node" output="screen">
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
         </node>
+        ...
       </launch>
       \endverbatim
     *
@@ -106,6 +107,7 @@ namespace nodewrap {
           <rosparam command="load" ns="/alice" file="$(find roscpp_nodewrap_tutorial)/etc/alice.yaml"/>
           <rosparam command="load" ns="/bob" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
         </node>
+        ...
       </launch>
       \endverbatim
     *
@@ -190,6 +192,7 @@ namespace nodewrap {
         <node name="bob" pkg="nodelet" type="nodelet" args="load roscpp_nodewrap_tutorial/ChatterNode chatters" output="screen">
           <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/etc/bob.yaml"/>
         </node>
+        ...
       </launch>
       \endverbatim
     */
@@ -211,15 +214,15 @@ namespace nodewrap {
   protected:
     /** \brief The ROS publisher advertising the chat topic
       */
-    ros::Publisher publisher;
+    Publisher publisher;
     
     /** \brief The ROS subscriber listening to the chat topic
       */
-    ros::Subscriber subscriber;
+    Subscriber subscriber;
     
     /** \brief The ROS service server which can be called
       */
-    ros::ServiceServer server;
+    ServiceServer server;
     
     /** \brief The human-readable name of the chatter
       */

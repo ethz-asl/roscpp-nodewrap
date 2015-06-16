@@ -47,8 +47,26 @@ CompositeTask::Impl::~Impl() {
 }
 
 /*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+const NodeImplPtr& CompositeTask::Impl::getNode() const {
+  return manager->getNode();
+}
+
+/*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
+
+void CompositeTask::shutdown() {
+  DiagnosticTask::shutdown();
+  DiagnosticTaskManager::shutdown();
+}
+
+void CompositeTask::resetImpl(Impl* impl) {
+  DiagnosticTask::impl.reset(impl);
+  DiagnosticTaskManager::impl.reset(impl);
+}
 
 void CompositeTask::Impl::startTask(diagnostic_updater::DiagnosticTask&
     task) {

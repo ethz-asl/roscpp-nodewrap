@@ -58,6 +58,17 @@ namespace nodewrap {
       */
     ~CompositeTask();
 
+    /** \brief Void pointer conversion
+      */
+    inline operator void*() const {
+      return (DiagnosticTask::impl && DiagnosticTaskManager::impl) ?
+        (void*)1 : (void*)0;
+    };
+    
+    /** \brief Perform shutdown of the composite task
+      */
+    void shutdown();
+    
   private:
     /** \brief ROS composite task implementation
       * 
@@ -76,6 +87,10 @@ namespace nodewrap {
       /** \brief Destructor
         */
       ~Impl();
+      
+      /** \brief Retrieve the node owning this composite task
+        */ 
+      const NodeImplPtr& getNode() const;
       
       /** \brief Start the provided task (implementation)
         */
@@ -97,6 +112,12 @@ namespace nodewrap {
         */ 
       boost::mutex taskMutex;
     };
+    
+    using DiagnosticTask::impl;
+    
+    /** \brief Reset the implemenation of this composite task
+      */
+    void resetImpl(Impl* impl);
   };
 };
 

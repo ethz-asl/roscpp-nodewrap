@@ -50,7 +50,8 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
   callback(defaultOptions.callback),
   started(false),
   canceled(false) {
-  std::string ns = ros::names::append("workers", name);
+  std::string ns = defaultOptions.ns.empty() ?
+    ros::names::append("workers", name) : defaultOptions.ns;
   
   double expectedFrequency = getNode()->getParam(
     ros::names::append(ns, "rate"), defaultOptions.frequency);
@@ -87,12 +88,12 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
   getStateServer = getNode()->advertiseService(
     ros::names::append(ns, "get_state"), getStateOptions);
   
-  FrequencyTaskOptions frequencyTaskOptions;
+  FrequencyTaskOptions frequencyTaskOptions(
+    defaultOptions.frequencyTaskOptions);
   frequencyTaskOptions.ns = ros::names::append(ns, "diagnostics/frequency");
   frequencyTaskOptions.expected = expectedFrequency;
-  frequencyTaskOptions.window = ros::Duration(1.0);
-  frequencyTask = getNode()->addDiagnosticTask<FrequencyTask>(
-    name+" Frequency", frequencyTaskOptions);
+  frequencyTask = getNode()->addDiagnosticTask<StatefulFrequencyTask>(
+    std::string("Worker ")+name+" Frequency", frequencyTaskOptions);
 }
 
 Worker::Impl::~Impl() {
@@ -195,7 +196,7 @@ void Worker::Impl::cancel(bool block) {
       safeStop();
       
       started = false;
-      frequencyTask.stop();
+      frequencyTask.disable();
       
       if (!startTime.isZero())
         NODEWRAP_MEMBER_INFO(
@@ -215,7 +216,7 @@ void Worker::Impl::runOnce() {
     startTime = ros::Time::now();
     NODEWRAP_MEMBER_INFO("Worker [%s] has been started.", identifier.c_str());
     
-    frequencyTask.start();
+    frequencyTask.enable();
   }
   
   threadId = boost::this_thread::get_id();
@@ -250,7 +251,7 @@ void Worker::Impl::runOnce() {
     
     started = false;
     canceled = false;
-    frequencyTask.stop();
+    frequencyTask.disable();
     
     NODEWRAP_MEMBER_INFO(
       "Worker [%s] has been canceled after %.3f second(s).",
@@ -260,7 +261,7 @@ void Worker::Impl::runOnce() {
     safeStop();
     
     started = false;
-    frequencyTask.stop();
+    frequencyTask.disable();
     
     NODEWRAP_MEMBER_INFO(
       "Worker [%s] has finished cleanly after %.3f second(s).",

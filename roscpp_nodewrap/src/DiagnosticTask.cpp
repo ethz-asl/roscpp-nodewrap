@@ -73,6 +73,10 @@ void DiagnosticTask::stop() {
     impl->as<DiagnosticTask::Impl>().stop();
 }
 
+void DiagnosticTask::resetImpl(Impl* impl) {
+  this->impl.reset(impl);
+}
+
 void DiagnosticTask::Impl::start() {
   if (!started) {
     manager->as<DiagnosticTaskManager::Impl>().startTask(task);

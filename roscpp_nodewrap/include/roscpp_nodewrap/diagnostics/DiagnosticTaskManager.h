@@ -55,7 +55,7 @@ namespace nodewrap {
     /** \brief Add a diagnostic task to this diagnostic task manager
       */
     template <class T> T addTask(const std::string& name, const typename
-      T::Options& defaultOptions);
+      T::Options& defaultOptions = typename T::Options());
     
   protected:
     /** \brief Abstract basis of the ROS diagnostic task manager

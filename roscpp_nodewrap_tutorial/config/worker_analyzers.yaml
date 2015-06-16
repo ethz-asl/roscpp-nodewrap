@@ -1,0 +1,35 @@
+pub_rate: 1.0
+base_path: ''
+analyzers:
+  maya:
+    type: AnalyzerGroup
+    path: Maya
+    analyzers:
+      workers:
+        type: AnalyzerGroup
+        path: Workers
+        analyzers:
+          house_keeping:
+            type: GenericAnalyzer
+            path: House Keeping
+            find_and_remove_prefix: "maya: Worker house_keeping"
+          fanning:
+            type: GenericAnalyzer
+            path: Fanning
+            find_and_remove_prefix: "maya: Worker fanning"
+          nursing:
+            type: GenericAnalyzer
+            path: Nursing
+            find_and_remove_prefix: "maya: Worker nursing"
+          collecting:
+            type: GenericAnalyzer
+            path: Collecting
+            find_and_remove_prefix: "maya: Worker collecting"
+      subscriber:
+        type: GenericAnalyzer
+        path: Subscriber
+        find_and_remove_prefix: "maya: Subscriber wake_nursing"
+      field:
+        type: GenericAnalyzer
+        path: Field
+        find_and_remove_prefix: "maya: field"

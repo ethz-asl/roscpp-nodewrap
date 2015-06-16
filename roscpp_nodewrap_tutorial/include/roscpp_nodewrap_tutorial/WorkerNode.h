@@ -131,7 +131,7 @@ namespace nodewrap {
     /** \brief The ROS subscriber listening to the topic for waking
       *   the nursing worker
       */
-    ros::Subscriber subscriber;
+    Subscriber subscriber;
     
     /** \brief The ROS worker performing the nursing task
       */

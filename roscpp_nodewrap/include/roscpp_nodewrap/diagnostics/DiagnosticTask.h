@@ -113,6 +113,11 @@ namespace nodewrap {
         */ 
       bool started;
     };
+  
+  private:
+    /** \brief Reset the implemenation of this diagnostic task
+      */
+    void resetImpl(Impl* impl);
   };
 };
 

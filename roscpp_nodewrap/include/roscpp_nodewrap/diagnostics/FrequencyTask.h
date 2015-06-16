@@ -23,23 +23,19 @@
 #ifndef ROSCPP_NODEWRAP_FREQUENCY_TASK_H
 #define ROSCPP_NODEWRAP_FREQUENCY_TASK_H
 
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
-
-#include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
-#include <roscpp_nodewrap/diagnostics/FrequencyTaskOptions.h>
-
 #include <roscpp_nodewrap/statistics/FrequencyStatistics.h>
+
+#include <roscpp_nodewrap/diagnostics/CyclicEventTask.h>
+#include <roscpp_nodewrap/diagnostics/FrequencyTaskOptions.h>
 
 namespace nodewrap {
   /** \brief Diagnostic task for frequency monitoring
     * 
-    * This class provides a diagnostic task to monitor the frequency of
-    * a cyclic event.
+    * This class provides the basis of all diagnostic tasks which monitor
+    * the frequency of a cyclic event.
     */
   class FrequencyTask :
-    public DiagnosticTask {
+    public CyclicEventTask<FrequencyStatistics> {
   friend class DiagnosticTaskManager;
   public:
     /** \brief Forward declaration of the frequency task options
@@ -60,34 +56,15 @@ namespace nodewrap {
     /** \brief Destructor
       */
     ~FrequencyTask();
-
-    /** \brief Retrieve the frequency statistics of this diagnostic task
-      */
-    FrequencyStatistics getStatistics() const;
     
-    /** \brief Retrieve the frequency statistics' estimates of this
-      *   frequency task
-      */
-    FrequencyStatistics::Estimates getStatisticsEstimates() const;
-    
-    /** \brief Signal this frequency task that the monitored event
-      *   has occurred
-      * 
-      * \param[in] timeOfEvent The time of the event.
-      */
-    inline void event(const ros::Time& timeOfEvent = ros::Time::now()) {
-      if (impl)
-        impl->as<FrequencyTask::Impl>().event(timeOfEvent);
-    };
-    
-  private:
+  protected:
     /** \brief ROS frequency task implementation
       * 
       * This class provides the private implementation of the frequency
       * task.
       */
     class Impl :
-      public DiagnosticTask::Impl {
+      public CyclicEventTask<FrequencyStatistics>::Impl {
     public:        
       /** \brief Constructor
         */
@@ -98,66 +75,10 @@ namespace nodewrap {
         */
       ~Impl();
       
-      /** \brief Retrieve the frequency statistics of this frequency task
+      /** \brief Retrieve the expected time of the next event
         *   (implementation)
         */
-      FrequencyStatistics getStatistics() const;
-      
-      /** \brief Retrieve the frequency statistics' estimates of this
-        *   frequency task (implementation)
-        */
-      FrequencyStatistics::Estimates getStatisticsEstimates() const;
-      
-      /** \brief Stop this frequency task (implementation)
-        */
-      void stop();
-      
-      /** \brief Signal this frequency task that the monitored event
-        *   has occurred (implementation)
-        */
-      inline void event(const ros::Time& timeOfEvent = ros::Time::now()) {
-        boost::mutex::scoped_lock lock(mutex);
-        
-        statistics.event(timeOfEvent);
-      };
-      
-      /** \brief Fill out this frequency task's status
-        */
-      void run(diagnostic_updater::DiagnosticStatusWrapper& status);
-      
-      /** \brief The frequency statistics of this diagnostic task
-        */ 
-      FrequencyStatistics statistics;
-
-      /** \brief The window of the frequency task's statistics
-        */
-      ros::Duration window;
-    
-      /** \brief The expected mean frequency to be diagnosed
-        */
-      double expected;
-      
-      /** \brief The warning tolerance of the diagnosed mean frequency
-        */
-      double warnMeanTolerance;
-      
-      /** \brief The error tolerance of the diagnosed mean frequency
-        */
-      double errorMeanTolerance;
-      
-      /** \brief The warning tolerance of the diagnosed frequency standard
-        *   deviation
-        */
-      double warnStandardDeviationTolerance;
-      
-      /** \brief The error tolerance of the diagnosed frequency standard
-        *   deviation
-        */
-      double errorStandardDeviationTolerance;
-      
-      /** \brief The frequency task's mutex
-        */ 
-      mutable boost::mutex mutex;
+      ros::Time getExpectedTimeOfNextEvent() const;
     };
   };
 };

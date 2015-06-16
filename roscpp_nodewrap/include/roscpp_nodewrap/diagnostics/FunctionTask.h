@@ -26,7 +26,6 @@
 #include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
 #include <roscpp_nodewrap/diagnostics/FunctionTaskOptions.h>
 
-
 namespace nodewrap {
   /** \brief Diagnostic function task
     * 

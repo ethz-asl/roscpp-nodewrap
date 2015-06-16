@@ -29,7 +29,14 @@
 
 #include <ros/console.h>
 
-#include <roscpp_nodewrap/NodeInterface.h>
+#include <roscpp_nodewrap/Publisher.h>
+#include <roscpp_nodewrap/PublisherOptions.h>
+#include <roscpp_nodewrap/Subscriber.h>
+#include <roscpp_nodewrap/SubscriberOptions.h>
+#include <roscpp_nodewrap/ServiceServer.h>
+#include <roscpp_nodewrap/ServiceServerOptions.h>
+#include <roscpp_nodewrap/ServiceClient.h>
+#include <roscpp_nodewrap/ServiceClientOptions.h>
 
 #include <roscpp_nodewrap/timer/TimerManager.h>
 
@@ -39,6 +46,8 @@
 #include <roscpp_nodewrap/worker/Worker.h>
 #include <roscpp_nodewrap/worker/WorkerManager.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
+
+#include <roscpp_nodewrap/NodeInterface.h>
 
 namespace nodewrap {  
   /** \brief Abstract class implementation of a ROS node(let)
@@ -54,6 +63,10 @@ namespace nodewrap {
     public boost::enable_shared_from_this<NodeImpl> {
   template <class C> friend class Node;
   template <class C> friend class Nodelet;
+  friend class Publisher;
+  friend class Subscriber;
+  friend class ServiceServer;
+  friend class ServiceClient;
   friend class TimerManager;
   friend class Timer;
   friend class DiagnosticUpdater;
@@ -140,60 +153,6 @@ namespace nodewrap {
       */
     void setDiagnosticsHardwareId(const std::string& hardwareId);
       
-    /** \brief Retrieve advertise options from the parameter server
-      * 
-      * \param[in] ns The parameter namespace of the publisher whose advertise
-      *   options shall be retrieved.
-      * \param[in] defaultOptions The publisher's default advertise options.
-      * \return The actual advertise options if the corresponding parameters
-      *   have been defined or their default values otherwise.
-      * 
-      * \see getParam
-      */
-    ros::AdvertiseOptions getAdvertiseOptions(const std::string& ns, const
-      ros::AdvertiseOptions& defaultOptions) const;
-
-    /** \brief Retrieve subscribe options from the parameter server
-      * 
-      * \param[in] ns The parameter namespace of the subscriber whose
-      *   subscribe options shall be retrieved.
-      * \param[in] defaultOptions The subscriber's default subscribe options.
-      * \return The actual subscribe options if the corresponding parameters
-      *   have been defined or their default values otherwise.
-      * 
-      * \see getParam
-      */
-    ros::SubscribeOptions getSubscribeOptions(const std::string& ns, const
-      ros::SubscribeOptions& defaultOptions) const;
-
-    /** \brief Retrieve advertise service options from the parameter server
-      * 
-      * \param[in] ns The parameter namespace of the service server whose
-      *   advertise service options shall be retrieved.
-      * \param[in] defaultOptions The service server's default advertise
-      *   service options.
-      * \return The actual advertise service options if the corresponding
-      *   parameters have been defined or their default values otherwise.
-      * 
-      * \see getParam
-      */
-    ros::AdvertiseServiceOptions getAdvertiseServiceOptions(const std::string&
-      ns, const ros::AdvertiseServiceOptions& defaultOptions) const;
-
-    /** \brief Retrieve service client options from the parameter server
-      * 
-      * \param[in] ns The parameter namespace of the service client whose
-      *   service client options shall be retrieved.
-      * \param[in] defaultOptions The service client's default service client
-      *   options.
-      * \return The actual service client options if the corresponding
-      *   parameters have been defined or their default values otherwise.
-      * 
-      * \see getParam
-      */
-    ros::ServiceClientOptions getServiceClientOptions(const std::string& ns,
-      const ros::ServiceClientOptions& defaultOptions) const;
-
     /** \brief Perform node(let) initialization
       * 
       * Here, all initialization code should be placed in the implementation,
@@ -258,10 +217,10 @@ namespace nodewrap {
       *   will automatically release a reference on this advertisement. On
       *   failure, an empty ROS publisher.
       * 
-      * \see advertise(const std::string&, const ros::AdvertiseOptions&) for
+      * \see advertise(const std::string&, const PublisherOptions&) for
       *   a detailed description of the method's behavior.
       */
-    template <class M> ros::Publisher advertise(const std::string& name,
+    template <class M> Publisher advertise(const std::string& name,
       const std::string& defaultTopic, uint32_t defaultQueueSize, bool
       defaultLatch = false);
     
@@ -290,10 +249,10 @@ namespace nodewrap {
       *   will automatically release a reference on this advertisement. On
       *   failure, an empty ROS publisher.
       * 
-      * \see advertise(const std::string&, const ros::AdvertiseOptions&) for
+      * \see advertise(const std::string&, const PublisherOptions&) for
       *   a detailed description of the method's behavior.
       */
-    template <class M> ros::Publisher advertise(const std::string& name,
+    template <class M> Publisher advertise(const std::string& name,
       const std::string& defaultTopic, uint32_t defaultQueueSize, const
       ros::SubscriberStatusCallback& connectCallback, const
       ros::SubscriberStatusCallback& disconnectCallback = 
@@ -316,15 +275,15 @@ namespace nodewrap {
       * 
       * \param[in] name The name of the new publisher, a valid ROS graph
       *   resource name.
-      * \param[in] defaultOptions The default advertise options to use.
+      * \param[in] defaultOptions The default publisher options to use.
       * \return On success, a ROS publisher that, when it goes out of scope,
       *   will automatically release a reference on this advertisement. On
       *   failure, an empty ROS publisher.
       * 
       * \see ros::NodeHandle::advertise
       */
-    ros::Publisher advertise(const std::string& name, const
-      ros::AdvertiseOptions& defaultOptions);
+    Publisher advertise(const std::string& name, const PublisherOptions&
+      defaultOptions);
     
     /** \brief Subscribe to a topic, with standard options (non-const version)
       * 
@@ -347,7 +306,7 @@ namespace nodewrap {
       * \see subscribe(const std::string&, const ros::SubscribeOptions&) for
       *   a detailed description of the method's behavior.
       */
-    template <class M, class T> ros::Subscriber subscribe(const std::string& 
+    template <class M, class T> Subscriber subscribe(const std::string& 
       name, const std::string& defaultTopic, uint32_t defaultQueueSize,
       void(T::*callback)(const boost::shared_ptr<M const>&), const
       ros::TransportHints& transportHints = ros::TransportHints());  
@@ -364,7 +323,7 @@ namespace nodewrap {
       * \see subscribe(const std::string&, const ros::SubscribeOptions&) for
       *   a detailed description of the method's behavior.
       */
-    template <class M, class T> ros::Subscriber subscribe(const std::string& 
+    template <class M, class T> Subscriber subscribe(const std::string& 
       name, const std::string& defaultTopic, uint32_t defaultQueueSize,
       void(T::*callback)(const boost::shared_ptr<M const>&) const,
       const ros::TransportHints& transportHints = ros::TransportHints());
@@ -384,14 +343,14 @@ namespace nodewrap {
       * 
       * \param[in] name The name of the new subscriber, a valid ROS graph
       *   resource name.
-      * \param[in] defaultOptions The default subscribe options to use.
+      * \param[in] defaultOptions The default subscriber options to use.
       * \return On success, a ROS subscriber that, when all copies of it go
       *   out of scope, will unsubscribe from this topic.
       * 
       * \see ros::NodeHandle::subscribe
       */
-    ros::Subscriber subscribe(const std::string& name, const
-      ros::SubscribeOptions& defaultOptions);
+    Subscriber subscribe(const std::string& name, const SubscriberOptions&
+      defaultOptions);
     
     /** \brief Advertise a service, templated on two message types and with
       *   standard options
@@ -414,7 +373,7 @@ namespace nodewrap {
       * \see advertiseService(const std::string&, const ros::AdvertiseServiceOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <class MReq, class MRes, class T> ros::ServiceServer
+    template <class MReq, class MRes, class T> ServiceServer
       advertiseService(const std::string& name, const std::string&
       defaultService, bool(T::*callback)(MReq&, MRes&), const
       ros::VoidConstPtr& trackedObject = ros::VoidConstPtr());
@@ -440,10 +399,10 @@ namespace nodewrap {
       * \see advertiseService(const std::string&, const ros::AdvertiseServiceOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <class S, class T> ros::ServiceServer advertiseService(
+    template <class S, class T> ServiceServer advertiseService(
       const std::string& name, const std::string& defaultService,
-      bool(T::*callback)(S&), const ros::VoidConstPtr& trackedObject =
-      ros::VoidConstPtr());
+      bool(T::*callback)(typename S::Request&, typename S::Response&),
+      const ros::VoidConstPtr& trackedObject = ros::VoidConstPtr());
     
     /** \brief Advertise a service, with full range of options
       * 
@@ -453,7 +412,7 @@ namespace nodewrap {
       * particular, this configuration is expected to represent a structure
       * of the following YAML format:
       * 
-      * - servers:
+      * - service_servers:
       *   - name:
       *     - service: <string>
       * 
@@ -465,8 +424,8 @@ namespace nodewrap {
       * 
       * \see ros::NodeHandle::advertiseService
       */
-    ros::ServiceServer advertiseService(const std::string& name,
-      const ros::AdvertiseServiceOptions& defaultOptions);
+    ServiceServer advertiseService(const std::string& name, const
+      ServiceServerOptions& defaultOptions);
     
     /** \brief Create a client for a service, templated on two message types
       *   and with standard options
@@ -491,7 +450,7 @@ namespace nodewrap {
       * \see serviceClient(const std::string&, const ros::ServiceClientOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <class MReq, class MRes> ros::ServiceClient serviceClient(
+    template <class MReq, class MRes> ServiceClient serviceClient(
       const std::string& name, const std::string& defaultService, bool
       defaultPersistent = false, const ros::M_string& headerValues =
       ros::M_string());
@@ -519,7 +478,7 @@ namespace nodewrap {
       * \see serviceClient(const std::string&, const ros::ServiceClientOptions&)
       *   for a detailed description of the method's behavior.
       */
-    template <class S> ros::ServiceClient serviceClient(const std::string&
+    template <class S> ServiceClient serviceClient(const std::string&
       name, const std::string& defaultService, bool defaultPersistent =
       false, const ros::M_string& headerValues = ros::M_string());
     
@@ -531,7 +490,7 @@ namespace nodewrap {
       * particular, this configuration is expected to represent a structure
       * of the following YAML format:
       * 
-      * - clients:
+      * - service_clients:
       *   - name:
       *     - service: <string>
       *     - persistent: <bool>
@@ -544,8 +503,8 @@ namespace nodewrap {
       * 
       * \see ros::NodeHandle::serviceClient
       */
-    ros::ServiceClient serviceClient(const std::string& name, const
-      ros::ServiceClientOptions& defaultOptions);    
+    ServiceClient serviceClient(const std::string& name, const
+      ServiceClientOptions& defaultOptions);    
 
     /** \brief Add a worker, with standard options
       * 

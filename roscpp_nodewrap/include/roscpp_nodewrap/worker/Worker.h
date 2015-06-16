@@ -36,7 +36,7 @@
 #include <roscpp_nodewrap/worker/WorkerEvent.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
 
-#include <roscpp_nodewrap/diagnostics/FrequencyTask.h>
+#include <roscpp_nodewrap/diagnostics/StatefulFrequencyTask.h>
 
 #include <roscpp_nodewrap_msgs/GetWorkerFrequency.h>
 #include <roscpp_nodewrap_msgs/GetWorkerState.h>
@@ -236,7 +236,7 @@ namespace nodewrap {
       /** \brief The diagnostic task for monitoring the frequency
         *   of this worker
         */ 
-      FrequencyTask frequencyTask;
+      StatefulFrequencyTask frequencyTask;
     };
   };
 };

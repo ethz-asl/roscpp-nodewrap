@@ -44,6 +44,107 @@ namespace nodewrap {
   /** \brief Forward declaration of the node implementation weak pointer type
     */
   typedef boost::weak_ptr<NodeImpl> NodeImplWPtr;
+  
+  /** \brief Forward declaration of the publisher options
+    */
+  class PublisherOptions;
+  /** \brief Forward declaration of the subscriber options
+    */
+  class SubscriberOptions;
+  /** \brief Forward declaration of the service server options
+    */
+  class ServiceServerOptions;
+  /** \brief Forward declaration of the service client options
+    */
+  class ServiceClientOptions;
+  
+  /** \brief Forward declaration of the publisher
+    */
+  class Publisher;  
+  /** \brief Forward declaration of the publisher pointer type
+    */
+  typedef boost::shared_ptr<Publisher> PublisherPtr;
+  /** \brief Forward declaration of the publisher weak pointer type
+    */
+  typedef boost::weak_ptr<Publisher> PublisherWPtr;
+  
+  /** \brief Forward declaration of the publisher implementation
+    */
+  class PublisherImpl;  
+  /** \brief Forward declaration of the publisher implementation
+    *   pointer type
+    */
+  typedef boost::shared_ptr<PublisherImpl> PublisherImplPtr;
+  /** \brief Forward declaration of the publisher implementation
+    *   weak pointer type
+    */
+  typedef boost::weak_ptr<PublisherImpl> PublisherImplWPtr;
+  
+  /** \brief Forward declaration of the subscriber
+    */
+  class Subscriber;  
+  /** \brief Forward declaration of the subscriber pointer type
+    */
+  typedef boost::shared_ptr<Subscriber> SubscriberPtr;
+  /** \brief Forward declaration of the subscriber weak pointer type
+    */
+  typedef boost::weak_ptr<Subscriber> SubscriberWPtr;
+  
+  /** \brief Forward declaration of the subscriber implementation
+    */
+  class SubscriberImpl;  
+  /** \brief Forward declaration of the subscriber implementation
+    *   pointer type
+    */
+  typedef boost::shared_ptr<SubscriberImpl> SubscriberImplPtr;
+  /** \brief Forward declaration of the subscriber implementation
+    *   weak pointer type
+    */
+  typedef boost::weak_ptr<SubscriberImpl> SubscriberImplWPtr;
+  
+  /** \brief Forward declaration of the service server
+    */
+  class ServiceServer;
+  /** \brief Forward declaration of the service server pointer type
+    */
+  typedef boost::shared_ptr<ServiceServer> ServiceServerPtr;
+  /** \brief Forward declaration of the service server weak pointer type
+    */
+  typedef boost::weak_ptr<ServiceServer> ServiceServerWPtr;
+  
+  /** \brief Forward declaration of the service server implementation
+    */
+  class ServiceServerImpl;  
+  /** \brief Forward declaration of the service server implementation
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ServiceServerImpl> ServiceServerImplPtr;
+  /** \brief Forward declaration of the service server implementation
+    *   weak pointer type
+    */
+  typedef boost::weak_ptr<ServiceServerImpl> ServiceServerImplWPtr;
+  
+  /** \brief Forward declaration of the service client
+    */
+  class ServiceClient;
+  /** \brief Forward declaration of the service client pointer type
+    */
+  typedef boost::shared_ptr<ServiceClient> ServiceClientPtr;
+  /** \brief Forward declaration of the service client weak pointer type
+    */
+  typedef boost::weak_ptr<ServiceClient> ServiceClientWPtr;
+  
+  /** \brief Forward declaration of the service client implementation
+    */
+  class ServiceClientImpl;  
+  /** \brief Forward declaration of the service client implementation
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ServiceClientImpl> ServiceClientImplPtr;
+  /** \brief Forward declaration of the service client implementation
+    *   weak pointer type
+    */
+  typedef boost::weak_ptr<ServiceClientImpl> ServiceClientImplWPtr;
 };
 
 #endif

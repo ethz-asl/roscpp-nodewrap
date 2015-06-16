@@ -39,7 +39,7 @@ template <class T> T DiagnosticTaskManager::addTask(const std::string& name,
       this->impl->instances.find(name);
       
     if (it == this->impl->instances.end()) {
-      task.impl.reset(new typename T::Impl(defaultOptions, name, this->impl));
+      task.resetImpl(new typename T::Impl(defaultOptions, name, this->impl));
 
       this->impl->instances.insert(std::make_pair(name, task.impl));
       
