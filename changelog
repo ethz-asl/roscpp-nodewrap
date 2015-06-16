@@ -1,3 +1,11 @@
+roscpp-nodewrap (0.1-20) unstable; urgency=low
+
+  * Fixed bug which caused segmentation fault of the worker manager when
+    advertising its services
+  * Worker shutdown now cancels the worker
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 14:24:00 +0100
+
 roscpp-nodewrap (0.1-19) unstable; urgency=low
 
   * Added diagnosed wrappers for publisher, subscriber, service server,

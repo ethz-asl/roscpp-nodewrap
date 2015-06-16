@@ -133,10 +133,8 @@ void WorkerManager::Impl::shutdown() {
         instances.begin(); it != instances.end(); ++it) {
       Worker::ImplPtr worker = it->second.lock();
     
-      if (worker) {
-        worker->as<Worker::Impl>().cancel(true);
+      if (worker)
         worker->shutdown();
-      }
     }
     
     listWorkersServer.shutdown();

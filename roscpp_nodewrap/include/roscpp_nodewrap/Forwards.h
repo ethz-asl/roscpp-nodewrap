@@ -58,6 +58,24 @@ namespace nodewrap {
     */
   class ServiceClientOptions;
   
+  /** \brief Forward declaration of the subscriber callback helper
+    */
+  class SubscriberCallbackHelper;
+  /** \brief Forward declaration of the subscriber callback helper
+    *   pointer type
+    */
+  typedef boost::shared_ptr<SubscriberCallbackHelper>
+    SubscriberCallbackHelperPtr;
+  
+  /** \brief Forward declaration of the service server callback helper
+    */
+  class ServiceServerCallbackHelper;
+  /** \brief Forward declaration of the service server callback helper
+    *   pointer type
+    */
+  typedef boost::shared_ptr<ServiceServerCallbackHelper>
+    ServiceServerCallbackHelperPtr;
+  
   /** \brief Forward declaration of the publisher
     */
   class Publisher;  

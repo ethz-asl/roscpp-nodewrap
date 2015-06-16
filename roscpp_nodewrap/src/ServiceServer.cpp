@@ -99,8 +99,10 @@ void ServiceServer::Impl::init(const ServiceServerOptions& defaultOptions) {
   serviceResponseType = defaultOptions.res_datatype;
   serviceMd5Sum = defaultOptions.md5sum;
     
-  boost::static_pointer_cast<ServiceServerCallbackHelper>(
-    options.helper)->serviceServer = shared_from_this();
+  ServiceServerCallbackHelperPtr helper =
+    boost::dynamic_pointer_cast<ServiceServerCallbackHelper>(options.helper);
+  if (helper)
+    helper->serviceServer = shared_from_this();
   serviceServer = node->getNodeHandle().advertiseService(options);
   
   ServiceServerStatusTaskOptions statusTaskOptions(

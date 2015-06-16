@@ -151,6 +151,8 @@ void Worker::wake() {
 
 void Worker::Impl::shutdown() {
   if (isValid()) {
+    cancel(true);
+    
     startServer.shutdown();
     cancelServer.shutdown();
     

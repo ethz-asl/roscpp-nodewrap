@@ -109,8 +109,10 @@ void Subscriber::Impl::init(const SubscriberOptions& defaultOptions) {
   messageMd5Sum = defaultOptions.md5sum;
   messageQueueSize = defaultOptions.queue_size;
   
-  boost::static_pointer_cast<SubscriberCallbackHelper>(
-    options.helper)->subscriber = shared_from_this();
+  SubscriberCallbackHelperPtr helper =
+    boost::dynamic_pointer_cast<SubscriberCallbackHelper>(options.helper);
+  if (helper)
+    helper->subscriber = shared_from_this();
   subscriber = node->getNodeHandle().subscribe(options);
   
   SubscriberStatusTaskOptions statusTaskOptions(
