@@ -34,9 +34,11 @@
 #include <roscpp_nodewrap/Managed.h>
 
 #include <roscpp_nodewrap/worker/WorkerEvent.h>
+#include <roscpp_nodewrap/worker/WorkerImpl.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
 
 #include <roscpp_nodewrap/diagnostics/StatefulFrequencyTask.h>
+#include <roscpp_nodewrap/diagnostics/WorkerStatusTask.h>
 
 #include <roscpp_nodewrap_msgs/GetWorkerFrequency.h>
 #include <roscpp_nodewrap_msgs/GetWorkerState.h>
@@ -51,6 +53,7 @@ namespace nodewrap {
     public Managed<Worker, std::string> {
   friend class WorkerManager;
   friend class WorkerQueueCallback;
+  friend class WorkerStatusTask;
   public:
     /** \brief Default constructor
       */
@@ -70,6 +73,10 @@ namespace nodewrap {
       */
     std::string getName() const;
     
+    /** \brief Retrieve the time passed since the worker has been started
+      */
+    ros::Duration getTimeSinceStart() const;
+      
     /** \brief Retrieve the frequency statistics' estimates of this worker
       * 
       * \return The frequency statistics' estimates of this worker.
@@ -95,12 +102,12 @@ namespace nodewrap {
       * worker implementation.
       */
     class Impl :
-      public Managed<Worker, std::string>::Impl {
+      public Managed<Worker, std::string>::Impl,
+      public WorkerImpl {
     public:
       /** \brief Constructor
         */
-      Impl(const WorkerOptions& defaultOptions, const std::string& name,
-        const ManagerImplPtr& manager);
+      Impl(const std::string& name, const ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -110,9 +117,18 @@ namespace nodewrap {
         */
       FrequencyStatistics::Estimates getStatisticsEstimates() const;
       
+      /** \brief Retrieve the time passed since the worker has been started
+        *   (implementation)
+        */
+      ros::Duration getTimeSinceStart() const;
+        
       /** \brief True, if this worker implementation is valid
         */
       bool isValid() const;
+      
+      /** \brief Initialize the worker
+        */
+      void init(const WorkerOptions& defaultOptions);
       
       /** \brief Create a timer for this worker
         */
@@ -194,10 +210,15 @@ namespace nodewrap {
         */ 
       bool hasPrivateCallbackQueue;
       
-      /** \brief The priority of the spinner serving this worker's 
+      /** \brief The expected priority of the spinner serving this worker's 
         *   private callback queue
         */ 
-      int priority;
+      int expectedPriority;
+      
+      /** \brief The actual priority of the spinner serving this worker's 
+        *   private callback queue
+        */ 
+      int actualPriority;
       
       /** \brief A shared pointer to an object being tracked for the worker
         *   callbacks
@@ -263,6 +284,11 @@ namespace nodewrap {
       /** \brief The worker's cancellation condition
         */ 
       boost::condition cancelCondition;
+      
+      /** \brief The diagnostic task for monitoring the status of this
+        *   worker
+        */ 
+      WorkerStatusTask statusTask;
       
       /** \brief The diagnostic task for monitoring the frequency
         *   of this worker

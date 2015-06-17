@@ -16,9 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/timer/Timer.h"
-
-#include "roscpp_nodewrap/worker/AsyncWorker.h"
+#include "roscpp_nodewrap/diagnostics/WorkerStatusTaskOptions.h"
 
 namespace nodewrap {
 
@@ -26,65 +24,7 @@ namespace nodewrap {
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-AsyncWorker::AsyncWorker() {
-}
-
-AsyncWorker::AsyncWorker(const AsyncWorker& src) :
-  Worker(src) {
-}
-
-AsyncWorker::~AsyncWorker() {  
-}
-
-AsyncWorker::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Worker::Impl(name, manager),
-  resetTimer(true) {
-}
-
-AsyncWorker::Impl::~Impl() {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void AsyncWorker::Impl::init(const WorkerOptions& defaultOptions) {
-  Worker::Impl::init(defaultOptions);
-  
-  ros::TimerOptions timerOptions;
-  
-  timerOptions.period = ros::Duration(0.0);
-  timerOptions.oneshot = expectedCycleTime.isZero();  
-  timerOptions.autostart = false;
-  timerOptions.callback = boost::bind(&AsyncWorker::Impl::timerCallback,
-    this, _1);
-  timerOptions.callback_queue = callbackQueue;
-  timerOptions.tracked_object = trackedObject.lock();
-
-  timer = createTimer(timerOptions);
-}
-
-void AsyncWorker::Impl::safeStart() {
-  timer.start();
-}
-
-void AsyncWorker::Impl::safeWake() {
-  resetTimer = true;
-  timer.setPeriod(ros::Duration(0.0));
-}
-
-void AsyncWorker::Impl::safeStop() {
-  timer.stop();
-}
-
-void AsyncWorker::Impl::timerCallback(const ros::TimerEvent& timerEvent) {
-  if (resetTimer) {
-    timer.setPeriod(expectedCycleTime);
-    resetTimer = false;
-  }
-
-  runOnce();
+WorkerStatusTaskOptions::WorkerStatusTaskOptions() {
 }
 
 }

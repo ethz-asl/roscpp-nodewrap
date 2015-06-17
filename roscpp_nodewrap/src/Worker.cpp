@@ -45,21 +45,72 @@ Worker::Worker(const Worker& src) :
 Worker::~Worker() {  
 }
 
-Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
-    name, const ManagerImplPtr& manager) :
+Worker::Impl::Impl(const std::string& name, const ManagerImplPtr& manager) :
   Managed<Worker, std::string>::Impl(name, manager),
   autostart(true),
-  callback(defaultOptions.callback),
-  callbackQueue(defaultOptions.callbackQueue),
+  callbackQueue(0),
   hasPrivateCallbackQueue(false),
-  priority(0),
-  trackedObject(defaultOptions.trackedObject),
-  hasTrackedObject(defaultOptions.trackedObject),
+  expectedPriority(0),
+  actualPriority(0),
+  hasTrackedObject(false),
   started(false),
   canceled(false) {
-  std::string ns = defaultOptions.ns.empty() ?
-    ros::names::append("workers", name) : defaultOptions.ns;
+}
+
+Worker::Impl::~Impl() {
+  shutdown();  
+}
+
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+std::string Worker::getName() const {
+  return getIdentifier();
+}
+
+ros::Duration Worker::getTimeSinceStart() const {
+  if (impl)
+    return impl->as<Worker::Impl>().getTimeSinceStart();
+  else
+    return ros::Duration(-1);
+}
+
+FrequencyStatistics::Estimates Worker::getStatisticsEstimates() const {
+  if (impl)
+    return impl->as<Worker::Impl>().getStatisticsEstimates();
+  else
+    return FrequencyStatistics::Estimates();
+}
+
+FrequencyStatistics::Estimates Worker::Impl::getStatisticsEstimates() const {
+  boost::mutex::scoped_lock lock(mutex);
   
+  return frequencyTask.getStatisticsEstimates();
+}
+
+ros::Duration Worker::Impl::getTimeSinceStart() const {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  if (!startTime.isZero())
+    return (ros::Time::now()-startTime);
+  else
+    return ros::Duration(-1);
+}
+
+bool Worker::Impl::isValid() const {
+  return startServer && cancelServer && getFrequencyServer &&
+    getStateServer && statusTask && frequencyTask;
+}
+
+/*****************************************************************************/
+/* Methods                                                                   */
+/*****************************************************************************/
+
+void Worker::Impl::init(const WorkerOptions& defaultOptions) {
+  std::string ns = defaultOptions.ns.empty() ?
+    ros::names::append("workers", identifier) : defaultOptions.ns;
+    
   double expectedFrequency = getNode()->getParam(
     ros::names::append(ns, "rate"), defaultOptions.frequency);
   expectedCycleTime = (expectedFrequency > 0.0) ?
@@ -72,11 +123,17 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
   int priority = getNode()->getParam(ros::names::append(ns, "priority"),
     defaultOptions.priority);
   
-  if (!callbackQueue && privateCallbackQueue) {
+  callback = defaultOptions.callback;
+  trackedObject = defaultOptions.trackedObject;
+  hasTrackedObject = defaultOptions.trackedObject;
+  
+  if (!defaultOptions.callbackQueue && privateCallbackQueue) {
     callbackQueue = new ros::CallbackQueue();
-    hasPrivateCallbackQueue = true;    
-    this->priority = priority;
+    hasPrivateCallbackQueue = true;
+    expectedPriority = priority;
   }
+  else
+    callbackQueue = defaultOptions.callbackQueue;
   
   ros::AdvertiseServiceOptions startOptions;
   startOptions.init<std_srvs::Empty::Request, std_srvs::Empty::Response>(
@@ -106,50 +163,21 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
   getStateServer = getNode()->advertiseService(
     ros::names::append(ns, "get_state"), getStateOptions);
   
+  WorkerStatusTaskOptions statusTaskOptions(defaultOptions.statusTaskOptions);
+  statusTaskOptions.ns = ros::names::append(ns,
+    ros::names::append("diagnostics", "worker_status"));
+  statusTask = getNode()->addDiagnosticTask<WorkerStatusTask>(
+    std::string("Worker ")+identifier+" Status", statusTaskOptions);
+  statusTask.impl->as<WorkerStatusTask::Impl>().worker =
+    shared_from_this();
+  
   FrequencyTaskOptions frequencyTaskOptions(
     defaultOptions.frequencyTaskOptions);
   frequencyTaskOptions.ns = ros::names::append(ns, "diagnostics/frequency");
   frequencyTaskOptions.expected = expectedFrequency;
   frequencyTask = getNode()->addDiagnosticTask<StatefulFrequencyTask>(
-    std::string("Worker ")+name+" Frequency", frequencyTaskOptions);
+    std::string("Worker ")+identifier+" Frequency", frequencyTaskOptions);
 }
-
-Worker::Impl::~Impl() {
-  shutdown();
-  
-  if (hasPrivateCallbackQueue)
-    delete callbackQueue;
-}
-
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-std::string Worker::getName() const {
-  return getIdentifier();
-}
-
-FrequencyStatistics::Estimates Worker::getStatisticsEstimates() const {
-  if (impl)
-    return impl->as<Worker::Impl>().getStatisticsEstimates();
-  else
-    return FrequencyStatistics::Estimates();
-}
-
-FrequencyStatistics::Estimates Worker::Impl::getStatisticsEstimates() const {
-  boost::mutex::scoped_lock lock(mutex);
-  
-  return frequencyTask.getStatisticsEstimates();
-}
-
-bool Worker::Impl::isValid() const {
-  return startServer && cancelServer && getFrequencyServer &&
-    getStateServer && frequencyTask;
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
 
 Timer Worker::Impl::createTimer(const ros::TimerOptions& options) {
   return getNode()->createTimer(options);
@@ -173,6 +201,9 @@ void Worker::wake() {
 void Worker::Impl::shutdown() {
   if (isValid()) {
     cancel(true);
+    
+    if (hasPrivateCallbackQueue)
+      delete callbackQueue;
 
     startServer.shutdown();
     cancelServer.shutdown();
@@ -180,6 +211,7 @@ void Worker::Impl::shutdown() {
     getFrequencyServer.shutdown();
     getStateServer.shutdown();
     
+    statusTask.shutdown();
     frequencyTask.shutdown();    
   }
 }
@@ -197,16 +229,18 @@ void Worker::Impl::start() {
     if (hasPrivateCallbackQueue) {
       spinner = boost::thread(boost::bind(&Worker::Impl::spin, this));
       
-      if (priority) {
+      if (expectedPriority) {
         sched_param sched;
         int policy;
         
-        pthread_getschedparam(spinner.native_handle(), &policy, &sched);
-        sched.sched_priority = priority;
+        sched.sched_priority = expectedPriority;
         if (pthread_setschedparam(spinner.native_handle(), SCHED_FIFO, &sched))
           NODEWRAP_MEMBER_WARN(
             "Failed to set priority for worker [%s] to %d: %s",
-            identifier.c_str(), priority, std::strerror(errno));
+            identifier.c_str(), expectedPriority, std::strerror(errno));
+          
+        pthread_getschedparam(spinner.native_handle(), &policy, &sched);
+        actualPriority = sched.sched_priority;
       }
     }
     

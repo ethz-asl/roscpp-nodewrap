@@ -109,14 +109,15 @@ Worker WorkerManager::addWorker(const std::string& name, const WorkerOptions&
       
     if (it == impl->instances.end()) {
       if (defaultOptions.synchronous)
-        worker.impl.reset(new SyncWorker::Impl(defaultOptions, name, impl));
+        worker.impl.reset(new SyncWorker::Impl(name, impl));
       else
-        worker.impl.reset(new AsyncWorker::Impl(defaultOptions, name, impl));
+        worker.impl.reset(new AsyncWorker::Impl(name, impl));
       
       impl->instances.insert(std::make_pair(name, worker.impl));
       
+      worker.impl->as<Worker::Impl>().init(defaultOptions);
       if (worker.impl->as<Worker::Impl>().autostart)
-        worker.impl->as<Worker::Impl>().start();    
+        worker.impl->as<Worker::Impl>().start();
     }
     else
       worker.impl = it->second.lock();

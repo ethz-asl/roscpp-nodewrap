@@ -16,54 +16,29 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/NodeImpl.h"
+/** \file WorkerStatusTaskOptions.h
+  * \brief Header file providing the WorkerStatusTaskOptions class
+  *   interface
+  */
 
-#include "roscpp_nodewrap/worker/SyncWorker.h"
-#include "roscpp_nodewrap/worker/WorkerQueueCallback.h"
+#ifndef ROSCPP_NODEWRAP_WORKER_STATUS_TASK_OPTIONS_H
+#define ROSCPP_NODEWRAP_WORKER_STATUS_TASK_OPTIONS_H
+
+#include <roscpp_nodewrap/diagnostics/DiagnosticTaskOptions.h>
 
 namespace nodewrap {
+  /** \brief ROS worker status task options
+    * 
+    * This class encapsulates all options available for creating a
+    * diagnostic worker status task.
+    */
+  class WorkerStatusTaskOptions :
+    public DiagnosticTaskOptions {
+  public:
+    /** \brief Default constructor
+      */
+    WorkerStatusTaskOptions();
+  };
+};
 
-/*****************************************************************************/
-/* Constructors and Destructor                                               */
-/*****************************************************************************/
-
-SyncWorker::SyncWorker() {
-}
-
-SyncWorker::SyncWorker(const SyncWorker& src) :
-  Worker(src) {
-}
-
-SyncWorker::~SyncWorker() {  
-}
-
-SyncWorker::Impl::Impl(const std::string& name, const ManagerImplPtr&
-    manager) :
-  Worker::Impl(name, manager) {
-}
-
-SyncWorker::Impl::~Impl() {
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void SyncWorker::Impl::safeStart() {
-}
-
-void SyncWorker::Impl::safeWake() {
-  ros::CallbackInterfacePtr callback(new WorkerQueueCallback(
-    boost::bind(&Worker::Impl::runOnce, this), trackedObject,
-    hasTrackedObject));
-  
-  if (callbackQueue)
-    callbackQueue->addCallback(callback);
-  else
-    getNode()->getNodeHandle().getCallbackQueue()->addCallback(callback);
-}
-
-void SyncWorker::Impl::safeStop() {
-}
-
-}
+#endif

@@ -16,70 +16,43 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file SyncWorker.h
-  * \brief Header file providing the SyncWorker class interface
+/** \file WorkerImpl.h
+  * \brief Header file providing the WorkerImpl class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_SYNC_WORKER_H
-#define ROSCPP_NODEWRAP_SYNC_WORKER_H
+#ifndef ROSCPP_NODEWRAP_WORKER_IMPL_H
+#define ROSCPP_NODEWRAP_WORKER_IMPL_H
 
-#include <roscpp_nodewrap/worker/Worker.h>
+#include <ros/ros.h>
+
+#include <boost/enable_shared_from_this.hpp>
+
+#include <roscpp_nodewrap/Forwards.h>
 
 namespace nodewrap {
-  /** \brief ROS synchronous node worker
+  /** \brief Abstract ROS worker implementation
     * 
-    * This class provides an event-controlled worker for use with the ROS
-    * node implementation.
+    * This class provides the abstract basis of the ROS worker implementation.
     */
-  class SyncWorker :
-    public Worker {
-  friend class WorkerManager;
-  friend class WorkerStatusTask;
-  public:
-    /** \brief Default constructor
+  class WorkerImpl :
+    public boost::enable_shared_from_this<WorkerImpl> {
+  friend class Worker;
+  private:
+    /** \brief Constructor
       */
-    SyncWorker();
-    
-    /** \brief Copy constructor
-      * 
-      * \param[in] src The source synchronous worker which is being copied
-      *   to this synchronous worker.
-      */
-    SyncWorker(const SyncWorker& src);
+    WorkerImpl();
     
     /** \brief Destructor
       */
-    ~SyncWorker();
+    virtual ~WorkerImpl();
     
-  private:
-    /** \brief ROS synchronous node worker implementation
-      * 
-      * This class provides the private implementation of the synchronous
-      * node worker.
+    /** \brief Initialize the worker implementation
       */
-    class Impl :
-      public Worker::Impl {
-    public:
-      /** \brief Constructor
-        */
-      Impl(const std::string& name, const ManagerImplPtr& manager);
-      
-      /** \brief Destructor
-        */
-      ~Impl();
-      
-      /** \brief Start the worker (thread-safe implementation)
-        */
-      void safeStart();
-            
-      /** \brief Wake the worker (thread-safe implementation)
-        */
-      void safeWake();
-            
-      /** \brief Stop the worker (thread-safe implementation)
-        */
-      void safeStop();      
-    };
+    virtual void init(const WorkerOptions& defaultOptions) = 0;
+          
+    /** \brief Perform shutdown of the worker implementation
+      */
+    virtual void shutdown() = 0;
   };
 };
 

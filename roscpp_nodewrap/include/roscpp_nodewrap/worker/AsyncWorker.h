@@ -36,6 +36,7 @@ namespace nodewrap {
   class AsyncWorker :
     public Worker {
   friend class WorkerManager;
+  friend class WorkerStatusTask;
   public:
     /** \brief Default constructor
       */
@@ -63,12 +64,15 @@ namespace nodewrap {
     public:
       /** \brief Constructor
         */
-      Impl(const WorkerOptions& defaultOptions, const std::string& name,
-        const ManagerImplPtr& manager);
+      Impl(const std::string& name, const ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
       ~Impl();
+      
+      /** \brief Initialize the asynchronous worker
+        */
+      void init(const WorkerOptions& defaultOptions);
       
       /** \brief Start the worker (thread-safe implementation)
         */

@@ -24,6 +24,7 @@
 #define ROSCPP_NODEWRAP_WORKER_OPTIONS_H
 
 #include <roscpp_nodewrap/diagnostics/FrequencyTaskOptions.h>
+#include <roscpp_nodewrap/diagnostics/WorkerStatusTaskOptions.h>
 
 namespace nodewrap {
   /** \brief ROS worker options
@@ -91,6 +92,11 @@ namespace nodewrap {
       *   callbacks
       */ 
     ros::VoidConstPtr trackedObject;
+    
+    /** \brief The options of the diagnostic task for monitoring the
+      *   status of the worker
+      */ 
+    WorkerStatusTaskOptions statusTaskOptions;
     
     /** \brief The options of the diagnostic task for monitoring the
       *   frequency of the worker

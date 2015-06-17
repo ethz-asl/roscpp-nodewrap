@@ -102,7 +102,7 @@ namespace nodewrap {
     *
     * \section worker_priorities A Word about Worker Priorities
     *
-    * In this implementation, time-intensive workers can be configured to 
+    * In this implementation, time-critical workers can be configured to 
     * use their private callback queue and higher priorization. Under the
     * hood, the worker implementation therefore needs to make calls to the
     * native worker thread handle using the pthread library.

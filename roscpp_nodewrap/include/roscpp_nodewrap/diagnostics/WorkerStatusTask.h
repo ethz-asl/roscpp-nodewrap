@@ -16,69 +16,75 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-/** \file SyncWorker.h
-  * \brief Header file providing the SyncWorker class interface
+/** \file WorkerStatusTask.h
+  * \brief Header file providing the WorkerStatusTask class interface
   */
 
-#ifndef ROSCPP_NODEWRAP_SYNC_WORKER_H
-#define ROSCPP_NODEWRAP_SYNC_WORKER_H
+#ifndef ROSCPP_NODEWRAP_WORKER_STATUS_TASK_H
+#define ROSCPP_NODEWRAP_WORKER_STATUS_TASK_H
 
-#include <roscpp_nodewrap/worker/Worker.h>
+#include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
+#include <roscpp_nodewrap/diagnostics/WorkerStatusTaskOptions.h>
 
 namespace nodewrap {
-  /** \brief ROS synchronous node worker
+  /** \brief Diagnostic worker status task
     * 
-    * This class provides an event-controlled worker for use with the ROS
-    * node implementation.
+    * This class provides a diagnostic task which monitors the status
+    * of a ROS worker.
     */
-  class SyncWorker :
-    public Worker {
-  friend class WorkerManager;
-  friend class WorkerStatusTask;
+  class WorkerStatusTask :
+    public DiagnosticTask {
+  friend class DiagnosticTaskManager;
+  friend class Worker;
   public:
+    /** \brief Forward declaration of the worker status task options
+      */
+    typedef WorkerStatusTaskOptions Options;
+    
     /** \brief Default constructor
       */
-    SyncWorker();
+    WorkerStatusTask();
     
     /** \brief Copy constructor
       * 
-      * \param[in] src The source synchronous worker which is being copied
-      *   to this synchronous worker.
+      * \param[in] src The source worker status task which is being
+      *   copied to this worker status task.
       */
-    SyncWorker(const SyncWorker& src);
+    WorkerStatusTask(const WorkerStatusTask& src);
     
     /** \brief Destructor
       */
-    ~SyncWorker();
+    ~WorkerStatusTask();
+
+    /** \brief Set the worker to be monitored by this task
+      */
+    void setWorker(const Worker& worker);
     
   private:
-    /** \brief ROS synchronous node worker implementation
+    /** \brief ROS worker status task implementation
       * 
-      * This class provides the private implementation of the synchronous
-      * node worker.
+      * This class provides the private implementation of the worker
+      * status task.
       */
     class Impl :
-      public Worker::Impl {
-    public:
+      public DiagnosticTask::Impl {
+    public:        
       /** \brief Constructor
         */
-      Impl(const std::string& name, const ManagerImplPtr& manager);
+      Impl(const Options& defaultOptions, const std::string& name, const
+        ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
       ~Impl();
       
-      /** \brief Start the worker (thread-safe implementation)
+      /** \brief Fill out this worker status task's status
         */
-      void safeStart();
+      void run(diagnostic_updater::DiagnosticStatusWrapper& status);
             
-      /** \brief Wake the worker (thread-safe implementation)
+      /** \brief The worker monitored by this task
         */
-      void safeWake();
-            
-      /** \brief Stop the worker (thread-safe implementation)
-        */
-      void safeStop();      
+      WorkerImplWPtr worker;
     };
   };
 };
