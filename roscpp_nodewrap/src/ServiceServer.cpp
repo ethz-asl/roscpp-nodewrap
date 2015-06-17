@@ -117,7 +117,7 @@ void ServiceServer::Impl::init(const ServiceServerOptions& defaultOptions) {
 
 void ServiceServer::Impl::shutdown() {
   if (isValid()) {
-    serviceServer.shutdown();
+    serviceServer = ros::ServiceServer();
     
     statusTask.shutdown();
   }

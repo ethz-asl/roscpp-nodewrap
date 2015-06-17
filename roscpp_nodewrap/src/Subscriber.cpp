@@ -154,7 +154,7 @@ void Subscriber::Impl::init(const SubscriberOptions& defaultOptions) {
 
 void Subscriber::Impl::shutdown() {
   if (isValid()) {
-    subscriber.shutdown();
+    subscriber = ros::Subscriber();
     
     statusTask.shutdown();
     processingFrequencyTask.shutdown();

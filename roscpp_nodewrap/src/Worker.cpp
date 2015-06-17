@@ -18,6 +18,8 @@
 
 #include <limits>
 
+#include <pthread.h>
+
 #include <boost/thread.hpp>
 #include <boost/thread/locks.hpp>
 
@@ -48,6 +50,11 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
   Managed<Worker, std::string>::Impl(name, manager),
   autostart(true),
   callback(defaultOptions.callback),
+  callbackQueue(defaultOptions.callbackQueue),
+  hasPrivateCallbackQueue(false),
+  priority(0),
+  trackedObject(defaultOptions.trackedObject),
+  hasTrackedObject(defaultOptions.trackedObject),
   started(false),
   canceled(false) {
   std::string ns = defaultOptions.ns.empty() ?
@@ -59,6 +66,17 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
     ros::Duration(1.0/expectedFrequency) : ros::Duration(0.0);
   autostart = getNode()->getParam(ros::names::append(ns, "autostart"),
     defaultOptions.autostart);
+  bool privateCallbackQueue = getNode()->getParam(
+    ros::names::append(ns, "private_callback_queue"),
+    defaultOptions.privateCallbackQueue);
+  int priority = getNode()->getParam(ros::names::append(ns, "priority"),
+    defaultOptions.priority);
+  
+  if (!callbackQueue && privateCallbackQueue) {
+    callbackQueue = new ros::CallbackQueue();
+    hasPrivateCallbackQueue = true;    
+    this->priority = priority;
+  }
   
   ros::AdvertiseServiceOptions startOptions;
   startOptions.init<std_srvs::Empty::Request, std_srvs::Empty::Response>(
@@ -98,6 +116,9 @@ Worker::Impl::Impl(const WorkerOptions& defaultOptions, const std::string&
 
 Worker::Impl::~Impl() {
   shutdown();
+  
+  if (hasPrivateCallbackQueue)
+    delete callbackQueue;
 }
 
 /*****************************************************************************/
@@ -152,14 +173,14 @@ void Worker::wake() {
 void Worker::Impl::shutdown() {
   if (isValid()) {
     cancel(true);
-    
+
     startServer.shutdown();
     cancelServer.shutdown();
     
     getFrequencyServer.shutdown();
     getStateServer.shutdown();
     
-    frequencyTask.shutdown();
+    frequencyTask.shutdown();    
   }
 }
 
@@ -172,6 +193,22 @@ void Worker::Impl::start() {
     
     startTime = ros::Time();
     timeOfLastCycle = ros::Time();
+    
+    if (hasPrivateCallbackQueue) {
+      spinner = boost::thread(boost::bind(&Worker::Impl::spin, this));
+      
+      if (priority) {
+        sched_param sched;
+        int policy;
+        
+        pthread_getschedparam(spinner.native_handle(), &policy, &sched);
+        sched.sched_priority = priority;
+        if (pthread_setschedparam(spinner.native_handle(), SCHED_FIFO, &sched))
+          NODEWRAP_MEMBER_WARN(
+            "Failed to set priority for worker [%s] to %d: %s",
+            identifier.c_str(), priority, std::strerror(errno));
+      }
+    }
     
     safeStart();
   }
@@ -191,8 +228,13 @@ void Worker::Impl::cancel(bool block) {
     if ((threadId != boost::thread::id()) &&
         (threadId != boost::this_thread::get_id())) {
       canceled = true;
-      if (block)
+    
+      if (block) {
         cancelCondition.wait(lock);
+        
+        if (hasPrivateCallbackQueue)
+          spinner.join();
+      }
     }
     else {
       safeStop();
@@ -271,6 +313,12 @@ void Worker::Impl::runOnce() {
   }
   
   threadId = boost::thread::id();
+}
+
+void Worker::Impl::spin() {
+  while (started)
+    ((ros::CallbackQueue*)callbackQueue)->callAvailable(
+      ros::WallDuration(0.1));
 }
 
 bool Worker::Impl::startCallback(std_srvs::Empty::Request& request,

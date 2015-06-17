@@ -47,8 +47,8 @@ AsyncWorker::Impl::Impl(const WorkerOptions& defaultOptions, const
   timerOptions.autostart = false;
   timerOptions.callback = boost::bind(&AsyncWorker::Impl::timerCallback,
     this, _1);
-  timerOptions.callback_queue = defaultOptions.callbackQueue;
-  timerOptions.tracked_object = defaultOptions.trackedObject;
+  timerOptions.callback_queue = callbackQueue;
+  timerOptions.tracked_object = trackedObject.lock();
 
   timer = createTimer(timerOptions);
 }

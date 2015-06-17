@@ -150,6 +150,10 @@ namespace nodewrap {
         */ 
       void runOnce();
       
+      /** \brief Spin over the private callback queue of this worker
+        */ 
+      void spin();
+      
       /** \brief Service callback starting this worker
         */ 
       bool startCallback(std_srvs::Empty::Request& request,
@@ -182,6 +186,29 @@ namespace nodewrap {
         */ 
       WorkerCallback callback;
       
+      /** \brief The callback queue used by this worker
+        */ 
+      ros::CallbackQueueInterface* callbackQueue;
+    
+      /** \brief If true, this worker's callback queue is private
+        */ 
+      bool hasPrivateCallbackQueue;
+      
+      /** \brief The priority of the spinner serving this worker's 
+        *   private callback queue
+        */ 
+      int priority;
+      
+      /** \brief A shared pointer to an object being tracked for the worker
+        *   callbacks
+        */ 
+      ros::VoidConstWPtr trackedObject;
+      
+      /** \brief If true, the worker has an object to track for its
+        *   callbacks
+        */ 
+      bool hasTrackedObject;
+      
       /** \brief True, if the worker has been started
         */ 
       bool started;
@@ -201,6 +228,10 @@ namespace nodewrap {
       /** \brief The actual cycle time of this worker
         */ 
       ros::Duration actualCycleTime;
+      
+      /** \brief The spinner serving this worker's private callback queue
+        */ 
+      boost::thread spinner;
       
       /** \brief Identifier of the thread running the worker
         * 

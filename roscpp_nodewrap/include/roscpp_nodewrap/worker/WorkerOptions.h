@@ -65,7 +65,25 @@ namespace nodewrap {
       */ 
     WorkerCallback callback;
     
+    /** \brief If true, the worker uses a private callback queue
+      * 
+      * \note This parameter will only take effect if the callback queue is
+      *   explicitly specified by these options.
+      */ 
+    bool privateCallbackQueue;
+    
+    /** \brief The priority of the worker as interpreted by the operating
+      *   system scheduler
+      * 
+      * \note This parameter will only take effect if the worker uses
+      *   a private callback queue as specified by theses options.
+      */ 
+    int priority;
+    
     /** \brief The callback queue to be used by the worker
+      * 
+      * \note If null, the worker will instantiate and use a private
+      *   callback queue if specified by these options.
       */ 
     ros::CallbackQueueInterface* callbackQueue;
     

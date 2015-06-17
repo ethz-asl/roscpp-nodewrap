@@ -39,10 +39,7 @@ SyncWorker::~SyncWorker() {
 
 SyncWorker::Impl::Impl(const WorkerOptions& defaultOptions, const
     std::string& name, const ManagerImplPtr& manager) :
-  Worker::Impl(defaultOptions, name, manager),
-  callbackQueue(defaultOptions.callbackQueue),
-  trackedObject(defaultOptions.trackedObject),
-  hasTrackedObject(defaultOptions.trackedObject) {
+  Worker::Impl(defaultOptions, name, manager) {
 }
 
 SyncWorker::Impl::~Impl() {

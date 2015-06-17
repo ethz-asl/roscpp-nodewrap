@@ -143,7 +143,7 @@ void ServiceClient::Impl::init(const ServiceClientOptions& defaultOptions) {
 
 void ServiceClient::Impl::shutdown() {
   if (isValid()) {
-    serviceClient.shutdown();
+    serviceClient = ros::ServiceClient();
     
     statusTask.shutdown();
   }

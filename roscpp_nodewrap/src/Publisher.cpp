@@ -158,7 +158,7 @@ void Publisher::Impl::init(const PublisherOptions& defaultOptions) {
 
 void Publisher::Impl::shutdown() {
   if (isValid()) {
-    publisher.shutdown();
+    publisher = ros::Publisher();
     
     statusTask.shutdown();
     publishingFrequencyTask.shutdown();

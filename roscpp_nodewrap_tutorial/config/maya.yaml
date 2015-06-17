@@ -25,9 +25,11 @@ workers:
   collecting:
     rate: 1000
     autostart: true
+    private_callback_queue: true
+    priority: 99
 
 diagnostics:
   period: 1.0
     
 field:
-  flowers: 10000
+  flowers: 100000

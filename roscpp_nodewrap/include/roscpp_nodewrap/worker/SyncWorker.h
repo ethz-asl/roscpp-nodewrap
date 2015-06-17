@@ -78,21 +78,7 @@ namespace nodewrap {
             
       /** \brief Stop the worker (thread-safe implementation)
         */
-      void safeStop();
-      
-      /** \brief The callback queue used by this worker
-        */ 
-      ros::CallbackQueueInterface* callbackQueue;
-    
-      /** \brief A shared pointer to an object being tracked for the worker
-        *   callbacks
-        */ 
-      ros::VoidConstWPtr trackedObject;
-      
-      /** \brief If true, the worker has an object to track for its
-        *   callbacks
-        */ 
-      bool hasTrackedObject;    
+      void safeStop();      
     };
   };
 };
