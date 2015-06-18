@@ -2,17 +2,19 @@ roscpp-nodewrap (0.1-22) unstable; urgency=low
 
   * Added worker status diagnostic task (and required worker modifications)
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 07:14:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 07:14:51 +0200
 
 roscpp-nodewrap (0.1-21) unstable; urgency=low
 
   * Fixed bug which caused native publishers, subscriber, service servers,
-    and service clients to be shutdown when the wrapper instances went out
+    and service clients to be shutdown when the wrapper instances went
+    out
     of scope (conversion to native would yield invalid handles)
-  * Added possibility for the worker to use its private callback queue and
+  * Added possibility for the worker to use its private callback queue
+    and
     spinner thread priorization
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 05:08:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 05:08:47 +0200
 
 roscpp-nodewrap (0.1-20) unstable; urgency=low
 
@@ -20,33 +22,34 @@ roscpp-nodewrap (0.1-20) unstable; urgency=low
     advertising its services
   * Worker shutdown now cancels the worker
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 14:24:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 14:25:22 +0200
 
 roscpp-nodewrap (0.1-19) unstable; urgency=low
 
   * Added diagnosed wrappers for publisher, subscriber, service server,
     and service client
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 11:27:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 11:28:22 +0200
 
 roscpp-nodewrap (0.1-18) unstable; urgency=low
 
   * Revised base classes
   * Added composite diagnostic task
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 11 Jun 2015 07:26:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 11 Jun 2015 07:26:57 +0200
 
 roscpp-nodewrap (0.1-17) unstable; urgency=low
 
   * Added diagnostic function task
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 17:03:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 17:04:01 +0200
 
 roscpp-nodewrap (0.1-16) unstable; urgency=low
 
-  * Added stamp of last event to cyclic event estimators and their messages
+  * Added stamp of last event to cyclic event estimators and their
+    messages
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:29:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:29:49 +0200
 
 roscpp-nodewrap (0.1-15) unstable; urgency=low
 
@@ -54,50 +57,50 @@ roscpp-nodewrap (0.1-15) unstable; urgency=low
   * Added diagnostics
   * Major worker revisions
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:20:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:20:39 +0200
 
 roscpp-nodewrap (0.1-14) unstable; urgency=low
 
   * Restructured includes
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 17:03:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 17:03:20 +0200
 
 roscpp-nodewrap (0.1-13) unstable; urgency=low
 
   * Now supporting synchronous and asynchronous workers
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 12:55:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 12:56:10 +0200
 
 roscpp-nodewrap (0.1-12) unstable; urgency=low
 
   * Moved services to roscpp_nodewrap_msgs package
   * Preparations of transition to Sync/AsyncWorker
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 27 May 2015 17:52:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 27 May 2015 05:53:21 +0200
 
 roscpp-nodewrap (0.1-11) unstable; urgency=low
 
   * First operational version of the worker feature and its tutorial
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 04 Feb 2015 16:03:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 04 Feb 2015 16:04:22 +0100
 
 roscpp-nodewrap (0.1-10) unstable; urgency=low
 
   * Removed code fragments and classes fromf features/advertise_param
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 02 Feb 2015 12:50:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 02 Feb 2015 12:50:32 +0100
 
 roscpp-nodewrap (0.1-9) unstable; urgency=low
 
   * Updated README.md with project information and install instructions
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:50:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:51:09 +0100
 
 roscpp-nodewrap (0.1-8) unstable; urgency=low
 
   * First class implementations for parameter advertising feature
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:20:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:20:34 +0100
 
 roscpp-nodewrap (0.1-7) unstable; urgency=low
 
@@ -105,7 +108,7 @@ roscpp-nodewrap (0.1-7) unstable; urgency=low
     for proper passing of the NodeImpl objects using shared pointers)
   * Added signal handling facilities
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:00:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 06 Jan 2015 10:00:36 +0100
 
 roscpp-nodewrap (0.1-6) unstable; urgency=low
 
@@ -117,21 +120,22 @@ roscpp-nodewrap (0.1-6) unstable; urgency=low
   * Added empty service server to chatter node for compile-time testing
     of the service-related node implementation members
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 26 Nov 2014 10:32:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 26 Nov 2014 10:33:04 +0100
 
 roscpp-nodewrap (0.1-5) unstable; urgency=low
 
   * Fixed bug in NodeImpl::advertiseService()
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 18:32:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 18:33:00 +0100
 
 roscpp-nodewrap (0.1-4) unstable; urgency=low
 
-  * Changed NodeImpl::advertiseService() with standard options to accept
-    a template argument of type Callback (to avoid future re-implementations
-    of the method for different overloaded callback signatures)
+  * Changed NodeImpl::advertiseService() with standard options to
+    accept
+  * a template argument of type Callback (to avoid future re-implementations
+  * of the method for different overloaded callback signatures)
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 16:13:00 +0100
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 25 Nov 2014 16:13:54 +0100
 
 roscpp-nodewrap (0.1-3) unstable; urgency=low
 

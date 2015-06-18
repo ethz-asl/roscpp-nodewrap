@@ -24,14 +24,14 @@ namespace nodewrap {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-template <typename T> void Signal::bind(int signal, void(T::*fp)(),
+template <typename T> void Signal::bind(int signal, void(T::*fp)(int),
     T* object) {
-  Signal::bind(signal, boost::bind(fp, object));
+  Signal::bind(signal, boost::bind(fp, object, _1));
 }
     
-template <typename T> void Signal::unbind(int signal, void(T::*fp)(),
+template <typename T> void Signal::unbind(int signal, void(T::*fp)(int),
     T* object) {
-  Signal::unbind(signal, boost::bind(fp, object));
+  Signal::unbind(signal, boost::bind(fp, object, _1));
 }
 
 }

@@ -172,6 +172,32 @@ namespace nodewrap {
       */
     virtual void cleanup() = 0;
     
+    /** \brief Node(let) signal handler
+      * 
+      * This helper method will be called if the process running the node(let)
+      * receives a SIGINT. The default behavior then is to simply initiate its
+      * shutdown. However, the method is declared virtual such that this
+      * behavior can be adapted in the implementation of the derived node(let).
+      * 
+      * \param[in] signal The signal to be handled which, by implementation,
+      *   should always equate to SIGINT.
+      * 
+      * \see shutdown
+      */
+    virtual void signaled(int signal);
+    
+    /** \brief Unload the nodelet
+      *
+      * This helper method will be called from the nodelet template wrapper
+      * of the node(let) implementation if the nodelet is unloaded. The default
+      * behavior then is to simply initiate its shutdown. However, the method
+      * is declared virtual such that this behavior can be adapted in the
+      * implementation of the derived node(let).
+      * 
+      * \see shutdown
+      */
+    virtual void unload();
+
     /** \brief Create a high precision timer, with standard options
       * 
       * \param[in] period The period of the timer.
@@ -595,6 +621,7 @@ namespace nodewrap {
     void start(const std::string& name, bool nodelet, const
       ros::NodeHandlePtr& nodeHandle);
     
+public:
     /** \brief Shutdown the node(let)
       *
       * This method is executed if a process interrupt signals the ROS

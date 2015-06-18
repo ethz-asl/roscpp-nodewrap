@@ -40,4 +40,8 @@ template <class C> void Nodelet<C>::onInit() {
     new ros::NodeHandle(this->getMTPrivateNodeHandle())));
 }
 
+template <class C> void Nodelet<C>::onUnload() {
+  impl->unload();
+}
+
 }

@@ -31,7 +31,7 @@ NodeImpl::NodeImpl() :
 }
 
 NodeImpl::~NodeImpl() {  
-  Signal::unbind(SIGINT, &NodeImpl::shutdown, this);
+  Signal::unbind(SIGINT, &NodeImpl::signaled, this);
 }
 
 /*****************************************************************************/
@@ -64,6 +64,14 @@ void NodeImpl::setDiagnosticsHardwareId(const std::string& hardwareId) {
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
+
+void NodeImpl::unload() {
+  this->shutdown();
+}
+
+void NodeImpl::signaled(int signal) {
+  this->shutdown();
+}
 
 Timer NodeImpl::createTimer(const ros::TimerOptions& options) {
   if (!timerManager)
@@ -126,9 +134,9 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
   this->nodelet = nodelet;
   this->nodeHandle = nodeHandle;
   
+  Signal::bind(SIGINT, &NodeImpl::signaled, this);
+
   init();
-  
-  Signal::bind(SIGINT, &NodeImpl::shutdown, this);
 }
 
 void NodeImpl::shutdown() {
