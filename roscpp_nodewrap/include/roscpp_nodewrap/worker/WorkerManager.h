@@ -23,12 +23,7 @@
 #ifndef ROSCPP_NODEWRAP_WORKER_MANAGER_H
 #define ROSCPP_NODEWRAP_WORKER_MANAGER_H
 
-#include <ros/ros.h>
-#include <ros/timer.h>
-
-#include <boost/thread/mutex.hpp>
-
-#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/Manager.h>
 
 #include <roscpp_nodewrap/worker/Worker.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
@@ -42,7 +37,8 @@ namespace nodewrap {
     * This class provides the facilities for managing a collection of
     * node workers.
     */
-  class WorkerManager {
+  class WorkerManager :
+    public Manager<Worker, std::string> {
   friend class NodeImpl;
   public:
     /** \brief Default constructor
@@ -59,16 +55,11 @@ namespace nodewrap {
     /** \brief Destructor
       */
     ~WorkerManager();
-    
-    /** \brief Perform shutdown of the worker manager
+        
+    /** \brief Add a worker to be managed by this worker manager
       */
-    void shutdown();
-      
-    /** \brief Void pointer conversion
-      */
-    inline operator void*() const {
-      return (impl && impl->isValid()) ? (void*)1 : (void*)0;
-    };
+    Worker addWorker(const std::string& name, const WorkerOptions&
+      defaultOptions);
     
   private:
     /** \brief ROS node worker manager implementation
@@ -76,15 +67,20 @@ namespace nodewrap {
       * This class provides the private implementation of the node worker
       * manager.
       */
-    class Impl {
+    class Impl :
+      public Manager<Worker, std::string>::Impl {
     public:
       /** \brief Default constructor
         */
-      Impl(const NodeImplPtr& nodeImpl);
+      Impl(const NodeImplPtr& node);
       
       /** \brief Destructor
         */
       ~Impl();
+      
+      /** \brief Retrieve the node owning this worker manager
+        */ 
+      const NodeImplPtr& getNode() const;
       
       /** \brief True, if this worker manager is valid
         */
@@ -92,7 +88,7 @@ namespace nodewrap {
       
       /** \brief Unadvertise the worker manager's services
         */
-      void unadvertise();
+      void shutdown();
       
       /** \brief Service callback listing the workers managed by this
         *   worker manager
@@ -118,38 +114,12 @@ namespace nodewrap {
       
       /** \brief The node implementation owning this worker manager
         */ 
-      NodeImplPtr nodeImpl;
-      
-      /** \brief The worker manager's mutex
-        */ 
-      mutable boost::mutex mutex;
-      
-      /** \brief The workers managed by this worker manager
-        */ 
-      std::map<std::string, Worker::ImplWPtr> workers;
+      NodeImplPtr node;
     };
-    
-    /** \brief Declaration of the worker manager implementation pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the worker manager implementation weak pointer
-      *   type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The worker manager's implementation
-      */
-    ImplPtr impl;
     
     /** \brief Constructor (private version)
       */
-    WorkerManager(const NodeImplPtr& nodeImpl);
-    
-    /** \brief Add a worker to be managed by this worker manager
-      */
-    Worker addWorker(const std::string& name, const WorkerOptions&
-      defaultOptions);
+    WorkerManager(const NodeImplPtr& node);
   };
 };
 

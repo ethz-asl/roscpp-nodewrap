@@ -16,37 +16,15 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/diagnostics/DiagnosticsExceptions.h"
+#include "roscpp_nodewrap/diagnostics/WorkerStatusTaskOptions.h"
 
 namespace nodewrap {
 
 /*****************************************************************************/
-/* Methods                                                                   */
+/* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-template <class T> T DiagnosticUpdater::addTask(const std::string& name,
-    const typename T::Options& defaultOptions) {
-  boost::mutex::scoped_lock lock(this->impl->mutex);
-  
-  if (name.empty())
-    throw InvalidDiagnosticTaskNameException(name,
-      "Task name may not be empty");
-    
-  T task;
-  std::map<std::string, DiagnosticTask::ImplWPtr>::iterator it =
-    this->impl->tasks.find(name);
-    
-  if (it == this->impl->tasks.end()) {
-    task.impl.reset(new typename T::Impl(name, defaultOptions,
-      this->impl->nodeImpl));
-
-    this->impl->tasks.insert(std::make_pair(name, task.impl));
-  }
-  else
-    task.impl = boost::static_pointer_cast<typename T::Impl>(
-      it->second.lock());
-  
-  return task;
+WorkerStatusTaskOptions::WorkerStatusTaskOptions() {
 }
 
 }

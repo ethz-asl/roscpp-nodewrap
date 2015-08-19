@@ -3,6 +3,9 @@ publishers:
     topic: "chat"
     queue_size: 100
     latch: false
+    diagnostics:
+      message_latency:
+        window_size: 100
 subscribers:
   chat:
     topic: "/bob/chat"

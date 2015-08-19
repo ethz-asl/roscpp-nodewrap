@@ -25,7 +25,7 @@
 
 #include <ros/ros.h>
 
-#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/Managed.h>
 
 namespace nodewrap {
   /** \brief ROS high precision timer
@@ -35,7 +35,8 @@ namespace nodewrap {
     * ROS standard timer, but its implementation features microsecond
     * precision.
     */
-  class Timer {
+  class Timer :
+    public Managed<Timer, int> {
   friend class TimerManager;
   public:
     /** \brief Default constructor
@@ -68,30 +69,6 @@ namespace nodewrap {
     /** \brief Stop this timer
       */
     void stop();
-      
-    /** \brief Void pointer conversion
-      */
-    inline operator void*() const {
-      return (impl && impl->isValid()) ? (void*)1 : (void*)0;
-    };
-    
-    /** \brief Lesser comparison operator
-      */
-    inline bool operator<(const Timer& timer) const {
-      return (impl < timer.impl);
-    };
-    
-    /** \brief Equality comparison operator
-      */
-    inline bool operator==(const Timer& timer) const {
-      return (impl == timer.impl);
-    };
-    
-    /** \brief Inequality comparison operator
-      */
-    inline bool operator!=(const Timer& timer) const {
-      return (impl != timer.impl);
-    };
     
   private:
     /** \brief ROS high precision timer implementation
@@ -99,11 +76,13 @@ namespace nodewrap {
       * This class provides the private implementation of the high
       * precision timer.
       */
-    class Impl {
+    class Impl :
+      public Managed<Timer, int>::Impl {
     public:
       /** \brief Constructor
         */
-      Impl(const ros::TimerOptions& options, const NodeImplPtr& nodeImpl);
+      Impl(const ros::TimerOptions& options, int handle, const
+        ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -129,13 +108,13 @@ namespace nodewrap {
         */
       void stop();
       
+      /** \brief Perform shutdown of this timer (implementation)
+        */
+      void shutdown();
+      
       /** \brief True, if this timer has been started
         */ 
       bool started;
-      
-      /** \brief The timer's internal handle
-        */ 
-      int handle;
       
       /** \brief The timer's period
         */ 
@@ -166,28 +145,7 @@ namespace nodewrap {
         *   callbacks
         */ 
       bool hasTrackedObject;
-      
-      /** \brief The node implementation owning this timer
-        */ 
-      NodeImplPtr nodeImpl;
     };
-
-    /** \brief Declaration of the timer implementation pointer
-      *   type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the timer implementation weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The timer's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (private version)
-      */
-    Timer(const ros::TimerOptions& options, const NodeImplPtr& nodeImpl);
   };
 };
 

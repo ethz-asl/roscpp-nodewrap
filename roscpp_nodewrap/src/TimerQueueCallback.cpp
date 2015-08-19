@@ -31,22 +31,25 @@ namespace nodewrap {
 /*****************************************************************************/
 
 TimerQueueCallback::TimerQueueCallback(const TimerManager::ImplPtr& manager,
-    const TimerInfoPtr& timerInfo, const ros::Time& lastExpected, const
-    ros::Time& lastActual, const ros::Time& currentExpected) :
+    const TimerInfoPtr& timerInfo, const ros::Time& expectedTimeOfLastCallback,
+    const ros::Time& actualTimeOfLastCallback, const ros::Time&
+    expectedTimeOfCurrentCallback) :
   manager(manager),
   timerInfo(timerInfo),
-  lastExpected(lastExpected),
-  lastActual(lastActual),
-  currentExpected(currentExpected),
+  expectedTimeOfLastCallback(expectedTimeOfLastCallback),
+  actualTimeOfLastCallback(actualTimeOfLastCallback),
+  expectedTimeOfCurrentCallback(expectedTimeOfCurrentCallback),
   called(false) {
+  boost::mutex::scoped_lock lock(timerInfo->mutex);
+  ++timerInfo->numWaitingCallbacks;
 }
 
 TimerQueueCallback::~TimerQueueCallback() {  
   TimerInfoPtr timerInfo = this->timerInfo.lock();
   
   if (timerInfo) {
-    boost::mutex::scoped_lock lock(timerInfo->waitingMutex);
-    --timerInfo->waitingCallbacks;
+    boost::mutex::scoped_lock lock(timerInfo->mutex);
+    --timerInfo->numWaitingCallbacks;
   }
 }
 
@@ -60,7 +63,7 @@ ros::CallbackInterface::CallResult TimerQueueCallback::call() {
   if (!timerInfo)
     return Invalid;
 
-  ++timerInfo->totalCalls;
+  ++timerInfo->totalNumCalls;
   called = true;
 
   ros::VoidConstPtr trackedObject;
@@ -73,24 +76,24 @@ ros::CallbackInterface::CallResult TimerQueueCallback::call() {
 
   ros::TimerEvent event;
   
-  event.last_expected = lastExpected;
-  event.last_real = lastActual;
-  event.current_expected = currentExpected;
+  event.last_expected = expectedTimeOfLastCallback;
+  event.last_real = actualTimeOfLastCallback;
+  event.current_expected = expectedTimeOfCurrentCallback;
   event.current_real = ros::Time::now();
-  event.profile.last_duration = timerInfo->lastCallbackDuration;
+  event.profile.last_duration = timerInfo->durationOfLastCallback;
 
   ros::WallTime callbackStart = ros::WallTime::now();
   timerInfo->callback(event);
   ros::WallTime callbackEnd = ros::WallTime::now();
-  timerInfo->lastCallbackDuration = callbackEnd-callbackStart;
+  timerInfo->durationOfLastCallback = callbackEnd-callbackStart;
 
-  timerInfo->lastActual = event.current_real;
+  timerInfo->actualTimeOfLastCallback = event.current_real;
 
   TimerManager::ImplPtr manager = this->manager.lock();
   if (!manager)
     return Invalid;
   
-  manager->schedule(timerInfo);
+  manager->as<TimerManager::Impl>().scheduleTimerCallback(timerInfo);
 
   return Success;
 }

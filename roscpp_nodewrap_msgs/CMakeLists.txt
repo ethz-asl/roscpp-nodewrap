@@ -24,6 +24,7 @@ add_message_files(
   DIRECTORY msg
   FILES
     FrequencyEstimates.msg
+    LatencyEstimates.msg
     PeriodEstimates.msg
 )
 

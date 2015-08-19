@@ -16,38 +16,20 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/statistics/CyclicEventStatistics.h"
-
 namespace nodewrap {
 
 /*****************************************************************************/
 /* Constructors and Destructor                                               */
 /*****************************************************************************/
 
-CyclicEventStatistics::CyclicEventStatistics() {
-}
-
-CyclicEventStatistics::CyclicEventStatistics(const CyclicEventStatistics& src) :
-  timeOfLastEvent(src.timeOfLastEvent) {
-}
-
-CyclicEventStatistics::~CyclicEventStatistics() {  
-}
-
-/*****************************************************************************/
-/* Accessors                                                                 */
-/*****************************************************************************/
-
-const ros::Time& CyclicEventStatistics::getTimeOfLastEvent() const {
-  return timeOfLastEvent;
-}
-
-/*****************************************************************************/
-/* Methods                                                                   */
-/*****************************************************************************/
-
-void CyclicEventStatistics::clear() {
-  timeOfLastEvent = ros::Time();
+template <class S>
+StatisticsTaskOptions<S>::StatisticsTaskOptions() :
+  expected(),
+  windowSize(0),
+  warnMeanTolerance(0.05),
+  errorMeanTolerance(0.1),
+  warnStandardDeviationTolerance(0.05),
+  errorStandardDeviationTolerance(0.1) {
 }
 
 }

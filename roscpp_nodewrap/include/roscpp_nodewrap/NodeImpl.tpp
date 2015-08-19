@@ -51,10 +51,10 @@ template <class T> Timer NodeImpl::createTimer(const ros::Duration& period,
   return this->createTimer(options);
 }
 
-template <class M> ros::Publisher NodeImpl::advertise(const std::string&
-    name, const std::string& defaultTopic, uint32_t defaultQueueSize, bool
+template <class M> Publisher NodeImpl::advertise(const std::string& name,
+    const std::string& defaultTopic, uint32_t defaultQueueSize, bool
     defaultLatch) {
-  ros::AdvertiseOptions defaultOptions;
+  PublisherOptions defaultOptions;
   
   defaultOptions.template init<M>(defaultTopic, defaultQueueSize);
   defaultOptions.latch = defaultLatch;
@@ -62,12 +62,12 @@ template <class M> ros::Publisher NodeImpl::advertise(const std::string&
   return this->advertise(name, defaultOptions);
 }
 
-template <class M> ros::Publisher NodeImpl::advertise(const std::string& name,
+template <class M> Publisher NodeImpl::advertise(const std::string& name,
     const std::string& defaultTopic, uint32_t defaultQueueSize, const
     ros::SubscriberStatusCallback& connectCallback, const
     ros::SubscriberStatusCallback& disconnectCallback, const ros::VoidConstPtr&
     trackedObject, bool defaultLatch) {
-  ros::AdvertiseOptions defaultOptions;
+  PublisherOptions defaultOptions;
   
   defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
     connectCallback, disconnectCallback);
@@ -77,11 +77,11 @@ template <class M> ros::Publisher NodeImpl::advertise(const std::string& name,
   return this->advertise(name, defaultOptions);
 }
 
-template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
+template <class M, class T> Subscriber NodeImpl::subscribe(const
     std::string& name, const std::string& defaultTopic, uint32_t
     defaultQueueSize, void(T::*callback)(const boost::shared_ptr<const M>&),
     const ros::TransportHints& transportHints) {
-  ros::SubscribeOptions defaultOptions;
+  SubscriberOptions defaultOptions;
   
   defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
     boost::bind(callback, static_cast<T*>(this), _1));
@@ -90,11 +90,11 @@ template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
   return this->subscribe(name, defaultOptions);
 }
   
-template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
+template <class M, class T> Subscriber NodeImpl::subscribe(const
     std::string& name, const std::string& defaultTopic, uint32_t
     defaultQueueSize, void(T::*callback)(const boost::shared_ptr<M const>&)
     const, const ros::TransportHints& transportHints) {
-  ros::SubscribeOptions defaultOptions;
+  SubscriberOptions defaultOptions;
   
   defaultOptions.template init<M>(defaultTopic, defaultQueueSize,
     boost::bind(callback, (const T*)this, _1));
@@ -103,11 +103,11 @@ template <class M, class T> ros::Subscriber NodeImpl::subscribe(const
   return this->subscribe(name, defaultOptions);
 }
 
-template <class MReq, class MRes, class T> ros::ServiceServer
+template <class MReq, class MRes, class T> ServiceServer
     NodeImpl::advertiseService(const std::string& name, const std::string&
     defaultService, bool(T::*callback)(MReq&, MRes&), const ros::VoidConstPtr&
     trackedObject) {
-  ros::AdvertiseServiceOptions defaultOptions;
+  ServiceServerOptions defaultOptions;
 
   defaultOptions.template init<MReq, MRes>(defaultService,
     boost::bind(callback, static_cast<T*>(this), _1, _2));
@@ -116,22 +116,23 @@ template <class MReq, class MRes, class T> ros::ServiceServer
   return this->advertiseService(name, defaultOptions);
 }
 
-template <class S, class T> ros::ServiceServer NodeImpl::advertiseService(
+template <class S, class T> ServiceServer NodeImpl::advertiseService(
     const std::string& name, const std::string& defaultService,
-    bool(T::*callback)(S&), const ros::VoidConstPtr& trackedObject) {
-  ros::AdvertiseServiceOptions defaultOptions;
+    bool(T::*callback)(typename S::Request&, typename S::Response&),
+    const ros::VoidConstPtr& trackedObject) {
+  ServiceServerOptions defaultOptions;
 
-  defaultOptions.template initBySpecType<S>(defaultService,
-    boost::bind(callback, static_cast<T*>(this), _1));
+  defaultOptions.template init<S>(defaultService,
+    boost::bind(callback, static_cast<T*>(this), _1, _2));
   defaultOptions.tracked_object = trackedObject;
   
   return this->advertiseService(name, defaultOptions);
 }
 
-template <class MReq, class MRes> ros::ServiceClient NodeImpl::serviceClient(
+template <class MReq, class MRes> ServiceClient NodeImpl::serviceClient(
     const std::string& name, const std::string& defaultService, bool
     defaultPersistent, const ros::M_string& headerValues) {
-  ros::ServiceClientOptions defaultOptions;
+  ServiceClientOptions defaultOptions;
   
   defaultOptions.template init<MReq, MRes>(defaultService, defaultPersistent,
     headerValues);
@@ -139,10 +140,10 @@ template <class MReq, class MRes> ros::ServiceClient NodeImpl::serviceClient(
   return this->serviceClient(name, defaultOptions);
 }
 
-template <class S> ros::ServiceClient NodeImpl::serviceClient(const
+template <class S> ServiceClient NodeImpl::serviceClient(const
     std::string& name, const std::string& defaultService, bool
     defaultPersistent, const ros::M_string& headerValues) {
-  ros::ServiceClientOptions defaultOptions;
+  ServiceClientOptions defaultOptions;
   
   defaultOptions.template init<S>(defaultService, defaultPersistent,
     headerValues);
@@ -161,11 +162,6 @@ template <class T> Worker NodeImpl::addWorker(const std::string& name,
   defaultOptions.synchronous = synchronous;
   
   return this->addWorker(name, defaultOptions);
-}
-
-template <class T> T NodeImpl::addDiagnosticTask(const std::string& name) {
-  typename T::Options defaultOptions;
-  return this->template addDiagnosticTask<T>(name, defaultOptions);
 }
 
 template <class T> T NodeImpl::addDiagnosticTask(const std::string& name,

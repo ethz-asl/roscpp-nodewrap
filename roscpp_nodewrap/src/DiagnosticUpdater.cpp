@@ -30,25 +30,24 @@ DiagnosticUpdater::DiagnosticUpdater() {
 }
 
 DiagnosticUpdater::DiagnosticUpdater(const DiagnosticUpdater& src) :
-  impl(src.impl) {
+  DiagnosticTaskManager(src) {
 }
 
-DiagnosticUpdater::DiagnosticUpdater(const NodeImplPtr& nodeImpl) :
-  impl(new Impl(nodeImpl)) {
+DiagnosticUpdater::DiagnosticUpdater(const NodeImplPtr& node) {
+  impl.reset(new Impl(node));
 }
 
 DiagnosticUpdater::~DiagnosticUpdater() {  
 }
 
-DiagnosticUpdater::Impl::Impl(const NodeImplPtr& nodeImpl) :
-  diagnostic_updater::Updater(ros::NodeHandle(), nodeImpl->getNodeHandle(),
-    nodeImpl->getName()),
-  nodeImpl(nodeImpl) {
+DiagnosticUpdater::Impl::Impl(const NodeImplPtr& node) :
+  updater(ros::NodeHandle(), node->getNodeHandle(), node->getName()),
+  node(node) {
   std::string ns = "diagnostics";
   
-  double period = nodeImpl->getParam(ros::names::append(ns, "period"),
-    getPeriod());
-  setHardwareID("none");
+  double period = node->getParam(ros::names::append(ns, "period"),
+    updater.getPeriod());
+  updater.setHardwareID("none");
     
   ros::TimerOptions timerOptions;
   timerOptions.period = ros::Duration(period);
@@ -57,7 +56,7 @@ DiagnosticUpdater::Impl::Impl(const NodeImplPtr& nodeImpl) :
   timerOptions.callback = boost::bind(&DiagnosticUpdater::Impl::timerCallback,
     this, _1);
   
-  timer = nodeImpl->getNodeHandle().createTimer(timerOptions);
+  timer = node->createTimer(timerOptions);
 }
     
 DiagnosticUpdater::Impl::~Impl() {
@@ -69,37 +68,33 @@ DiagnosticUpdater::Impl::~Impl() {
 
 void DiagnosticUpdater::setHardwareId(const std::string& hardwareId) {
   if (impl)
-    impl->setHardwareId(hardwareId);
+    impl->as<DiagnosticUpdater::Impl>().setHardwareId(hardwareId);
+}
+
+const NodeImplPtr& DiagnosticUpdater::Impl::getNode() const {
+  return node;
 }
 
 void DiagnosticUpdater::Impl::setHardwareId(const std::string& hardwareId) {
-  setHardwareID(hardwareId);
+  updater.setHardwareID(hardwareId);
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticUpdater::shutdown() {
-  if (impl)
-    impl->shutdown();
+void DiagnosticUpdater::Impl::startTask(diagnostic_updater::DiagnosticTask&
+    task) {
+  updater.add(task);
 }
 
-void DiagnosticUpdater::Impl::shutdown() {
-  boost::mutex::scoped_lock lock(mutex);
-  
-  for (std::map<std::string, DiagnosticTask::ImplWPtr>::iterator it =
-      tasks.begin(); it != tasks.end(); ++it) {
-    DiagnosticTask::ImplPtr task = it->second.lock();
-  
-    if (task)
-      task->remove();
-  }
+void DiagnosticUpdater::Impl::stopTask(const std::string& name) {
+  updater.removeByName(name);
 }
 
 void DiagnosticUpdater::Impl::timerCallback(const ros::TimerEvent&
     timerEvent) {
-  force_update();
+  updater.force_update();
 }
 
 }

@@ -26,6 +26,10 @@
 #include <ros/ros.h>
 
 namespace nodewrap {
+  /** \brief Forward declaration of the worker options
+    */
+  class WorkerOptions;
+  
   /** \brief Forward declaration of the worker
     */
   class Worker;
@@ -35,6 +39,17 @@ namespace nodewrap {
   /** \brief Forward declaration of the worker weak pointer type
     */
   typedef boost::weak_ptr<Worker> WorkerWPtr;
+  
+  /** \brief Forward declaration of the worker implementation
+    */
+  class WorkerImpl;  
+  /** \brief Forward declaration of the worker implementation pointer type
+    */
+  typedef boost::shared_ptr<WorkerImpl> WorkerImplPtr;
+  /** \brief Forward declaration of the worker implementation weak pointer
+    *   type
+    */
+  typedef boost::weak_ptr<WorkerImpl> WorkerImplWPtr;
   
   /** \brief Forward declaration of the worker manager
     */

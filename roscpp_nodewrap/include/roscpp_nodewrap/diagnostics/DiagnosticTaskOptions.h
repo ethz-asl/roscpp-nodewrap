@@ -39,7 +39,7 @@ namespace nodewrap {
       */
     DiagnosticTaskOptions();
     
-    /** \brief The namespace of the diagnostic task.
+    /** \brief The namespace of the diagnostic task options
       */
     std::string ns;
   };

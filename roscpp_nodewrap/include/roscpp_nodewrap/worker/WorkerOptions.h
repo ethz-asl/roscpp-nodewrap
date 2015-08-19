@@ -23,9 +23,8 @@
 #ifndef ROSCPP_NODEWRAP_WORKER_OPTIONS_H
 #define ROSCPP_NODEWRAP_WORKER_OPTIONS_H
 
-#include <ros/ros.h>
-
-#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/diagnostics/FrequencyTaskOptions.h>
+#include <roscpp_nodewrap/diagnostics/WorkerStatusTaskOptions.h>
 
 namespace nodewrap {
   /** \brief ROS worker options
@@ -39,6 +38,10 @@ namespace nodewrap {
       */
     WorkerOptions();
 
+    /** \brief The namespace of the worker options
+      */
+    std::string ns;
+    
     /** \brief The frequency at which the worker's callback is expected to
       *   be invoked
       * 
@@ -63,14 +66,42 @@ namespace nodewrap {
       */ 
     WorkerCallback callback;
     
+    /** \brief If true, the worker uses a private callback queue
+      * 
+      * \note This parameter will only take effect if the callback queue is
+      *   explicitly specified by these options.
+      */ 
+    bool privateCallbackQueue;
+    
+    /** \brief The priority of the worker as interpreted by the operating
+      *   system scheduler
+      * 
+      * \note This parameter will only take effect if the worker uses
+      *   a private callback queue as specified by theses options.
+      */ 
+    int priority;
+    
     /** \brief The callback queue to be used by the worker
+      * 
+      * \note If null, the worker will instantiate and use a private
+      *   callback queue if specified by these options.
       */ 
     ros::CallbackQueueInterface* callbackQueue;
     
     /** \brief A shared pointer to an object to track for the worker
       *   callbacks
       */ 
-    ros::VoidConstPtr trackedObject;    
+    ros::VoidConstPtr trackedObject;
+    
+    /** \brief The options of the diagnostic task for monitoring the
+      *   status of the worker
+      */ 
+    WorkerStatusTaskOptions statusTaskOptions;
+    
+    /** \brief The options of the diagnostic task for monitoring the
+      *   frequency of the worker
+      */ 
+    FrequencyTaskOptions frequencyTaskOptions;
   };
 };
 

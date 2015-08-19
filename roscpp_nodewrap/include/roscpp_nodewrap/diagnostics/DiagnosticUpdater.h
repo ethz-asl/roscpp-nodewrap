@@ -27,18 +27,16 @@
 
 #include <diagnostic_updater/diagnostic_updater.h>
 
-#include <roscpp_nodewrap/Forwards.h>
-
-#include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
+#include <roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h>
 
 namespace nodewrap {
   /** \brief ROS diagnostic updater
     * 
     * This class provides the diagnostic updater of a ROS node(let).
     */
-  class DiagnosticUpdater {
+  class DiagnosticUpdater :
+    public DiagnosticTaskManager {
   friend class NodeImpl;
-  friend class DiagnosticTask;
   public:
     /** \brief Default constructor
       */
@@ -62,16 +60,6 @@ namespace nodewrap {
       */
     void setHardwareId(const std::string& hardwareId);
     
-    /** \brief Perform shutdown of the diagnostic updater
-      */
-    void shutdown();
-      
-    /** \brief Void pointer conversion
-      */
-    inline operator void*() const {
-      return impl ? (void*)1 : (void*)0;
-    };
-    
   private:
     /** \brief ROS diagnostic updater implementation
       * 
@@ -79,71 +67,54 @@ namespace nodewrap {
       * updater.
       */
     class Impl :
-      public diagnostic_updater::Updater {
+      public DiagnosticTaskManager::Impl {
     public:
       /** \brief Default constructor
         */
-      Impl(const NodeImplPtr& nodeImpl);
+      Impl(const NodeImplPtr& node);
       
       /** \brief Destructor
         */
       ~Impl();
+      
+      /** \brief Retrieve the node owning this diagnostic updater
+        */ 
+      const NodeImplPtr& getNode() const;
       
       /** \brief Set the hardware identifier to be announced by this
         *   diagnostic updater (implementation)
         */
       void setHardwareId(const std::string& hardwareId);
       
-      /** \brief Perform shutdown of the diagnostic updater (implementation)
+      /** \brief Start the provided task (implementation)
         */
-      void shutdown();
-            
+      void startTask(diagnostic_updater::DiagnosticTask& task);
+      
+      /** \brief Stop the referred task (implementation)
+        */
+      void stopTask(const std::string& name);
+      
       /** \brief The timer callback of this diagnostic updater
         */ 
       void timerCallback(const ros::TimerEvent& timerEvent);
       
+      /** \brief The ROS diagnostic updater
+        */ 
+      diagnostic_updater::Updater updater;
+      
       /** \brief The timer controlling this diagnostic updater
         */ 
-      ros::Timer timer;
+      Timer timer;
       
       /** \brief The node implementation owning this diagnostic updater
         */ 
-      NodeImplPtr nodeImpl;
-      
-      /** \brief The diagnostic updater's mutex
-        */ 
-      mutable boost::mutex mutex;
-      
-      /** \brief The diagnostic tasks run by this diagnostics updater
-        */ 
-      std::map<std::string, DiagnosticTask::ImplWPtr> tasks;
+      NodeImplPtr node;
     };
-    
-    /** \brief Declaration of the diagnostic updater implementation
-      *   pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the diagnostic updater implementation
-      *   weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The diagnostic updater's implementation
-      */
-    ImplPtr impl;
-    
+
     /** \brief Constructor (private version)
       */
-    DiagnosticUpdater(const NodeImplPtr& nodeImpl);
-    
-    /** \brief Add a diagnostic task to this diagnostic updater
-      */
-    template <class T> T addTask(const std::string& name, const typename
-      T::Options& defaultOptions);
+    DiagnosticUpdater(const NodeImplPtr& node);
   };
 };
-
-#include <roscpp_nodewrap/diagnostics/DiagnosticUpdater.tpp>
 
 #endif

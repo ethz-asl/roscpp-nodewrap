@@ -23,27 +23,62 @@
 #ifndef ROSCPP_NODEWRAP_CYCLIC_EVENT_STATISTICS_H
 #define ROSCPP_NODEWRAP_CYCLIC_EVENT_STATISTICS_H
 
-#include <ros/ros.h>
-
-#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/statistics/Statistics.h>
 
 namespace nodewrap {
   /** \brief ROS cyclic event statistics
     * 
-    * This class provides the basis of all statistics for a cyclic event.
+    * This class provides the templated basis of all statistics for
+    * evaluating the timing of a cyclic event.
     */
-  class CyclicEventStatistics {
+  template <typename T> class CyclicEventStatistics :
+    public Statistics<T> {
   public:
-    /** \brief Default constructor
+    /** \brief Declaration of the cyclic event statistics estimates type
       */
-    CyclicEventStatistics();
+    class Estimates :
+      public Statistics<T>::Estimates {
+    public:
+      /** \brief Default constructor
+        */
+      Estimates();
+      
+      /** \brief Copy constructor
+        * 
+        * \param[in] src The source cyclic event statistics estimates which
+        *   are being copied to these cyclic event statistics estimates.
+        */
+      Estimates(const Estimates& src);
+          
+      /** \brief Convert these cyclic event statistics estimates to a ROS
+        *    message
+        * 
+        * \param[in,out] message The message to convert these estimates to.
+        */
+      template <typename M> void toMessage(M& message) const;
+      
+      /** \brief Time of the last event considered in the estimates
+        */
+      ros::Time timeOfLastEvent;
+    };
+    
+    /** \brief Default constructor
+      * 
+      * \param[in] rollingWindowSize The size of the window for computing
+      *   the rolling estimates.
+      * \param[in] nameOfVariates The name of the variates.
+      * \param[in] unitOfVariates The unit of the variates.
+      */
+    CyclicEventStatistics(size_t rollingWindowSize = 0, const std::string&
+      nameOfVariates = std::string(), const std::string& unitOfVariates = 
+      std::string());
     
     /** \brief Copy constructor
       * 
       * \param[in] src The source cyclic event statistics which are being
       *   copied to these cyclic event statistics.
       */
-    CyclicEventStatistics(const CyclicEventStatistics& src);
+    CyclicEventStatistics(const CyclicEventStatistics<T>& src);
     
     /** \brief Destructor
       */
@@ -62,32 +97,34 @@ namespace nodewrap {
       * 
       * \return The time since the last event.
       */
-    inline ros::Duration getTimeSinceLastEvent(const ros::Time&
-        now = ros::Time::now()) const {
-      if (!timeOfLastEvent.isZero())
-        return now-timeOfLastEvent;
-      else
-        return ros::Duration();
-    };    
+    ros::Duration getTimeSinceLastEvent(const ros::Time&
+        now = ros::Time::now()) const;    
     
-    /** \brief Signal to these cyclic event statistics that an event
-      *   has occurred.
+    /** \brief Update these cyclic event statistics with the time of
+      *   occurrence of an event.
       * 
       * \param[in] timeOfEvent The time of the event.
       */
-    inline void event(const ros::Time& timeOfEvent = ros::Time::now()) {
-      timeOfLastEvent = timeOfEvent;
-    };
+    void event(const ros::Time& timeOfEvent = ros::Time::now());
+    
+    /** \brief Extract the estimates of these cyclic event statistics
+      *
+      * \param[in,out] estimates The extracted current estimates of
+      *   these statistics.
+      */
+    void extract(Estimates& estimates) const;
     
     /** \brief Clear these cyclic event statistics
       */
     void clear();
     
   protected:
-    /** \brief Time of the last event of these cyclic event statistics
+    /** \brief The time of the last event
       */
     ros::Time timeOfLastEvent;
   };
 };
+
+#include <roscpp_nodewrap/statistics/CyclicEventStatistics.tpp>
 
 #endif

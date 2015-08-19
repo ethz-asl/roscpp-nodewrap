@@ -26,7 +26,6 @@
 #include <roscpp_nodewrap/diagnostics/DiagnosticTask.h>
 #include <roscpp_nodewrap/diagnostics/FunctionTaskOptions.h>
 
-
 namespace nodewrap {
   /** \brief Diagnostic function task
     * 
@@ -34,7 +33,7 @@ namespace nodewrap {
     */
   class FunctionTask :
     public DiagnosticTask {
-  friend class DiagnosticUpdater;
+  friend class DiagnosticTaskManager;
   public:
     /** \brief Forward declaration of the function task options
       */
@@ -66,8 +65,8 @@ namespace nodewrap {
     public:        
       /** \brief Constructor
         */
-      Impl(const std::string& name, const Options& defaultOptions, const
-        NodeImplPtr& nodeImpl);
+      Impl(const Options& defaultOptions, const std::string& name, const
+        ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -81,25 +80,6 @@ namespace nodewrap {
         */ 
       DiagnosticTaskCallback callback;
     };
-      
-    /** \brief Declaration of the function task implementation
-      *   pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the function task implementation
-      *   weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The function task's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (private version)
-      */
-    FunctionTask(const std::string& name, const Options& defaultOptions,
-      const NodeImplPtr& nodeImpl);
   };
 };
 

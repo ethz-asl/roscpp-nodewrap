@@ -16,9 +16,6 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include <boost/thread.hpp>
-#include <boost/thread/locks.hpp>
-
 #include "roscpp_nodewrap/NodeImpl.h"
 
 #include "roscpp_nodewrap/worker/SyncWorker.h"
@@ -34,25 +31,15 @@ SyncWorker::SyncWorker() {
 }
 
 SyncWorker::SyncWorker(const SyncWorker& src) :
-  Worker(src),
-  impl(src.impl) {
-}
-
-SyncWorker::SyncWorker(const std::string& name, const WorkerOptions&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  impl(new Impl(name, defaultOptions, nodeImpl)),
-  Worker(impl) {
+  Worker(src) {
 }
 
 SyncWorker::~SyncWorker() {  
 }
 
-SyncWorker::Impl::Impl(const std::string& name, const WorkerOptions&
-    defaultOptions, const NodeImplPtr& nodeImpl) :
-  Worker::Impl(name, defaultOptions, nodeImpl),
-  callbackQueue(defaultOptions.callbackQueue),
-  trackedObject(defaultOptions.trackedObject),
-  hasTrackedObject(defaultOptions.trackedObject) {
+SyncWorker::Impl::Impl(const std::string& name, const ManagerImplPtr&
+    manager) :
+  Worker::Impl(name, manager) {
 }
 
 SyncWorker::Impl::~Impl() {
@@ -73,7 +60,7 @@ void SyncWorker::Impl::safeWake() {
   if (callbackQueue)
     callbackQueue->addCallback(callback);
   else
-    nodeImpl->getNodeHandle().getCallbackQueue()->addCallback(callback);
+    getNode()->getNodeHandle().getCallbackQueue()->addCallback(callback);
 }
 
 void SyncWorker::Impl::safeStop() {

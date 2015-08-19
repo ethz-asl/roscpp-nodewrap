@@ -16,7 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
-#include "roscpp_nodewrap/NodeImpl.h"
+#include "roscpp_nodewrap/diagnostics/DiagnosticTaskManager.h"
 
 #include "roscpp_nodewrap/diagnostics/DiagnosticTask.h"
 
@@ -30,26 +30,21 @@ DiagnosticTask::DiagnosticTask() {
 }
 
 DiagnosticTask::DiagnosticTask(const DiagnosticTask& src) :
-  impl(src.impl) {
-}
-
-DiagnosticTask::DiagnosticTask(const ImplPtr& impl) :
-  impl(impl) {
+  Managed<DiagnosticTask, std::string>(src) {
 }
 
 DiagnosticTask::~DiagnosticTask() {  
 }
 
-DiagnosticTask::Impl::Impl(const std::string& name, const NodeImplPtr&
-    nodeImpl) :
-  diagnostic_updater::DiagnosticTask(name),
-  nodeImpl(nodeImpl),
-  valid(true) {
-  nodeImpl->diagnosticUpdater.impl->add(*this);
+DiagnosticTask::Impl::Impl(const std::string& name, const ManagerImplPtr&
+    manager) :
+  Managed<nodewrap::DiagnosticTask, std::string>::Impl(name, manager),
+  task(name, boost::bind(&DiagnosticTask::Impl::run, this, _1)),
+  started(false) {
 }
 
 DiagnosticTask::Impl::~Impl() {
-  remove();
+  shutdown();
 }
 
 /*****************************************************************************/
@@ -57,30 +52,49 @@ DiagnosticTask::Impl::~Impl() {
 /*****************************************************************************/
 
 std::string DiagnosticTask::getName() const {
-  if (impl)
-    return impl->getName();
-  else
-    return std::string();
+  return getIdentifier();
 }
 
 bool DiagnosticTask::Impl::isValid() const {
-  return valid;
+  return true;
 }
 
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void DiagnosticTask::shutdown() {
+void DiagnosticTask::start() {
   if (impl)
-    impl->remove();
+    impl->as<DiagnosticTask::Impl>().start();
 }
 
-void DiagnosticTask::Impl::remove() {
-  if (valid) {
-    nodeImpl->diagnosticUpdater.impl->removeByName(getName());
-    valid = false;
+void DiagnosticTask::stop() {
+  if (impl)
+    impl->as<DiagnosticTask::Impl>().stop();
+}
+
+void DiagnosticTask::resetImpl(Impl* impl) {
+  this->impl.reset(impl);
+}
+
+void DiagnosticTask::Impl::start() {
+  if (!started) {
+    manager->as<DiagnosticTaskManager::Impl>().startTask(task);
+    
+    started = true;
   }
+}
+
+void DiagnosticTask::Impl::stop() {
+  if (started) {
+    started = false;
+    
+    manager->as<DiagnosticTaskManager::Impl>().stopTask(task.getName());
+  }
+}
+
+void DiagnosticTask::Impl::shutdown() {
+  stop();
 }
 
 }

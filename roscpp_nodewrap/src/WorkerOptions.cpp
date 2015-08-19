@@ -29,6 +29,8 @@ WorkerOptions::WorkerOptions() :
   autostart(true),
   synchronous(false),
   statisticsWindow(1.0),
+  privateCallbackQueue(false),
+  priority(0),
   callbackQueue(0) {
 }
 

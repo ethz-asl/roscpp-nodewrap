@@ -99,6 +99,27 @@ namespace nodewrap {
     *
     * For a complete example configuration, see the ROS package which provides
     * this tutorial.
+    *
+    * \section worker_priorities A Word about Worker Priorities
+    *
+    * In this implementation, time-critical workers can be configured to 
+    * use their private callback queue and higher priorization. Under the
+    * hood, the worker implementation therefore needs to make calls to the
+    * native worker thread handle using the pthread library.
+    * 
+    * Most operating systems require special user or group privileges in
+    * order for the thread to modifiy its scheduling policy and increase its
+    * priority. On Unbuntu, these privileges may be granted to the user at
+    * login by adding any of the following lines to /etc/security/limits.conf:
+    *
+      \verbatim
+      [user]    -  rtprio  99
+      @[group]  -  rtprio  99
+      \endverbatim
+    *
+    * Note that the above placeholders [user] and [group] should be
+    * substituted by the actual user/group membership of the user executing
+    * the ROS node.
     */
   class WorkerNode :
     public NodeImpl {
@@ -131,7 +152,7 @@ namespace nodewrap {
     /** \brief The ROS subscriber listening to the topic for waking
       *   the nursing worker
       */
-    ros::Subscriber subscriber;
+    Subscriber subscriber;
     
     /** \brief The ROS worker performing the nursing task
       */

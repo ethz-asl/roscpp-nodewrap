@@ -31,12 +31,14 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
-#include <roscpp_nodewrap/Forwards.h>
+#include <roscpp_nodewrap/Managed.h>
 
 #include <roscpp_nodewrap/worker/WorkerEvent.h>
+#include <roscpp_nodewrap/worker/WorkerImpl.h>
 #include <roscpp_nodewrap/worker/WorkerOptions.h>
 
-#include <roscpp_nodewrap/diagnostics/FrequencyTask.h>
+#include <roscpp_nodewrap/diagnostics/StatefulFrequencyTask.h>
+#include <roscpp_nodewrap/diagnostics/WorkerStatusTask.h>
 
 #include <roscpp_nodewrap_msgs/GetWorkerFrequency.h>
 #include <roscpp_nodewrap_msgs/GetWorkerState.h>
@@ -47,9 +49,11 @@ namespace nodewrap {
     * This class provides the abstract basis of a worker for use with
     * the ROS node implementation.
     */
-  class Worker {
+  class Worker :
+    public Managed<Worker, std::string> {
   friend class WorkerManager;
   friend class WorkerQueueCallback;
+  friend class WorkerStatusTask;
   public:
     /** \brief Default constructor
       */
@@ -69,6 +73,10 @@ namespace nodewrap {
       */
     std::string getName() const;
     
+    /** \brief Retrieve the time passed since the worker has been started
+      */
+    ros::Duration getTimeSinceStart() const;
+      
     /** \brief Retrieve the frequency statistics' estimates of this worker
       * 
       * \return The frequency statistics' estimates of this worker.
@@ -87,46 +95,19 @@ namespace nodewrap {
       */
     void wake();
     
-    /** \brief Perform shutdown of the worker
-      */
-    void shutdown();
-      
-    /** \brief Void pointer conversion
-      */
-    inline operator void*() const {
-      return (impl && impl->isValid()) ? (void*)1 : (void*)0;
-    };
-    
-    /** \brief Lesser comparison operator
-      */
-    inline bool operator<(const Worker& worker) const {
-      return (impl < worker.impl);
-    };
-    
-    /** \brief Equality comparison operator
-      */
-    inline bool operator==(const Worker& worker) const {
-      return (impl == worker.impl);
-    };
-    
-    /** \brief Inequality comparison operator
-      */
-    inline bool operator!=(const Worker& worker) const {
-      return (impl != worker.impl);
-    };
-    
   protected:
     /** \brief Abstract basis of the ROS node worker implementation
       * 
       * This class provides the protected, abstract basis of the node
       * worker implementation.
       */
-    class Impl {
+    class Impl :
+      public Managed<Worker, std::string>::Impl,
+      public WorkerImpl {
     public:
       /** \brief Constructor
         */
-      Impl(const std::string& name, const WorkerOptions& defaultOptions,
-        const NodeImplPtr& nodeImpl);
+      Impl(const std::string& name, const ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -136,9 +117,18 @@ namespace nodewrap {
         */
       FrequencyStatistics::Estimates getStatisticsEstimates() const;
       
+      /** \brief Retrieve the time passed since the worker has been started
+        *   (implementation)
+        */
+      ros::Duration getTimeSinceStart() const;
+        
       /** \brief True, if this worker implementation is valid
         */
       bool isValid() const;
+      
+      /** \brief Initialize the worker
+        */
+      void init(const WorkerOptions& defaultOptions);
       
       /** \brief Create a timer for this worker
         */
@@ -170,11 +160,15 @@ namespace nodewrap {
             
       /** \brief Unadvertise the worker's services
         */
-      void unadvertise();
+      void shutdown();
             
       /** \brief Run this worker once
         */ 
       void runOnce();
+      
+      /** \brief Spin over the private callback queue of this worker
+        */ 
+      void spin();
       
       /** \brief Service callback starting this worker
         */ 
@@ -196,10 +190,6 @@ namespace nodewrap {
       bool getStateCallback(GetWorkerState::Request& request,
         GetWorkerState::Response& response);
       
-      /** \brief The name of this worker
-        */ 
-      std::string name;
-      
       /** \brief The expected cycle time of this worker
         */ 
       ros::Duration expectedCycleTime;
@@ -211,6 +201,34 @@ namespace nodewrap {
       /** \brief The worker's callback
         */ 
       WorkerCallback callback;
+      
+      /** \brief The callback queue used by this worker
+        */ 
+      ros::CallbackQueueInterface* callbackQueue;
+    
+      /** \brief If true, this worker's callback queue is private
+        */ 
+      bool hasPrivateCallbackQueue;
+      
+      /** \brief The expected priority of the spinner serving this worker's 
+        *   private callback queue
+        */ 
+      int expectedPriority;
+      
+      /** \brief The actual priority of the spinner serving this worker's 
+        *   private callback queue
+        */ 
+      int actualPriority;
+      
+      /** \brief A shared pointer to an object being tracked for the worker
+        *   callbacks
+        */ 
+      ros::VoidConstWPtr trackedObject;
+      
+      /** \brief If true, the worker has an object to track for its
+        *   callbacks
+        */ 
+      bool hasTrackedObject;
       
       /** \brief True, if the worker has been started
         */ 
@@ -231,6 +249,10 @@ namespace nodewrap {
       /** \brief The actual cycle time of this worker
         */ 
       ros::Duration actualCycleTime;
+      
+      /** \brief The spinner serving this worker's private callback queue
+        */ 
+      boost::thread spinner;
       
       /** \brief Identifier of the thread running the worker
         * 
@@ -263,31 +285,16 @@ namespace nodewrap {
         */ 
       boost::condition cancelCondition;
       
-      /** \brief The node implementation owning this worker
+      /** \brief The diagnostic task for monitoring the status of this
+        *   worker
         */ 
-      NodeImplPtr nodeImpl;
+      WorkerStatusTask statusTask;
       
       /** \brief The diagnostic task for monitoring the frequency
         *   of this worker
         */ 
-      FrequencyTask frequencyTask;
+      StatefulFrequencyTask frequencyTask;
     };
-    
-    /** \brief Declaration of the worker implementation pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the worker implementation weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The worker's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (protected version)
-      */
-    Worker(const ImplPtr& impl);
   };
 };
 

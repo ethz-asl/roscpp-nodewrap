@@ -34,6 +34,7 @@ namespace nodewrap {
   class SyncWorker :
     public Worker {
   friend class WorkerManager;
+  friend class WorkerStatusTask;
   public:
     /** \brief Default constructor
       */
@@ -61,8 +62,7 @@ namespace nodewrap {
     public:
       /** \brief Constructor
         */
-      Impl(const std::string& name, const WorkerOptions& defaultOptions,
-        const NodeImplPtr& nodeImpl);
+      Impl(const std::string& name, const ManagerImplPtr& manager);
       
       /** \brief Destructor
         */
@@ -78,41 +78,8 @@ namespace nodewrap {
             
       /** \brief Stop the worker (thread-safe implementation)
         */
-      void safeStop();
-      
-      /** \brief The callback queue used by this worker
-        */ 
-      ros::CallbackQueueInterface* callbackQueue;
-    
-      /** \brief A shared pointer to an object being tracked for the worker
-        *   callbacks
-        */ 
-      ros::VoidConstWPtr trackedObject;
-      
-      /** \brief If true, the worker has an object to track for its
-        *   callbacks
-        */ 
-      bool hasTrackedObject;    
+      void safeStop();      
     };
-    
-    /** \brief Declaration of the synchronous worker implementation
-      *   pointer type
-      */
-    typedef boost::shared_ptr<Impl> ImplPtr;
-    
-    /** \brief Declaration of the synchronous worker implementation
-      *   weak pointer type
-      */
-    typedef boost::weak_ptr<Impl> ImplWPtr;
-    
-    /** \brief The synchronous worker's implementation
-      */
-    ImplPtr impl;
-    
-    /** \brief Constructor (private version)
-      */
-    SyncWorker(const std::string& name, const WorkerOptions& defaultOptions,
-      const NodeImplPtr& nodeImpl);
   };
 };
 

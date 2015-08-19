@@ -29,9 +29,9 @@ TimerInfo::TimerInfo() :
   callbackQueue(0),
   removed(false),
   hasTrackedObject(false),
-  waitingCallbacks(0),
+  numWaitingCallbacks(0),
   oneshot(false),
-  totalCalls(0) {
+  totalNumCalls(0) {
 }
 
 }

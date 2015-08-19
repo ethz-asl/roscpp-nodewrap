@@ -2,6 +2,9 @@ publishers:
   chat:
     topic: "chat"
     queue_size: 100
+    diagnostics:
+      status:
+        minimum_number_of_subscribers: 1
 subscribers:
   chat:
     topic: "/alice/chat"

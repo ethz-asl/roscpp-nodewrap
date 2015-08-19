@@ -11,7 +11,7 @@
   <arg name="diagnostics" default="false"/>
   <group if="$(arg diagnostics)">
     <node pkg="diagnostic_aggregator" type="aggregator_node" name="diagnostic_aggregator">
-      <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/maya_analyzers.yaml"/>
+      <rosparam command="load" file="$(find roscpp_nodewrap_tutorial)/config/worker_analyzers.yaml"/>
     </node>
     <node pkg="rqt_robot_monitor" type="rqt_robot_monitor" name="diagnostic_monitor" required="true"/>
   </group>

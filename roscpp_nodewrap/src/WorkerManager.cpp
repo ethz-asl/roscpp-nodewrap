@@ -23,6 +23,7 @@
 #include "roscpp_nodewrap/worker/AsyncWorker.h"
 #include "roscpp_nodewrap/worker/SyncWorker.h"
 #include "roscpp_nodewrap/worker/WorkerExceptions.h"
+
 #include "roscpp_nodewrap/worker/WorkerManager.h"
 
 namespace nodewrap {
@@ -35,40 +36,46 @@ WorkerManager::WorkerManager() {
 }
 
 WorkerManager::WorkerManager(const WorkerManager& src) :
-  impl(src.impl) {
+  Manager<Worker, std::string>(src) {
 }
 
-WorkerManager::WorkerManager(const NodeImplPtr& nodeImpl) :
-  impl(new Impl(nodeImpl)) {
+WorkerManager::WorkerManager(const NodeImplPtr& node) {
+  impl.reset(new Impl(node));
 }
 
 WorkerManager::~WorkerManager() {  
 }
 
-WorkerManager::Impl::Impl(const NodeImplPtr& nodeImpl) :
-  nodeImpl(nodeImpl) {
+WorkerManager::Impl::Impl(const NodeImplPtr& node) :
+  node(node) {
   ros::AdvertiseServiceOptions listWorkersOptions;
   listWorkersOptions.init<ListWorkers::Request, ListWorkers::Response>(
     "list_workers", boost::bind(&WorkerManager::Impl::listWorkersCallback,
     this, _1, _2));
-  listWorkersServer = nodeImpl->getNodeHandle().advertiseService(
+  listWorkersServer = node->advertiseService(
+    ros::names::append("worker_manager", "list_workers"),
     listWorkersOptions);
   
   ros::AdvertiseServiceOptions hasWorkerOptions;
   hasWorkerOptions.init<HasWorker::Request, HasWorker::Response>(
     "has_worker", boost::bind(&WorkerManager::Impl::hasWorkerCallback,
     this, _1, _2));
-  hasWorkerServer = nodeImpl->getNodeHandle().advertiseService(
+  hasWorkerServer = node->advertiseService(
+    ros::names::append("worker_manager", "has_worker"),
     hasWorkerOptions);
 }
 
 WorkerManager::Impl::~Impl() {
-  unadvertise();
+  shutdown();
 }
 
 /*****************************************************************************/
 /* Accessors                                                                 */
 /*****************************************************************************/
+
+const NodeImplPtr& WorkerManager::Impl::getNode() const {
+  return node;
+}
 
 bool WorkerManager::Impl::isValid() const {
   return listWorkersServer && hasWorkerServer;
@@ -78,62 +85,57 @@ bool WorkerManager::Impl::isValid() const {
 /* Methods                                                                   */
 /*****************************************************************************/
 
-void WorkerManager::shutdown() {
-  if (impl)
-    impl->unadvertise();
-}
-
 Worker WorkerManager::addWorker(const std::string& name, const WorkerOptions&
     defaultOptions) {
-  boost::mutex::scoped_lock lock(impl->mutex);
-  
-  if (name.empty())
-    throw InvalidWorkerNameException(name, "Worker name may not be empty");
-  
-  for (size_t i = 0; i < name.size(); ++i) {
-    if (!isalnum(name[i]) && (name[i] != '_') && (name[i] != '/')) {
-      std::stringstream stream;
-      stream << "Character [" << name[i] << "] at element [" << i <<
-        "] is not valid";
-      throw InvalidWorkerNameException(name, stream.str());
-    }
-  }
-  
   Worker worker;
-  std::map<std::string, Worker::ImplWPtr>::iterator it =
-    impl->workers.find(name);
+  
+  if (impl) {
+    boost::mutex::scoped_lock lock(impl->mutex);
     
-  if (it == impl->workers.end()) {
-    if (defaultOptions.synchronous)
-      worker.impl.reset(new SyncWorker::Impl(name, defaultOptions,
-        impl->nodeImpl));
-    else
-      worker.impl.reset(new AsyncWorker::Impl(name, defaultOptions,
-        impl->nodeImpl));
+    if (name.empty())
+      throw InvalidWorkerNameException(name, "Worker name may not be empty");
+    
+    for (size_t i = 0; i < name.size(); ++i) {
+      if (!isalnum(name[i]) && (name[i] != '_') && (name[i] != '/')) {
+        std::stringstream stream;
+        stream << "Character [" << name[i] << "] at element [" << i <<
+          "] is not valid";
+        throw InvalidWorkerNameException(name, stream.str());
+      }
+    }
+    
+    std::map<std::string, Worker::ImplWPtr>::iterator it =
+      impl->instances.find(name);
       
-    impl->workers.insert(std::make_pair(name, worker.impl));
-    
-    if (worker.impl->autostart)
-      worker.impl->start();    
+    if (it == impl->instances.end()) {
+      if (defaultOptions.synchronous)
+        worker.impl.reset(new SyncWorker::Impl(name, impl));
+      else
+        worker.impl.reset(new AsyncWorker::Impl(name, impl));
+      
+      impl->instances.insert(std::make_pair(name, worker.impl));
+      
+      worker.impl->as<Worker::Impl>().init(defaultOptions);
+      if (worker.impl->as<Worker::Impl>().autostart)
+        worker.impl->as<Worker::Impl>().start();
+    }
+    else
+      worker.impl = it->second.lock();
   }
-  else
-    worker.impl = it->second.lock();
   
   return worker;
 }
 
-void WorkerManager::Impl::unadvertise() {
+void WorkerManager::Impl::shutdown() {
   boost::mutex::scoped_lock lock(mutex);
   
   if (isValid()) {
     for (std::map<std::string, Worker::ImplWPtr>::iterator it =
-        workers.begin(); it != workers.end(); ++it) {
+        instances.begin(); it != instances.end(); ++it) {
       Worker::ImplPtr worker = it->second.lock();
     
-      if (worker) {
-        worker->cancel(true);
-        worker->unadvertise();
-      }
+      if (worker)
+        worker->shutdown();
     }
     
     listWorkersServer.shutdown();
@@ -144,10 +146,10 @@ void WorkerManager::Impl::unadvertise() {
 bool WorkerManager::Impl::listWorkersCallback(ListWorkers::Request& request,
     ListWorkers::Response& response) {
   boost::mutex::scoped_lock lock(mutex);
-  response.names.reserve(workers.size());
+  response.names.reserve(instances.size());
   
   for (std::map<std::string, Worker::ImplWPtr>::iterator it =
-      workers.begin(); it != workers.end(); ++it) {
+      instances.begin(); it != instances.end(); ++it) {
     if (it->second.lock())
       response.names.push_back(it->first);
   }
@@ -160,8 +162,8 @@ bool WorkerManager::Impl::hasWorkerCallback(HasWorker::Request& request,
   boost::mutex::scoped_lock lock(mutex);
 
   std::map<std::string, Worker::ImplWPtr>::iterator it =
-    workers.find(request.name);
-  response.result = (it != workers.end()) && it->second.lock();
+    instances.find(request.name);
+  response.result = (it != instances.end()) && it->second.lock();
   
   return true;
 }
