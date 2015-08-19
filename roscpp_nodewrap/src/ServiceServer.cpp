@@ -90,7 +90,7 @@ void ServiceServer::shutdown() {
 void ServiceServer::Impl::init(const ServiceServerOptions& defaultOptions) {
   ros::AdvertiseServiceOptions options(defaultOptions);
   std::string ns = defaultOptions.ns.empty() ?
-    ros::names::append("service_servers", name) : defaultOptions.ns;
+    ros::names::append("servers", name) : defaultOptions.ns;
   
   options.service = node->getParam(ros::names::append(ns, "service"),
     defaultOptions.service);

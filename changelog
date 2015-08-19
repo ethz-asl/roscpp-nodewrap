@@ -1,3 +1,9 @@
+roscpp-nodewrap (0.1-23) unstable; urgency=low
+
+  * Reverted parameter namespace of service servers and clients
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 19 Aug 2015 15:39:00 +0200
+
 roscpp-nodewrap (0.1-22) unstable; urgency=low
 
   * Added worker status diagnostic task (and required worker modifications)

@@ -11,7 +11,7 @@ subscribers:
     topic: "/bob/chat"
     queue_size: 100
     latch: false
-service_servers:
+servers:
   call:
     service: "call"
 chat:

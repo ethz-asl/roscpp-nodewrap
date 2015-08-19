@@ -118,7 +118,7 @@ void ServiceClient::shutdown() {
 void ServiceClient::Impl::init(const ServiceClientOptions& defaultOptions) {
   ros::ServiceClientOptions options(defaultOptions);
   std::string ns = defaultOptions.ns.empty() ?
-    ros::names::append("service_clients", name) : defaultOptions.ns;
+    ros::names::append("clients", name) : defaultOptions.ns;
   
   options.service = node->getParam(ros::names::append(ns, "service"),
     defaultOptions.service);

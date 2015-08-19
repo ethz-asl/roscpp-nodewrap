@@ -9,7 +9,7 @@ subscribers:
   chat:
     topic: "/alice/chat"
     queue_size: 100
-service_servers:
+servers:
   call:
     service: "call"
 chat:

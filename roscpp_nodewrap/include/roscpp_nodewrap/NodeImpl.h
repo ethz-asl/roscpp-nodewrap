@@ -438,7 +438,7 @@ namespace nodewrap {
       * particular, this configuration is expected to represent a structure
       * of the following YAML format:
       * 
-      * - service_servers:
+      * - servers:
       *   - name:
       *     - service: <string>
       * 
@@ -516,7 +516,7 @@ namespace nodewrap {
       * particular, this configuration is expected to represent a structure
       * of the following YAML format:
       * 
-      * - service_clients:
+      * - clients:
       *   - name:
       *     - service: <string>
       *     - persistent: <bool>
