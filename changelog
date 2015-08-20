@@ -1,16 +1,29 @@
-roscpp-nodewrap (0.1-23) unstable; urgency=low
+roscpp-nodewrap (0.1-31) unstable; urgency=low
+
+  * Fixed a bug which would cause service servers to be advertised unsing
+    wrong MD5 sums
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 20 Aug 2015 14:15:00 +0200
+
+roscpp-nodewrap (0.1-30) unstable; urgency=low
 
   * Reverted parameter namespace of service servers and clients
 
- -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 19 Aug 2015 15:39:00 +0200
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 19 Aug 2015 15:39:45 +0200
 
-roscpp-nodewrap (0.1-22) unstable; urgency=low
+roscpp-nodewrap (0.1-29) unstable; urgency=low
+
+  * Merge branch 'master' into features/worker
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 18 Jun 2015 19:37:25 +0200
+
+roscpp-nodewrap (0.1-28) unstable; urgency=low
 
   * Added worker status diagnostic task (and required worker modifications)
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 07:14:51 +0200
 
-roscpp-nodewrap (0.1-21) unstable; urgency=low
+roscpp-nodewrap (0.1-27) unstable; urgency=low
 
   * Fixed bug which caused native publishers, subscriber, service servers,
     and service clients to be shutdown when the wrapper instances went
@@ -22,7 +35,7 @@ roscpp-nodewrap (0.1-21) unstable; urgency=low
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 17 Jun 2015 05:08:47 +0200
 
-roscpp-nodewrap (0.1-20) unstable; urgency=low
+roscpp-nodewrap (0.1-26) unstable; urgency=low
 
   * Fixed bug which caused segmentation fault of the worker manager when
     advertising its services
@@ -30,34 +43,46 @@ roscpp-nodewrap (0.1-20) unstable; urgency=low
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 14:25:22 +0200
 
-roscpp-nodewrap (0.1-19) unstable; urgency=low
+roscpp-nodewrap (0.1-25) unstable; urgency=low
 
   * Added diagnosed wrappers for publisher, subscriber, service server,
     and service client
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 16 Jun 2015 11:28:22 +0200
 
-roscpp-nodewrap (0.1-18) unstable; urgency=low
+roscpp-nodewrap (0.1-24) unstable; urgency=low
 
   * Revised base classes
   * Added composite diagnostic task
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 11 Jun 2015 07:26:57 +0200
 
-roscpp-nodewrap (0.1-17) unstable; urgency=low
+roscpp-nodewrap (0.1-23) unstable; urgency=low
+
+  * Updated changelog
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 08 Jun 2015 06:41:55 +0200
+
+roscpp-nodewrap (0.1-22) unstable; urgency=low
+
+  * Merge branch 'master' of github.com:ethz-asl/roscpp-nodewrap
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 08 Jun 2015 06:40:51 +0200
+
+roscpp-nodewrap (0.1-21) unstable; urgency=low
 
   * Added diagnostic function task
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 17:04:01 +0200
 
-roscpp-nodewrap (0.1-16) unstable; urgency=low
+roscpp-nodewrap (0.1-20) unstable; urgency=low
 
   * Added stamp of last event to cyclic event estimators and their
     messages
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:29:49 +0200
 
-roscpp-nodewrap (0.1-15) unstable; urgency=low
+roscpp-nodewrap (0.1-19) unstable; urgency=low
 
   * Added own high precision timer implementation
   * Added diagnostics
@@ -65,42 +90,73 @@ roscpp-nodewrap (0.1-15) unstable; urgency=low
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Fri, 05 Jun 2015 15:20:39 +0200
 
-roscpp-nodewrap (0.1-14) unstable; urgency=low
+roscpp-nodewrap (0.1-18) unstable; urgency=low
 
   * Restructured includes
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 17:03:20 +0200
 
-roscpp-nodewrap (0.1-13) unstable; urgency=low
+roscpp-nodewrap (0.1-17) unstable; urgency=low
 
   * Now supporting synchronous and asynchronous workers
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Thu, 28 May 2015 12:56:10 +0200
 
-roscpp-nodewrap (0.1-12) unstable; urgency=low
+roscpp-nodewrap (0.1-16) unstable; urgency=low
 
   * Moved services to roscpp_nodewrap_msgs package
   * Preparations of transition to Sync/AsyncWorker
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 27 May 2015 05:53:21 +0200
 
-roscpp-nodewrap (0.1-11) unstable; urgency=low
+roscpp-nodewrap (0.1-15) unstable; urgency=low
+
+  * Merged features/unload
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 18 Feb 2015 14:54:09 +0100
+
+roscpp-nodewrap (0.1-14) unstable; urgency=low
+
+  * Both the signal and the unload handler, are now protected and
+    virtual
+  * Renamed the default signal handler
+  * Removed the method for unbinding default signal handler (with the
+    default handler being protected, the same behavior can be achieved
+    using Signal::unbind())
+  * Added documentation to both the node signal and the unload handler
+  * Added unload method and added signum to signal handler argument
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 18 Feb 2015 14:41:23 +0100
+
+roscpp-nodewrap (0.1-13) unstable; urgency=low
+
+  * Updated README.md
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Tue, 17 Feb 2015 05:43:35 +0100
+
+roscpp-nodewrap (0.1-12) unstable; urgency=low
 
   * First operational version of the worker feature and its tutorial
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 04 Feb 2015 16:04:22 +0100
 
-roscpp-nodewrap (0.1-10) unstable; urgency=low
+roscpp-nodewrap (0.1-11) unstable; urgency=low
 
   * Removed code fragments and classes fromf features/advertise_param
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Mon, 02 Feb 2015 12:50:32 +0100
 
-roscpp-nodewrap (0.1-9) unstable; urgency=low
+roscpp-nodewrap (0.1-10) unstable; urgency=low
 
   * Updated README.md with project information and install instructions
 
  -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 28 Jan 2015 11:51:09 +0100
+
+roscpp-nodewrap (0.1-9) unstable; urgency=low
+
+  * Added unload method and added signum to signal handler argument.
+
+ -- gehrinch <gehrinch@ethz.ch>  Thu, 08 Jan 2015 16:45:46 +0100
 
 roscpp-nodewrap (0.1-8) unstable; urgency=low
 

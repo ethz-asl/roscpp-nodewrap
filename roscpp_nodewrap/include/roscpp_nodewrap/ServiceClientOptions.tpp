@@ -24,7 +24,7 @@ namespace nodewrap {
 
 template <class MReq, class MRes> void ServiceClientOptions::init(const
     std::string& service, bool persistent, const ros::M_string& header) {
-  this->datatype = ros::message_traits::template datatype<MReq>();
+  this->datatype = ros::service_traits::template datatype<MReq>();
   this->req_datatype = ros::message_traits::template datatype<MReq>();
   this->res_datatype = ros::message_traits::template datatype<MRes>();
   

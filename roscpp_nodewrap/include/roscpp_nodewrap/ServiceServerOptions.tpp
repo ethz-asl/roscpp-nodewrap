@@ -28,8 +28,8 @@ template <class MReq, class MRes> void ServiceServerOptions::init(
     const std::string& service, const boost::function<bool(MReq&, MRes&)>&
     callback) {
   this->service = service;
-  this->md5sum = ros::message_traits::template md5sum<MReq>();
-  this->datatype = ros::message_traits::template datatype<MReq>();
+  this->md5sum = ros::service_traits::template md5sum<MReq>();
+  this->datatype = ros::service_traits::template datatype<MReq>();
   this->req_datatype = ros::message_traits::template datatype<MReq>();
   this->res_datatype = ros::message_traits::template datatype<MRes>();
   
