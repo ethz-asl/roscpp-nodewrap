@@ -1,3 +1,10 @@
+roscpp-nodewrap (0.1-32) unstable; urgency=low
+
+  * Fixed a bug in ServiceClient::waitForExistence() which would cause
+    erratic return values
+
+ -- Ralf Kaestner <ralf.kaestner@gmail.com>  Wed, 06 Jan 2016 14:31:00 +0200
+
 roscpp-nodewrap (0.1-31) unstable; urgency=low
 
   * Fixed a bug which would cause service servers to be advertised unsing
