@@ -39,6 +39,8 @@ template <class MReq, class MRes> bool ServiceClient::call(MReq& request,
       ++impl->numServedRequests;
     else
       ++impl->numFailedRequests;
+    
+    return result;
   }
   else
     return false;
