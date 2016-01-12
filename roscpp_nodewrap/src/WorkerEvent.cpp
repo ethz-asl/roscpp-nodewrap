@@ -16,6 +16,8 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.       *
  ******************************************************************************/
 
+#include <roscpp_nodewrap/worker/Worker.h>
+
 #include "roscpp_nodewrap/worker/WorkerEvent.h"
 
 namespace nodewrap {
@@ -25,6 +27,17 @@ namespace nodewrap {
 /*****************************************************************************/
 
 WorkerEvent::WorkerEvent() {
+}
+
+/*****************************************************************************/
+/* Accessors                                                                 */
+/*****************************************************************************/
+
+bool WorkerEvent::isWorkerCanceled() const {
+  if (worker)
+    return worker->isCanceled();
+  else
+    return false;
 }
 
 }

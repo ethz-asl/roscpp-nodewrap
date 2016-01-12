@@ -83,6 +83,10 @@ namespace nodewrap {
       */
     FrequencyStatistics::Estimates getStatisticsEstimates() const;
       
+    /** \brief True, if this worker has been canceled
+      */
+    bool isCanceled() const;
+    
     /** \brief Start the worker
       */
     void start();
@@ -122,9 +126,13 @@ namespace nodewrap {
         */
       ros::Duration getTimeSinceStart() const;
         
+      /** \brief True, if this worker has been canceled (implementation)
+        */
+      bool isCanceled() const;
+    
       /** \brief True, if this worker implementation is valid
         */
-      bool isValid() const;
+      bool isValid() const;      
       
       /** \brief Initialize the worker
         */
