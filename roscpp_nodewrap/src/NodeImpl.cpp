@@ -140,6 +140,8 @@ void NodeImpl::start(const std::string& name, bool nodelet, const
 }
 
 void NodeImpl::shutdown() {
+  if (timerManager)
+    timerManager.shutdown();
   if (diagnosticUpdater)
     diagnosticUpdater.shutdown();
   if (workerManager)
