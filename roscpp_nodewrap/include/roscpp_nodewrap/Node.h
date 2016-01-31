@@ -108,7 +108,12 @@ namespace nodewrap {
       */
     Node& operator=(const Node& src);
 
-  private:
+
+    nodewrap::NodeImplPtr getImplPtr() {
+      return impl;
+    }
+
+  protected:
     /** \brief The node's implementation
       */
     NodeImplPtr impl;
