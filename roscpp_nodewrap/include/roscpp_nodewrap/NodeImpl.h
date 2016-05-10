@@ -28,6 +28,7 @@
 #include <boost/enable_shared_from_this.hpp>
 
 #include <ros/console.h>
+#include <roscpp_nodewrap/Console.h>
 
 #include <roscpp_nodewrap/Publisher.h>
 #include <roscpp_nodewrap/PublisherOptions.h>
@@ -128,6 +129,19 @@ namespace nodewrap {
       */
     template <typename T> T getParam(const std::string& key, const T&
       defaultValue) const;
+
+    /** \brief Retrieve a parameter value from the parameter server. Use warning output if parameter does not exist.
+      *
+      * \param[in] key The key referring to the parameter whose value
+      *   shall be retrieved.
+      * \param[in] defaultValue The default value of the parameter.
+      * \return The actual value of the parameter if the parameter
+      *   has been defined or the default value otherwise.
+      *
+      * \see ros::NodeHandle::getParam
+      */
+    template <typename T> T getParamWithWarning(const std::string& key,
+      const T& defaultValue) const;
     
     /** \brief Query if the node(let) is a ROS nodelet
       * 
