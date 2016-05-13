@@ -35,6 +35,20 @@ template <typename T> T NodeImpl::getParam(const std::string& key,
   return value;
 }
 
+template <typename T> T NodeImpl::getParamWithWarning(const std::string& key,
+    const T& defaultValue) const {
+  T value;
+
+  if(!this->getNodeHandle().hasParam(key) || !this->getNodeHandle().getParam(key, value))
+  {
+    NODEWRAP_WARN_STREAM("[" <<this->getName()<<"]: Parameter " << key << " not found. Using default value.");
+    value = defaultValue;
+  }
+
+  return value;
+}
+
+
 /*****************************************************************************/
 /* Methods                                                                   */
 /*****************************************************************************/
