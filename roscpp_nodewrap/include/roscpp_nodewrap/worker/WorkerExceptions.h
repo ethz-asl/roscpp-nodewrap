@@ -23,11 +23,13 @@
 #ifndef ROSCPP_NODEWRAP_WORKER_EXCEPTIONS_H
 #define ROSCPP_NODEWRAP_WORKER_EXCEPTIONS_H
 
+#include <string>
+
 #include <ros/exception.h>
 
 namespace nodewrap {
   /** \brief Exception thrown in case of an invalid worker name
-    */ 
+    */
   class InvalidWorkerNameException :
     public ros::Exception {
   public:

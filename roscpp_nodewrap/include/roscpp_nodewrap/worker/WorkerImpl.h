@@ -37,6 +37,7 @@ namespace nodewrap {
   class WorkerImpl :
     public boost::enable_shared_from_this<WorkerImpl> {
   friend class Worker;
+  friend class WorkerEvent;
   private:
     /** \brief Constructor
       */
@@ -45,6 +46,10 @@ namespace nodewrap {
     /** \brief Destructor
       */
     virtual ~WorkerImpl();
+    
+    /** \brief True, if this worker has been canceled (implementation)
+      */
+    virtual bool isCanceled() const = 0;
     
     /** \brief Initialize the worker implementation
       */

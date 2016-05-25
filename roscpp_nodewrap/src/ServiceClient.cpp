@@ -105,7 +105,7 @@ bool ServiceClient::Impl::isValid() const {
 
 bool ServiceClient::waitForExistence(const ros::Duration& timeout) {
   if (impl)
-    impl->serviceClient.waitForExistence(timeout);
+    return impl->serviceClient.waitForExistence(timeout);
   else
     return false;
 }

@@ -10,7 +10,7 @@ C++ implementation of ROS node(let) wrappers.
 
 **License:** GNU Lesser General Public License (LGPL)
 
-**Operating system(s):** Debian-based Linux
+**Operating system(s):** Debian-based Linux, Mac OS X
 
 **Package PPA:** Not available
 
@@ -60,9 +60,8 @@ The build dependencies of this project are available from the standard
 package repositories of recent Ubuntu and ROS releases. To install them,
 simply use the command
 
-```
+```shell
 sudo apt-get install ros-ROS_DISTRO-roscpp, ros-ROS_DISTRO-nodelet ros-ROS_DISTRO-rospy, ros-ROS_DISTRO-message-generation, ros-ROS_DISTRO-std-msgs
-
 ```
 
 #### Building with catkin (recommended for ROS developers)
@@ -72,33 +71,33 @@ may attempt to build this project using catkin as follows:
 
 * Create the directory structure for your catkin workspace by issuing
 
-  ```
+  ```shell
   mkdir -p CATKIN_WS_DIR/src
   ```
 
 * Assuming that your ROS environment has been set up properly, initialize the
   catkin workspace using the command
 
-  ```
+  ```shell
   catkin_init_workspace CATKIN_WS_DIR/src
   ```
 
 * Individually link the directories containing the project's package source
   trees into your catkin workspace source directory through
 
-  ```
+  ```shell
   ln -sf PROJECT_DIR/roscpp_nodewrap* CATKIN_WS_DIR/src
   ```
 
 * Switch into the catkin workspace directory by 
 
-  ```
+  ```shell
   cd CATKIN_WS_DIR
   ```
 
 * In the catkin workspace directory, run 
 
-  ```
+  ```shell
   catkin_make
   ```
 
@@ -121,19 +120,19 @@ project the CMake way. Assuming that you have cloned the project sources into
 
 * Create a build directory using 
 
-  ```
+  ```shell
   mkdir -p PROJECT_DIR/build
   ```
 
 * Switch into the build directoy by 
 
-  ```
+  ```shell
   cd PROJECT_DIR/build
   ```
 
 * In the build directory, run 
 
-  ```
+  ```shell
   cmake -DROS_DISTRIBUTION=ROS_DISTRO PROJECT_DIR
   ```
 
@@ -141,25 +140,25 @@ project the CMake way. Assuming that you have cloned the project sources into
 
 * If you want to inspect or modify the build configuration, issue 
 
-  ```
+  ```shell
   ccmake PROJECT_DIR
   ```
 
 * Build the project using 
 
-  ```
+  ```shell
   make
   ```
 
 * If you intend to install the project, call 
 
-  ```
+  ```shell
   make packages_install
   ```
 
   (from packages on Debian-based Linux only) or 
 
-  ```
+  ```shell
   make install
   ```
 
@@ -169,7 +168,7 @@ This project generates its API documentation from source. To access it, you
 may either inspect the build directory tree after the project has been built
 using `make` or install the documentation package through
 
-```
+```shell
 sudo apt-get install roscpp-nodewrap-doc
 ```
 

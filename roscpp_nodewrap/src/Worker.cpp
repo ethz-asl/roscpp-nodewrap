@@ -83,6 +83,13 @@ FrequencyStatistics::Estimates Worker::getStatisticsEstimates() const {
     return FrequencyStatistics::Estimates();
 }
 
+bool Worker::isCanceled() const {
+  if (impl)
+    return impl->as<Worker::Impl>().isCanceled();
+  else
+    return false;
+}
+
 FrequencyStatistics::Estimates Worker::Impl::getStatisticsEstimates() const {
   boost::mutex::scoped_lock lock(mutex);
   
@@ -96,6 +103,12 @@ ros::Duration Worker::Impl::getTimeSinceStart() const {
     return (ros::Time::now()-startTime);
   else
     return ros::Duration(-1);
+}
+
+bool Worker::Impl::isCanceled() const {
+  boost::mutex::scoped_lock lock(mutex);
+  
+  return canceled;
 }
 
 bool Worker::Impl::isValid() const {
@@ -312,6 +325,8 @@ void Worker::Impl::runOnce() {
       frequencyTask.event(timeOfCycle);
       
       WorkerEvent workerEvent;
+      
+      workerEvent.worker = shared_from_this();
       workerEvent.expectedCycleTime = expectedCycleTime;
       workerEvent.actualCycleTime = actualCycleTime;
   

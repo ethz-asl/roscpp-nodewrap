@@ -37,6 +37,11 @@ namespace nodewrap {
     /** \brief Default constructor
       */
     WorkerEvent();
+
+    /** \brief True, if the worker owning this worker event has been
+      *   canceled
+      */
+    bool isWorkerCanceled() const;
     
     /** \brief The expected cycle time of the worker
       */ 
@@ -45,6 +50,13 @@ namespace nodewrap {
     /** \brief The momentary, actual cycle time of the worker
       */ 
     ros::Duration actualCycleTime;
+    
+  private:
+    friend class Worker;
+    
+    /** \brief The worker owning this worker event
+      */
+    WorkerImplPtr worker;
   };
 };
 
