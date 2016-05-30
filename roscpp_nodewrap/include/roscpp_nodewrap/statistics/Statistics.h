@@ -25,13 +25,13 @@
 
 #include <ros/ros.h>
 
-#include <roscpp_nodewrap/boost/accumulators/accumulators.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/stats.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/count.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/min.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/max.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/rolling_mean.hpp>
-#include <roscpp_nodewrap/boost/accumulators/statistics/rolling_variance.hpp>
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/count.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
+#include <boost/accumulators/statistics/rolling_variance.hpp>
 
 #include <roscpp_nodewrap/Forwards.h>
 

@@ -18,7 +18,7 @@
 
 #include <limits>
 
-#include <roscpp_nodewrap/boost/accumulators/statistics/rolling_count.hpp>
+#include <boost/accumulators/statistics/rolling_count.hpp>
 
 namespace nodewrap {
 

@@ -11,6 +11,7 @@ project(roscpp_nodewrap)
 
 ## Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
+  cmake_modules
   roscpp
   rospy
   nodelet
